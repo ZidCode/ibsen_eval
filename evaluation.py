@@ -81,6 +81,9 @@ def evaluate(rfile, tfile, dfile, gps_coords, utc_time,  check=False):
     reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
     sun_zenith = get_sun_zenith(utc_time, *gps_coords)
 
+    print("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(rfile, tfile, dfile))
+    print("Date: %s \n \t Zenith angle %s" %(utc_time, sun_zenith))
+
     if check:
         assert not tar_data['data'].all() == tar['data'].all()
         plot_meas(tar_data, ref_data, dark)
