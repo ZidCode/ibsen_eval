@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import os
 import copy
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from processing.spectrum_analyser import get_spectral_irradiance_reflectance
+from processing.solar_zenith import get_sun_zenith
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
 
 """
@@ -63,7 +65,7 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
 
 
 # Decorators
-def evaluate(rfile, tfile, dfile, check=False):
+def evaluate(rfile, tfile, dfile, gps_coords, utc_time,  check=False):
 
     ref = parse_ibsen_file(rfile)
     tar = parse_ibsen_file(tfile)
@@ -77,6 +79,7 @@ def evaluate(rfile, tfile, dfile, check=False):
     assert ref['data'][:, 0].all() == ref['tdata'][0].all()
 
     reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
+    sun_zenith = get_sun_zenith(utc_time, *gps_coords)
 
     if check:
         assert not tar_data['data'].all() == tar['data'].all()
@@ -92,10 +95,12 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--debug', action='store_true', help="Set debug level")
     args = parser.parse_args()
 
-    #minimaleCirren T2/ST06/target003.asc
-    measurement = os.path.dirname(os.path.realpath(__file__)) + '/../measurements/Ostsee/T2/ST06/'
+    #minimaleCirren T4/ST06/target000.asc
+    measurement = os.path.dirname(os.path.realpath(__file__)) + '/../measurements/Ostsee/T4/ST06/'
 
-    files = ['reference001.asc', 'target003.asc', 'darkcurrent001.asc']
-    file_set  = [measurement + f for f in files]
-    file_set.append(args.debug)
+    gps_coords = [53.9453236, 11.3829424, 0]
+    utc_time = datetime.strptime('2016-04-14 08:47:00', '%Y-%m-%d %H:%M:%S')
+    files = ['reference000.asc', 'target000.asc','darkcurrent000.asc']
+    file_set  = np.array([measurement + f for f in files])
+    file_set = np.append(file_set, [gps_coords, utc_time, args.debug])
     evaluate(*file_set)
