@@ -38,6 +38,7 @@ def parse_ibsen_file(filename, maxrows=50):
     data_dict['data_std'] = data[:, 2]
     data_dict['data'] = data[:, 3:]
     data_dict['tdata'] = np.transpose(data_dict['data'])
+    data_dict['darkcurrent_corrected'] = False
     return data_dict
 
 
@@ -48,11 +49,13 @@ def subtract_dark_from_mean(*args):
     dd['mean'] = get_mean_column(dd)
     meas = range(len(args) - 1)
 
-    for i, arg in enumerate(args[1:]):
+    tobe_correct = [a for a in args[1:] if a['darkcurrent_corrected'] == False]
+    for i, arg in enumerate(tobe_correct):
         meas[i] = arg
         meas[i]['mean'] = get_mean_column(meas[i])
         meas[i]['tdata'] -= dd['tdata']
         meas[i]['mean'] -= dd['mean']
+        meas[i]['darkcurrent_corrected'] = True
 
 
 
