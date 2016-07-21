@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import logging
+import copy
 """
 FREEDOM VIS - Ibsen
     360 to 830 nm wavelength range
@@ -37,18 +38,19 @@ def parse_ibsen_file(filename, maxrows=50):
     return data_dict
 
 
-def subtract_dark_from_mean(tar, ref, dark):
-    dark['mean'] = get_mean_column(dark)
-    ref['mean'] = get_mean_column(ref)
-    tar['mean'] = get_mean_column(tar)
+def subtract_dark_from_mean(*args):
 
-    ref['mean'] -=  dark['mean']
-    tar['mean'] -= dark['mean']
+    dd = copy.deepcopy(args[0])
+    #TODO check measurement type dark
+    dd['mean'] = get_mean_column(dd)
+    meas = range(len(args) - 1)
 
-    ref['tdata'] -= dark['tdata']
-    tar['tdata'] -= dark['tdata']
+    for i, arg in enumerate(args[1:]):
+        meas[i] = arg
+        meas[i]['mean'] = get_mean_column(meas[i])
+        meas[i]['tdata'] -= dd['tdata']
+        meas[i]['mean'] -= dd['mean']
 
-    assert dark['mean'].all() == np.mean(dark['data'], axis=1).all()
 
 
 def get_mean_column(ibsen_dict):

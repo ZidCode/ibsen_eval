@@ -71,7 +71,7 @@ def evaluate(rfile, tfile, dfile, check=False):
 
     ref_data = copy.deepcopy(ref)
     tar_data = copy.deepcopy(tar)
-    subtract_dark_from_mean(tar, ref, dark)
+    subtract_dark_from_mean(dark, tar, ref)
 
     assert tar['mean'].all() == (get_mean_column(tar) - get_mean_column(dark)).all()
     assert ref['data'][:, 0].all() == ref['tdata'][0].all()
