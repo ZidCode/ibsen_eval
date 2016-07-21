@@ -18,6 +18,9 @@ def parse_ibsen_file(filename, maxrows=50):
     header_tmp = header.reshape(1, len(header))[0]
     # TODO: Add comment
     assert header.all() == header_tmp.all()
+    data_dict['Type'] = header[np.where(np.array([str(s).find('Meas')
+                               for s in header]) == 0)[0][0]].split()[-1]
+
     int_time = header[np.where(header == '[IntTime]')[0][0] + 1]
     data_dict['IntTime'] = np.array([float(inter) for inter in int_time.split()])
     data_dict['num_of_meas'] = len(data_dict['IntTime'])
@@ -41,7 +44,7 @@ def parse_ibsen_file(filename, maxrows=50):
 def subtract_dark_from_mean(*args):
 
     dd = copy.deepcopy(args[0])
-    #TODO check measurement type dark
+    assert dd['Type'] == 'darkcurrent', 'First parameter has to be darkcurrent'
     dd['mean'] = get_mean_column(dd)
     meas = range(len(args) - 1)
 
