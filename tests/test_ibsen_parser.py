@@ -5,7 +5,7 @@ from tempfile import mkstemp
 from evaluation.parser.ibsen_parser import parse_ibsen_file, subtract_dark_from_mean, get_mean_column
 
 
-DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data']))
+DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data', 'Type', 'darkcurrent_corrected']))
 
 
 DEFAULT_MEAS = '[Measurement] \n\
@@ -49,6 +49,7 @@ def test_parse_ibsen_file():
     filename = create_meas_file()
     ibsen_dict = parse_ibsen_file(filename)
     assert ibsen_dict['IntTime'] == 40, 'IntTime %s' % ibsen_dict['IntTime']
+    assert ibsen_dict['Type'] == 'reference'
     assert_equal(np.array(sorted(ibsen_dict.keys())), DEFAULT_KEYS)
 
 
@@ -58,14 +59,17 @@ def test_substract_dark_from_mean():
 
     ref = parse_ibsen_file(ref)
     dark = parse_ibsen_file(dark)
+    dark['Type'] = 'darkcurrent'
 
     ref_tmp = copy.deepcopy(ref)
     dark_tmp = copy.deepcopy(dark)
     ref_tmp['mean'] = get_mean_column(ref_tmp)
     dark_tmp['mean'] = get_mean_column(dark_tmp)
-
+    assert ref['darkcurrent_corrected'] == False
     subtract_dark_from_mean(dark, ref)
 
     raw = ref_tmp['mean'] - dark_tmp['mean']
+    assert ref['darkcurrent_corrected'] == True
+    subtract_dark_from_mean(dark, ref)
     assert_array_equal(ref['mean'], ref_tmp['mean'] - dark_tmp['mean'])
     assert_array_equal(ref['mean'], np.zeros(2))
