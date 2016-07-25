@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 import os
 import copy
+import ConfigParser
+from datetime import datetime
+from ast import literal_eval
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from processing.spectrum_analyser import get_spectral_irradiance_reflectance
+from processing.solar_zenith import get_sun_zenith
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
 
 """
@@ -62,12 +66,23 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     plt.show()
 
 
-# Decorators
-def evaluate(rfile, tfile, dfile, check=False):
+def parse_ini_config(ini_file):
+    config = ConfigParser.ConfigParser()
+    config.read(ini_file)
+    config_dict = {s: dict(config.items(s)) for s in config.sections()}
+    config_dict['Processing']['logging'] = literal_eval(config_dict['Processing']['logging'])
+    config_dict['Data']['gps_coords'] = np.array([float(s) for s in config_dict['Data']['gps_coords'].split(',')])
+    config_dict['Data']['utc_time'] = datetime.strptime(config_dict['Data']['utc_time'], '%Y-%m-%d %H:%M:%S')
+    return config_dict
 
-    ref = parse_ibsen_file(rfile)
-    tar = parse_ibsen_file(tfile)
-    dark = parse_ibsen_file(dfile)
+
+# Decorators
+def evaluate(config):
+
+    config_data = config['Data']
+    ref = parse_ibsen_file(config_data['reference'])
+    tar = parse_ibsen_file(config_data['target'])
+    dark = parse_ibsen_file(config_data['dark'])
 
     ref_data = copy.deepcopy(ref)
     tar_data = copy.deepcopy(tar)
@@ -77,8 +92,12 @@ def evaluate(rfile, tfile, dfile, check=False):
     assert ref['data'][:, 0].all() == ref['tdata'][0].all()
 
     reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
+    sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
 
-    if check:
+    print("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
+    print("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
+
+    if config['Processing']['logging']:
         assert not tar_data['data'].all() == tar['data'].all()
         plot_meas(tar_data, ref_data, dark)
         frame = pd.DataFrame(np.transpose([tar['wave'], reflectance]), columns=['Wavelength', 'Reflectance'])
@@ -87,15 +106,6 @@ def evaluate(rfile, tfile, dfile, check=False):
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--debug', action='store_true', help="Set debug level")
-    args = parser.parse_args()
-
-    #minimaleCirren T2/ST06/target003.asc
-    measurement = os.path.dirname(os.path.realpath(__file__)) + '/../measurements/Ostsee/T2/ST06/'
-
-    files = ['reference001.asc', 'target003.asc', 'darkcurrent001.asc']
-    file_set  = [measurement + f for f in files]
-    file_set.append(args.debug)
-    evaluate(*file_set)
+    default_ini = 'config.ini'
+    config = parse_ini_config(default_ini)
+    evaluate(config)
