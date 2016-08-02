@@ -49,6 +49,7 @@ def get_parameters(data, utc_time):
     return fl_vector(humidity), time_series
 
 
+# TODO: Use decorators..
 def retrieve_rel_humidity(gps, utc_time, debug=False):
     json_file = get_file_format(gps, utc_time)
     try:
@@ -57,6 +58,7 @@ def retrieve_rel_humidity(gps, utc_time, debug=False):
     except IOError:
         print("Info: File not present. Start downloading")
         download_weather_data(json_file)
+        # Duplicated code (alternative)
         with open(json_file, 'r') as fp:
             data = json.load(fp)
 
