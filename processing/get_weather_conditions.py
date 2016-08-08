@@ -27,7 +27,8 @@ def download_weather_data(destiny):
 
 
 def get_file_format(gps, utc_time):
-    data_folder = os.getcwd() + '/../tests/data/'
+    dir_ = os.environ['PYTHONPATH'].split(':')[-1]
+    data_folder = dir_ + '/tests/data/'
     gps = '%s,%s' %(gps[0], gps[1])
     utc = utc_time.strftime("%Y%m%d")
     file_format = data_folder + 'data_' + utc + '_' + gps + '.json'

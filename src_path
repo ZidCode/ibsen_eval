@@ -1,1 +1,1 @@
-export PYTHONPATH=$PYTHONPATH:/home/$USER/DLR/Codes/evaluation
+export PYTHONPATH=$PYTHONPATH:/users/$USER/DLR/Codes/evaluation
