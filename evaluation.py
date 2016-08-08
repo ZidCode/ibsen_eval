@@ -10,8 +10,10 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from processing.spectrum_analyser import get_spectral_irradiance_reflectance
 from processing.solar_zenith import get_sun_zenith
+from processing.get_weather_conditions import retrieve_rel_humidity
+from processing.atmospheric_mass import get_atmospheric_path_length
+from processing.get_ssa import get_ssa
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
-
 """
 FREEDOM VIS - Ibsen
     360 to 830 nm wavelength range
@@ -93,10 +95,15 @@ def evaluate(config):
 
     reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
     sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
+    atmos_path = get_atmospheric_path_length(sun_zenith)
+    RH = retrieve_rel_humidity(config['Data']['gps_coords'], config['Data']['utc_time'])
+    ssa = get_ssa(RH)
 
     print("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
     print("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
-
+    print(" \n \t  Atmospheric path length %s" % atmos_path)
+    print(" \n \t  Relative humidity %s" % RH)
+    print(" \n \t  Single scattering albedo %s" % ssa)
     if config['Processing']['logging']:
         assert not tar_data['data'].all() == tar['data'].all()
         plot_meas(tar_data, ref_data, dark)
