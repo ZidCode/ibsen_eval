@@ -35,7 +35,22 @@ def get_file_format(gps, utc_time):
     return file_format
 
 
-def get_parameters(data, utc_time):
+def get_parameters(gps, utc_time):
+    json_file = get_file_format(gps, utc_time)
+    try:
+        with open(json_file, 'r') as fp:
+            data = json.load(fp)
+    except IOError:
+        print("Info: File not present. Start downloading")
+        download_weather_data(json_file)
+        # Duplicated code (alternative)
+        with open(json_file, 'r') as fp:
+            data = json.load(fp)
+
+    return data
+
+
+def extract_humidity(data, utc_time):
     fl_vector = np.vectorize(float)
     utc_tmp = copy.copy(utc_time)
     time_series = np.array([])
@@ -52,19 +67,8 @@ def get_parameters(data, utc_time):
 
 # TODO: Use decorators..
 def retrieve_rel_humidity(gps, utc_time, debug=False):
-    json_file = get_file_format(gps, utc_time)
-    try:
-        with open(json_file, 'r') as fp:
-            data = json.load(fp)
-    except IOError:
-        print("Info: File not present. Start downloading")
-        download_weather_data(json_file)
-        # Duplicated code (alternative)
-        with open(json_file, 'r') as fp:
-            data = json.load(fp)
-
-
-    humidity, time_series = get_parameters(data, utc_time)
+    data = get_parameters(gps, utc_time)
+    humidity, time_series = extract_humidity(data, utc_time)
     history_stamps = mdates.date2num(time_series)
     utc_stamp = mdates.date2num(utc_time)
 
