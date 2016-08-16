@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import copy
+import logging
 import ConfigParser
 from datetime import datetime
 from ast import literal_eval
@@ -78,9 +79,20 @@ def parse_ini_config(ini_file):
     return config_dict
 
 
+def create_logger(log_config):
+    log_dict = {'DEBUG': logging.DEBUG, 'INFO': logging.INFO}
+    logger = logging.getLogger('eval')
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.setLevel(log_config['logging_level'])
+    return logger
+
+
 # Decorators
 def evaluate(config):
-
+    logger = create_logger(config['Processing'])
     config_data = config['Data']
     ref = parse_ibsen_file(config_data['reference'])
     tar = parse_ibsen_file(config_data['target'])
@@ -99,12 +111,13 @@ def evaluate(config):
     RH = retrieve_rel_humidity(config['Data']['gps_coords'], config['Data']['utc_time'])
     ssa = get_ssa(RH)
 
-    print("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
-    print("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
-    print(" \n \t  Atmospheric path length %s" % atmos_path)
-    print(" \n \t  Relative humidity %s" % RH)
-    print(" \n \t  Single scattering albedo %s" % ssa)
-    if config['Processing']['logging']:
+    logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
+    logger.info("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
+    logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
+    logger.info(" \n \t  Relative humidity %s" % RH)
+    logger.info(" \n \t  Single scattering albedo %s" % ssa)
+
+    if config['Processing']['logging_level'] == 'DEBUG':
         assert not tar_data['data'].all() == tar['data'].all()
         plot_meas(tar_data, ref_data, dark)
         frame = pd.DataFrame(np.transpose([tar['wave'], reflectance]), columns=['Wavelength', 'Reflectance'])
