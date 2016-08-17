@@ -33,7 +33,7 @@ def sort_ibsen_by_int(dirname=os.path.dirname(os.path.realpath(__file__))+"/../.
 
 
 def calc_scaling_factors(waveibs, dark, ref):
-    wave, int, r_err = get_halogen_spectra()
+    wave, intensity, r_err = get_halogen_spectra()
 
     start_ind = np.where(waveibs > wave[0])[0][0]
     end_ind = np.where(waveibs < wave[-1])[0][-1]
@@ -45,7 +45,7 @@ def calc_scaling_factors(waveibs, dark, ref):
     assert ref[start_ind] == mod_ref[0]
 
     mod_intensity = mod_ref - mod_dark
-    map_holgen_intensities = np.interp(mod_waves, wave, int)
+    map_holgen_intensities = np.interp(mod_waves, wave, intensity)
     scale_factor = map_holgen_intensities / mod_intensity
     return scale_factor, mod_intensity, map_holgen_intensities, mod_waves
 
