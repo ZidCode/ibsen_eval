@@ -46,7 +46,7 @@ def calc_scaling_factors(waveibs, dark, ref):
 
     mod_intensity = mod_ref - mod_dark
     map_holgen_intensities = np.interp(mod_waves, wave, intensity)
-    scale_factor = map_holgen_intensities / mod_intensity
+    scale_factor = map_holgen_intensities / mod_intensity * 10 ** -6
     return scale_factor, mod_intensity, map_holgen_intensities, mod_waves
 
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument('-r','--range', nargs='+', default=['1', '-1', '1'],  help='min, max, step to determine calibration files (-c has to added)')
     args = parser.parse_args()
     conv_to_float = lambda x: int(x)
-
+    # TODO independancy of integration time
     if args.check:
         range = map(conv_to_float, args.range)
         check_nonlinearity(*range)
