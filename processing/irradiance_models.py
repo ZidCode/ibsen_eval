@@ -1,13 +1,40 @@
+import logging
 import numpy as np
 from math import exp
 from lmfit import Model
 import matplotlib.pyplot as plt
-
+from solar_zenith import get_sun_zenith
+from get_weather_conditions import retrieve_rel_humidity
+from atmospheric_mass import get_atmospheric_path_length
+from get_ssa import get_ssa
 
 """
 Irradiance model due to Greg and Carder
 """
 exp_v = np.vectorize(exp)
+
+
+def build_Model(config_data, logger=logging):
+    """
+    This method constructs a class object with calculated parameters from gps
+    position and utc_time
+    Args:
+        config_data: Dict with gps_coords (list of floats) and utc_time
+        (datetime)
+        logger: available logger
+    Returns:
+        irr_mod: irradiance_modles object
+    """
+    sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
+    atmos_path = get_atmospheric_path_length(sun_zenith)
+    RH = retrieve_rel_humidity(config_data['gps_coords'], config_data['utc_time'])
+    ssa = get_ssa(RH)
+    irr_mod = irradiance_models(atmos_path, RH, ssa)
+    logger.info(" \n \t Zenith angle %s" %  sun_zenith)
+    logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
+    logger.info(" \n \t  Relative humidity %s" % RH)
+    logger.info(" \n \t  Single scattering albedo %s" % ssa)
+    return irr_mod
 
 
 class irradiance_models:

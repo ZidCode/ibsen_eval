@@ -10,10 +10,7 @@ from ast import literal_eval
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from processing.spectrum_analyser import get_spectral_irradiance_reflectance
-from processing.solar_zenith import get_sun_zenith
-from processing.get_weather_conditions import retrieve_rel_humidity
-from processing.atmospheric_mass import get_atmospheric_path_length
-from processing.get_ssa import get_ssa
+import processing.irradiance_models as irr
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
 """
 FREEDOM VIS - Ibsen
@@ -106,16 +103,11 @@ def evaluate(config):
     assert ref['data'][:, 0].all() == ref['tdata'][0].all()
 
     reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
-    sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
-    atmos_path = get_atmospheric_path_length(sun_zenith)
-    RH = retrieve_rel_humidity(config['Data']['gps_coords'], config['Data']['utc_time'])
-    ssa = get_ssa(RH)
+    irradiance_model = irr.build_Model(config['Data'], logger)
+    reflectance_dict = {'wave_mu': ref['wave'] / 1000.0, 'reflect': reflectance}
 
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
     logger.info("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
-    logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
-    logger.info(" \n \t  Relative humidity %s" % RH)
-    logger.info(" \n \t  Single scattering albedo %s" % ssa)
 
     if config['Processing']['logging_level'] == 'DEBUG':
         assert not tar_data['data'].all() == tar['data'].all()
