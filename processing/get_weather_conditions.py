@@ -71,12 +71,10 @@ def retrieve_rel_humidity(gps, utc_time, debug=False):
     humidity, time_series = extract_humidity(data, utc_time)
     history_stamps = mdates.date2num(time_series)
     utc_stamp = mdates.date2num(utc_time)
-
     inter = interpolate.interp1d(history_stamps, humidity)
     utc_humidity_value = inter(utc_stamp)
-
     if debug:
-        t_new = np.linspace(history_stamps[0], history_stamps[-1], 1000)
+        t_new = np.linspace(min(history_stamps), max(history_stamps), 1000)
         plt.plot(time_series, humidity, '+')
         plt.plot(utc_stamp, utc_humidity_value, 'o', label=r'rel. hum %.1f' % utc_humidity_value)
         plt.plot(t_new, inter(t_new))
