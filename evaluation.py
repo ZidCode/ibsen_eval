@@ -86,7 +86,8 @@ def evaluate(config):
     irradiance_model = irr.build_Model(config['Data'], logger)
     reflectance_dict = {'wave_mu': ref['wave'] / 1000.0, 'reflect': reflectance}
 
-    params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model)
+    range_ = np.array([0.35, 0.5])
+    params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_)
     logger.info("%s \n" % result.fit_report())
 
     if config['Processing']['logging_level'] == 'DEBUG':
