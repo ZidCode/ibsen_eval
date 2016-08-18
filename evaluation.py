@@ -12,22 +12,6 @@ import matplotlib.gridspec as gridspec
 from processing.spectrum_analyser import get_spectral_irradiance_reflectance, retrieve_aengstrom_parameters
 import processing.irradiance_models as irr
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
-"""
-FREEDOM VIS - Ibsen
-    360 to 830 nm wavelength range
-    Numerical aperture of 0.16
-    Minimum resolution of 1.3 nm (FWHM)
-    Footprint of 25 mm x 48 mm
-ibsen_dict:
-    {'num_of_meas': <int>,
-    'data_mean': array([..]),
-    'tdata': array([[..],..,[..]]) shape(30, 1024),
-    'start_data_index': 18,
-    'data_std': array([..]),
-    'wave': array([..]),
-    'IntTime': <float>,
-    'data': array([[..],..,[..]]) shape(1024, 30)}
-"""
 
 
 def plot_meas(tar, ref, dark):

@@ -8,6 +8,15 @@ FREEDOM VIS - Ibsen
     Numerical aperture of 0.16
     Minimum resolution of 1.3 nm (FWHM)
     Footprint of 25 mm x 48 mm
+ibsen_dict:
+    {'num_of_meas': <int>,
+    'data_mean': array([..]),
+    'tdata': array([[..],..,[..]]) shape(30, 1024),
+    'start_data_index': 18,
+    'data_std': array([..]),
+    'wave': array([..]),
+    'IntTime': <float>,
+    'data': array([[..],..,[..]]) shape(1024, 30)}
 """
 
 
