@@ -90,17 +90,13 @@ def create_logger(log_config):
 # Decorators
 def evaluate(config):
     logger = create_logger(config['Processing'])
-    config_data = config['Data']
-    ref = parse_ibsen_file(config_data['reference'])
-    tar = parse_ibsen_file(config_data['target'])
-    dark = parse_ibsen_file(config_data['dark'])
-
-    ref_data = copy.deepcopy(ref)
-    tar_data = copy.deepcopy(tar)
+    ref = parse_ibsen_file(config['Data']['reference'])
+    tar = parse_ibsen_file(config['Data']['target'])
+    dark = parse_ibsen_file(config['Data']['dark'])
     subtract_dark_from_mean(dark, tar, ref)
 
-    assert tar['mean'].all() == (get_mean_column(tar) - get_mean_column(dark)).all()
-    assert ref['data'][:, 0].all() == ref['tdata'][0].all()
+    logger.info("Date: %s " % config['Data']['utc_time'])
+    logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['dark'] ))
 
     reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
     irradiance_model = irr.build_Model(config['Data'], logger)
@@ -108,12 +104,9 @@ def evaluate(config):
 
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model)
     logger.info("%s \n" % result.fit_report())
-    logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
-    logger.info("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
 
     if config['Processing']['logging_level'] == 'DEBUG':
-        assert not tar_data['data'].all() == tar['data'].all()
-        plot_meas(tar_data, ref_data, dark)
+        plot_meas(tar, ref, dark)
         frame = pd.DataFrame(np.transpose([tar['wave'], reflectance]), columns=['Wavelength', 'Reflectance'])
         frame.to_csv('reflectance.csv', index=False)
         plot_used_irradiance_and_reflectance(tar, ref, reflectance)
