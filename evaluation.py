@@ -9,7 +9,7 @@ from datetime import datetime
 from ast import literal_eval
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from processing.spectrum_analyser import get_spectral_irradiance_reflectance
+from processing.spectrum_analyser import get_spectral_irradiance_reflectance, retrieve_aengstrom_parameters
 import processing.irradiance_models as irr
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
 """
@@ -106,6 +106,8 @@ def evaluate(config):
     irradiance_model = irr.build_Model(config['Data'], logger)
     reflectance_dict = {'wave_mu': ref['wave'] / 1000.0, 'reflect': reflectance}
 
+    params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model)
+    logger.info("%s \n" % result.fit_report())
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config_data['reference'], config_data['target'], config_data['dark'] ))
     logger.info("Date: %s \n \t Zenith angle %s" %(config_data['utc_time'], sun_zenith))
 
