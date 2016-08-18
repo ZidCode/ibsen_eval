@@ -53,6 +53,13 @@ def evaluate(config):
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_)
     logger.info("%s \n" % result.fit_report())
 
+    import matplotlib.pyplot as plt
+    plt.plot(reflectance_dict['wave_mu'], result.init_fit, 'k--')
+    plt.plot(reflectance_dict['wave_mu'], result.best_fit, 'r-')
+    plt.plot(reflectance_dict['wave_mu'], reflectance, '*')
+    plt.show()
+
+
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_meas(tar, ref, dark)
         frame = pd.DataFrame(np.transpose([tar['wave'], reflectance]), columns=['Wavelength', 'Reflectance'])
