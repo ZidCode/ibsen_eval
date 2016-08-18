@@ -50,11 +50,11 @@ class irradiance_models:
     def tau_r(self, x):
         return - self.ray * x ** (self.ray_expo)
 
-    def tau_as(self, x, beta, alpha):
+    def tau_as(self, x, alpha, beta):
         return - self.ssa * self.AM * beta * x ** (-alpha)
 
     def mix_term(self, x, alpha, beta):
-        term = (1 - exp_v(0.95 * self.tau_r(x)))  * 0.5 + exp_v(1.5 * self.tau_r(x)) * (1 - exp_v(self.tau_as(x, beta, alpha)))
+        term = (1 - exp_v(0.95 * self.tau_r(x)))  * 0.5 + exp_v(1.5 * self.tau_r(x)) * (1 - exp_v(self.tau_as(x, alpha, beta)))
         return term
 
     def ratio_E_ds_E_d(self, x, alpha, beta):
