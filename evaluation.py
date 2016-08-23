@@ -20,6 +20,7 @@ def parse_ini_config(ini_file):
     config_dict['Processing']['logging'] = literal_eval(config_dict['Processing']['logging'])
     config_dict['Data']['gps_coords'] = np.array([float(s) for s in config_dict['Data']['gps_coords'].split(',')])
     config_dict['Data']['utc_time'] = datetime.strptime(config_dict['Data']['utc_time'], '%Y-%m-%d %H:%M:%S')
+    config_dict['Processing']['range_'] = np.array([float(s) for s in config_dict['Processing']['range_'].split(',')])
     return config_dict
 
 
@@ -50,7 +51,7 @@ def evaluate(config):
     irradiance_model = irr.build_Model(config['Data'], logger)
     reflectance_dict = {'wave_mu': ref['wave'] / 1000.0, 'reflect': reflectance}
 
-    range_ = np.array([0.35, 0.5])
+    range_ = config['Processing']['range_']
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_)
     logger.info("%s \n" % result.fit_report())
 
