@@ -21,6 +21,8 @@ def parse_ini_config(ini_file):
     config_dict['Data']['gps_coords'] = np.array([float(s) for s in config_dict['Data']['gps_coords'].split(',')])
     config_dict['Data']['utc_time'] = datetime.strptime(config_dict['Data']['utc_time'], '%Y-%m-%d %H:%M:%S')
     config_dict['Processing']['range_'] = np.array([float(s) for s in config_dict['Processing']['range_'].split(',')])
+    config_dict['Processing']['alpha'] = float(config_dict['Processing']['alpha'])
+    config_dict['Processing']['beta'] = float(config_dict['Processing']['beta'])
     return config_dict
 
 
@@ -51,8 +53,9 @@ def evaluate(config):
     irradiance_model = irr.build_Model(config['Data'], logger)
     reflectance_dict = {'wave_mu': ref['wave'] / 1000.0, 'reflect': reflectance}
 
+    inital_values = config['Processing']
     range_ = config['Processing']['range_']
-    params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_)
+    params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_, inital_values)
     logger.info("%s \n" % result.fit_report())
 
     import matplotlib.pyplot as plt

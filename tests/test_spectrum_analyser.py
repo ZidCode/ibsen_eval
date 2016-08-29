@@ -16,5 +16,6 @@ def test_retrieve_aengstrom_parameters():
 
     reflectance_dict = {'wave_mu': x, 'reflect': y}
     w_range = np.array([200., 800.]) / 1000.
-    params, result = retrieve_aengstrom_parameters(reflectance_dict, irr, w_range)
+    initial_values = {'alpha': 1.2, 'beta': 0.05}
+    params, result = retrieve_aengstrom_parameters(reflectance_dict, irr, w_range, initial_values)
     assert_almost_equal(params['alpha']['value'], 1.2, 1)
