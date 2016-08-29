@@ -9,13 +9,13 @@ def get_spectral_irradiance_reflectance(E_d, E_up):
     return E_up / E_d
 
 
-def retrieve_aengstrom_parameters(data, irr_model, wave_range):
+def retrieve_aengstrom_parameters(spectra, irr_model, wave_range):
 
     #pars = gmod.make_params(alpha, beta)
     #result.params['alpha'].stderr
-    weights = construct_weights(data['wave_mu'], wave_range)
+    weights = construct_weights(spectra['wave_mu'], wave_range)
     gmod = Model(irr_model.ratio_E_ds_E_d, independent_vars=['x'], param_names=['alpha', 'beta'])
-    result = gmod.fit(data['reflect'], x=data['wave_mu'], alpha=1.4, beta=0.0, weights=weights)
+    result = gmod.fit(spectra['reflect'], x=spectra['wave_mu'], alpha=1.4, beta=0.0, weights=weights)
 
     param_dict = dict()
     for key in result.params.keys():
