@@ -5,7 +5,7 @@ from tempfile import mkstemp
 from evaluation.parser.ibsen_parser import parse_ibsen_file, subtract_dark_from_mean, get_mean_column
 
 
-DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data', 'Type', 'darkcurrent_corrected']))
+DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data', 'Type', 'darkcurrent_corrected', 'data_sample_std']))
 
 
 DEFAULT_MEAS = '[Measurement] \n\

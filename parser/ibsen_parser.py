@@ -45,6 +45,7 @@ def parse_ibsen_file(filename, maxrows=50):
     data_dict['wave'] = data[:, 0]
     data_dict['data_mean'] = data[:, 1]
     data_dict['data_std'] = data[:, 2]
+    data_dict['data_sample_std'] = np.std(data[:,3:], axis=1, ddof=1)
     data_dict['data'] = data[:, 3:]
     data_dict['tdata'] = np.transpose(data_dict['data'])
     data_dict['darkcurrent_corrected'] = False
