@@ -22,7 +22,7 @@ def retrieve_aengstrom_parameters(spectra, irr_model, wave_range, initial_values
     #result.params['alpha'].stderr
     weights = construct_weights(spectra['wave_mu'], wave_range)
     gmod = Model(irr_model.ratio_E_ds_E_d, independent_vars=['x'], param_names=['alpha', 'beta'])
-    result = gmod.fit(spectra['reflect'], x=spectra['wave_mu'], alpha=initial_values['alpha'], beta=initial_values['beta'], weights=weights)
+    result = gmod.fit(spectra['spectra'], x=spectra['wave_mu'], alpha=initial_values['alpha'], beta=initial_values['beta'])
 
     param_dict = dict()
     for key in result.params.keys():

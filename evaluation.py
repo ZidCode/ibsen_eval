@@ -67,9 +67,9 @@ def evaluate(config):
 
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_meas(tar, ref, dark)
-        frame = pd.DataFrame(np.transpose([tar['wave'], reflectance]), columns=['Wavelength', 'Reflectance'])
+        frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
         frame.to_csv('reflectance.csv', index=False)
-        plot_used_irradiance_and_reflectance(tar, ref, reflectance)
+        plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict['spectra'])
 
 
 if __name__ == "__main__":

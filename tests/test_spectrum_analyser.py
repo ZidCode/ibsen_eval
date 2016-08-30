@@ -14,7 +14,7 @@ def test_retrieve_aengstrom_parameters():
     x = np.linspace(200, 800, 100) / 1000.
     y = irr.ratio_E_ds_E_d(x, 1.2, 0.06) + np.random.normal(0, 0.01, len(x))
 
-    reflectance_dict = {'wave_mu': x, 'reflect': y}
+    reflectance_dict = {'wave_mu': x, 'spectra': y}
     w_range = np.array([200., 800.]) / 1000.
     initial_values = {'alpha': 1.2, 'beta': 0.05}
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irr, w_range, initial_values)
