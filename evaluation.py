@@ -8,9 +8,9 @@ import pandas as pd
 from datetime import datetime
 from ast import literal_eval
 import processing.irradiance_models as irr
-from processing.spectrum_analyser import get_spectral_irradiance_reflectance, retrieve_aengstrom_parameters
+from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_parameters
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
-from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance
+from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance
 
 
 def parse_ini_config(ini_file):
@@ -49,20 +49,14 @@ def evaluate(config):
     logger.info("GPS coords (lat, lon) %s %s" % (config['Data']['gps_coords'][0], config['Data']['gps_coords'][1]))
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['dark'] ))
 
-    reflectance = get_spectral_irradiance_reflectance(ref['mean'], tar['mean'])
     irradiance_model = irr.build_Model(config['Data'], logger)
-    reflectance_dict = {'wave_mu': ref['wave'] / 1000.0, 'reflect': reflectance}
+    reflectance_dict = get_reflectance(ref, tar)
 
     inital_values = config['Processing']
     range_ = config['Processing']['range_']
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_, inital_values)
-    logger.info("%s \n" % result.fit_report())
 
-    import matplotlib.pyplot as plt
-    plt.plot(reflectance_dict['wave_mu'], result.init_fit, 'k--')
-    plt.plot(reflectance_dict['wave_mu'], result.best_fit, 'r-')
-    plt.plot(reflectance_dict['wave_mu'], reflectance, '*')
-    plt.show()
+    logger.info("%s \n" % result.fit_report())
 
 
     if config['Processing']['logging_level'] == 'DEBUG':
@@ -70,6 +64,7 @@ def evaluate(config):
         frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
         frame.to_csv('reflectance.csv', index=False)
         plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
+        plot_fitted_reflectance(reflectance_dict, params, result)
 
 
 if __name__ == "__main__":

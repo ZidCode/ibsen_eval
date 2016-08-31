@@ -17,6 +17,14 @@ def get_error_of_spectral_reflectance(E_d, E_up, E_d_std, E_up_std):
     reflect_std = np.sqrt((1 / E_d) ** 2 * E_up_std ** 2 + (E_up / E_d ** 2) ** 2 * E_d_std ** 2)
     return reflect_std
 
+def get_reflectance(E_d, E_up):
+    reflectance = get_spectral_irradiance_reflectance(E_d['mean'], E_up['mean'])
+    reflectance_std = get_error_of_spectral_reflectance(E_d['mean'], E_up['mean'], E_d['data_sample_std'], E_up['data_sample_std'])
+
+    reflectance_dict = {'wave_mu': E_d['wave'] / 1000.0, 'spectra': reflectance, 'std': reflectance_std, 'var': reflectance_std ** 2}
+    return reflectance_dict
+
+
 def retrieve_aengstrom_parameters(spectra, irr_model, wave_range, initial_values):
     """
     Args:
