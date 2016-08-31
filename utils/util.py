@@ -1,9 +1,11 @@
 import numpy as np
 
 
-def construct_weights(x, range_):
+def construct_weights(std):
+    return 1 / (std)
 
-    weights = np.ones(len(x))
-    index_ = np.concatenate((np.where(x < min(range_))[0], np.where(x > max(range_))[0]))
-    weights[index_] = 0
-    return weights
+
+def cut_range(range_, x, y, std):
+    start = np.where(x <= range_[0])[0][-1]
+    end = np.where(x >= range_[1])[0][0]
+    return x[start:end], y[start:end], std[start:end]

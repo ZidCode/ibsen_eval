@@ -2,7 +2,7 @@ import numpy as np
 from lmfit import Model
 import matplotlib.pyplot as plt
 from irradiance_models import irradiance_models
-from utils.util import construct_weights
+from utils.util import construct_weights, cut_range
 
 
 def get_spectral_irradiance_reflectance(E_d, E_up):
@@ -33,14 +33,18 @@ def retrieve_aengstrom_parameters(spectra, irr_model, wave_range, initial_values
         wave_range: Wave range to fit
         inital_value: Dict with inital values with parameter name keys
     """
-
-    #pars = gmod.make_params(alpha, beta)
-    #result.params['alpha'].stderr
-    weights = construct_weights(spectra['wave_mu'], wave_range)
-    gmod = Model(irr_model.ratio_E_ds_E_d, independent_vars=['x'], param_names=['alpha', 'beta'])
-    result = gmod.fit(spectra['spectra'], x=spectra['wave_mu'], alpha=initial_values['alpha'], beta=initial_values['beta'])
-
     param_dict = dict()
+    x_cut, y_cut, std_cut = cut_range(wave_range, spectra['wave_mu'], spectra['spectra'], spectra['std'])
+    param_dict['wave_range'] = x_cut
+    param_dict['spectra_range'] = y_cut
+    param_dict['std'] = std_cut
+
+    # WRONG construct weights with variance
+    # cutting new method
+    weights = construct_weights(param_dict['std'])
+    gmod = Model(irr_model.ratio_E_ds_E_d, independent_vars=['x'], param_names=['alpha', 'beta'])
+    result = gmod.fit(param_dict['spectra_range'], x=param_dict['wave_range'], alpha=initial_values['alpha'], beta=initial_values['beta'], weights=weights)
+
     for key in result.params.keys():
         param_dict[key] = dict()
         param_dict[key]['stderr'] = result.params[key].stderr
