@@ -9,6 +9,14 @@ def get_spectral_irradiance_reflectance(E_d, E_up):
     return E_up / E_d
 
 
+def get_error_of_spectral_reflectance(E_d, E_up, E_d_std, E_up_std):
+    """
+    Reflectance std is calculated via gaussian propagation of uncertainty.
+    Specific error is calculated
+    """
+    reflect_std = np.sqrt((1 / E_d) ** 2 * E_up_std ** 2 + (E_up / E_d ** 2) ** 2 * E_d_std ** 2)
+    return reflect_std
+
 def retrieve_aengstrom_parameters(spectra, irr_model, wave_range, initial_values):
     """
     Args:
