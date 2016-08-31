@@ -32,7 +32,8 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
         ax1.plot(meas['wave'], meas['mean'], label='%s' %key)
 
     ax1.set_title('Diffuse and direct Irradiance')
-    ax2.plot(tarmd['wave'], reflectance)
+    ax2.plot(reflectance['wave_mu'], reflectance['spectra'], '+')
+    ax2.errorbar(reflectance['wave_mu'], reflectance['spectra'], yerr=reflectance['std'], ecolor='g', fmt='none')
     ax2.set_title('Reflectance')
     ax1.legend()
     plt.xlabel('Wavelength [nm]')

@@ -69,7 +69,7 @@ def evaluate(config):
         plot_meas(tar, ref, dark)
         frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
         frame.to_csv('reflectance.csv', index=False)
-        plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict['spectra'])
+        plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
 
 
 if __name__ == "__main__":
