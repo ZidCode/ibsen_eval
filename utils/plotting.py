@@ -40,4 +40,22 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     plt.show()
 
 
+def plot_fitted_reflectance(reflectance_dict, params, result):
+    """
+    Args:
+        reflectance_dict: Reflectance dict with std, wave and spectra
+        params: Lmfit fitted values for corresponding spectra
+        result: Lmfit MinimizerResult() object
+    """
+    gs = gridspec.GridSpec(2, 2)
+    ax1 = plt.subplot(gs[0, :])
+    ax2 = plt.subplot(gs[1, :])
 
+    ax1 = result.plot_residuals(ax=ax1)
+    ax2.plot(reflectance_dict['wave_mu'], reflectance_dict['spectra'])
+    ax2.plot(params['wave_range'], result.best_fit, 'r-')
+    ax2.errorbar(params['wave_range'], params['spectra_range'], yerr=params['std'], ecolor='g')
+    ax2.set_title('Fitted reflectance')
+    ax2.set_ylabel('Reflectance')
+    ax2.set_xlabel(r'Wavelength $\left[\mu m\right]$')
+    plt.show()
