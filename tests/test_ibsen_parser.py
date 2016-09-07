@@ -1,15 +1,17 @@
 import numpy as np
 import copy
+from datetime import datetime
 from numpy.testing import assert_equal, assert_array_equal
 from tempfile import mkstemp
 from evaluation.parser.ibsen_parser import parse_ibsen_file, subtract_dark_from_mean, get_mean_column
 
 
-DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data', 'Type', 'darkcurrent_corrected', 'data_sample_std']))
+DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data', 'Type', 'darkcurrent_corrected', 'data_sample_std', 'UTCTime']))
 
 
 DEFAULT_MEAS = '[Measurement] \n\
 Date    2016-05-25 \n\
+UTCTime 11:30:26 \n\
 Project Radiometric Calibration \n\
 Testsite    RASTA \n\
 Station  \n\
@@ -48,8 +50,10 @@ def create_meas_file():
 def test_parse_ibsen_file():
     filename = create_meas_file()
     ibsen_dict = parse_ibsen_file(filename)
+    UTCTime = datetime.strptime('2016-05-25 11:30:26', '%Y-%m-%d %H:%M:%S')
     assert ibsen_dict['IntTime'] == 40, 'IntTime %s' % ibsen_dict['IntTime']
     assert ibsen_dict['Type'] == 'reference'
+    assert ibsen_dict['UTCTime'] == UTCTime
     assert_equal(np.array(sorted(ibsen_dict.keys())), DEFAULT_KEYS)
 
 

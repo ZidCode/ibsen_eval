@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import logging
 import copy
+from datetime import datetime
 """
 FREEDOM VIS - Ibsen
     360 to 830 nm wavelength range
@@ -29,6 +30,13 @@ def parse_ibsen_file(filename, maxrows=50):
     assert header.all() == header_tmp.all()
     data_dict['Type'] = header[np.where(np.array([str(s).find('Meas')
                                for s in header]) == 0)[0][0]].split()[-1]
+    try:
+        date =  header[np.where(np.array([str(s).find('Date') for s in header]) == 0)[0][0]].split()[-1]
+        time =  header[np.where(np.array([str(s).find('UTCTime') for s in header]) == 0)[0][0]].split()[-1]
+        data_dict['UTCTime'] = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
+    except IndexError:
+        logging.error("No [UTCTime] in measurments. Setting UTCTime to None")
+        data_dict['UTCTime'] = None
 
     int_time = header[np.where(header == '[IntTime]')[0][0] + 1]
     data_dict['IntTime'] = np.array([float(inter) for inter in int_time.split()])
