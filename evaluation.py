@@ -45,6 +45,9 @@ def evaluate(config):
     dark = parse_ibsen_file(config['Data']['dark'])
     subtract_dark_from_mean(dark, tar, ref)
 
+    if tar['UTCTime']:
+        logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Data']['utc_time'], tar['UTCTime']))
+        config['Data']['utc_time'] = tar['UTCTime']
     logger.info("Date: %s " % config['Data']['utc_time'])
     logger.info("GPS coords (lat, lon) %s %s" % (config['Data']['gps_coords'][0], config['Data']['gps_coords'][1]))
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['dark'] ))
