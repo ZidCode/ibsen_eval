@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from scipy.constants import atmosphere
 from math import exp, log
 from lmfit import Model
 import matplotlib.pyplot as plt
@@ -31,7 +32,7 @@ def build_Model(config_data, logger=logging):
     humidity = weather_dict['hum']
     pressure = weather_dict['pressurem']
     ssa = get_ssa(humidity)
-    irr_mod = irradiance_models(atmos_path, humidity, ssa, sun_zenith)
+    irr_mod = irradiance_models(atmos_path, humidity, ssa, sun_zenith, pressure)
     logger.info(" \n \t Zenith angle %s" %  sun_zenith)
     logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
     logger.info(" \n \t  Relative humidity %s" % humidity)
@@ -42,10 +43,12 @@ def build_Model(config_data, logger=logging):
 
 class irradiance_models:
 
-    def __init__(self, AM, RH, ssa, zenith):
+    def __init__(self, AM, RH, ssa, zenith, pressure):
         self.AM = AM
         self.RH = RH
         self.ssa = ssa
+        self.pressure = pressure
+        self.p_0 = atmosphere / 100.0
         self.zenith_rad = np.radians(zenith)
         self.ray = 0.00877
         self.ray_expo = -4.05
@@ -63,7 +66,7 @@ class irradiance_models:
         return F_a
 
     def tau_r(self, x):
-        return - self.ray * x ** (self.ray_expo)
+        return - self.ray * (self.pressure / self.p_0) * x ** (self.ray_expo)
 
     def tau_as(self, x, alpha, beta):
         return - self.ssa * self.AM * beta * x ** (-alpha)

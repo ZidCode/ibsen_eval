@@ -10,8 +10,9 @@ def test_retrieve_aengstrom_parameters():
     rel_h = 0.665
     ssa = 0.968997161171
     zenith = 20
+    pressure = 1021
 
-    irr = irradiance_models(AM, rel_h, ssa, zenith)
+    irr = irradiance_models(AM, rel_h, ssa, zenith, pressure)
     x = np.linspace(200, 800, 100) / 1000.
     y = irr.ratio_E_ds_E_d(x, 1.2, 0.06)
 
