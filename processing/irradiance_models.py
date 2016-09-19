@@ -27,8 +27,7 @@ def build_Model(config_data, logger=logging):
     """
     sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
     atmos_path = get_atmospheric_path_length(sun_zenith)
-    params = ['hum', 'pressurem']
-    weather_dict = retrieve_weather_parameters(params, config_data['gps_coords'], config_data['utc_time'])
+    weather_dict = retrieve_weather_parameters(config_data['params'], config_data['gps_coords'], config_data['utc_time'])
     humidity = weather_dict['hum']
     pressure = weather_dict['pressurem']
     ssa = get_ssa(humidity)

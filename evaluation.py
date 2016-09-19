@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import re
 import copy
 import logging
 import ConfigParser
@@ -20,6 +21,7 @@ def parse_ini_config(ini_file):
     config_dict['Processing']['logging'] = literal_eval(config_dict['Processing']['logging'])
     config_dict['Processing']['gps_coords'] = np.array([float(s) for s in config_dict['Processing']['gps_coords'].split(',')])
     config_dict['Processing']['utc_time'] = datetime.strptime(config_dict['Processing']['utc_time'], '%Y-%m-%d %H:%M:%S')
+    config_dict['Processing']['params'] = re.split(', | \s', config_dict['Processing']['params'])
     config_dict['Fitting']['range_'] = np.array([float(s) for s in config_dict['Fitting']['range_'].split(',')])
     config_dict['Fitting']['alpha'] = float(config_dict['Fitting']['alpha'])
     config_dict['Fitting']['beta'] = float(config_dict['Fitting']['beta'])
