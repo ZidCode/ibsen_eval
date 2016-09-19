@@ -16,6 +16,6 @@ def test_parse_ini_config():
     assert config['Processing']['utc_time'] == utc_time
     assert_array_equal(sorted(config['Fitting'].keys()), sorted(FITTING_VALS))
 
-def test_evaluate():
-    ie.evaluate(test_config)
+def test_evaluate_spectra():
+    ie.evaluate_spectra(test_config)
 

@@ -40,7 +40,7 @@ def create_logger(log_config):
 
 
 # Decorators
-def evaluate(config):
+def evaluate_spectra(config):
     logger = create_logger(config['Processing'])
     ref = parse_ibsen_file(config['Data']['reference'])
     tar = parse_ibsen_file(config['Data']['target'])
@@ -72,8 +72,9 @@ def evaluate(config):
         plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
         plot_fitted_reflectance(reflectance_dict, params, result)
 
+    return params
 
 if __name__ == "__main__":
     default_ini = 'config.ini'
     config = parse_ini_config(default_ini)
-    evaluate(config)
+    evaluate_spectra(config)
