@@ -18,11 +18,11 @@ def parse_ini_config(ini_file):
     config.read(ini_file)
     config_dict = {s: dict(config.items(s)) for s in config.sections()}
     config_dict['Processing']['logging'] = literal_eval(config_dict['Processing']['logging'])
-    config_dict['Data']['gps_coords'] = np.array([float(s) for s in config_dict['Data']['gps_coords'].split(',')])
-    config_dict['Data']['utc_time'] = datetime.strptime(config_dict['Data']['utc_time'], '%Y-%m-%d %H:%M:%S')
-    config_dict['Processing']['range_'] = np.array([float(s) for s in config_dict['Processing']['range_'].split(',')])
-    config_dict['Processing']['alpha'] = float(config_dict['Processing']['alpha'])
-    config_dict['Processing']['beta'] = float(config_dict['Processing']['beta'])
+    config_dict['Processing']['gps_coords'] = np.array([float(s) for s in config_dict['Processing']['gps_coords'].split(',')])
+    config_dict['Processing']['utc_time'] = datetime.strptime(config_dict['Processing']['utc_time'], '%Y-%m-%d %H:%M:%S')
+    config_dict['Fitting']['range_'] = np.array([float(s) for s in config_dict['Fitting']['range_'].split(',')])
+    config_dict['Fitting']['alpha'] = float(config_dict['Fitting']['alpha'])
+    config_dict['Fitting']['beta'] = float(config_dict['Fitting']['beta'])
     return config_dict
 
 
@@ -46,17 +46,17 @@ def evaluate(config):
     subtract_dark_from_mean(dark, tar, ref)
 
     if tar['UTCTime']:
-        logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Data']['utc_time'], tar['UTCTime']))
-        config['Data']['utc_time'] = tar['UTCTime']
-    logger.info("Date: %s " % config['Data']['utc_time'])
-    logger.info("GPS coords (lat, lon) %s %s" % (config['Data']['gps_coords'][0], config['Data']['gps_coords'][1]))
+        logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Processing']['utc_time'], tar['UTCTime']))
+        config['Processing']['utc_time'] = tar['UTCTime']
+    logger.info("Date: %s " % config['Processing']['utc_time'])
+    logger.info("GPS coords (lat, lon) %s %s" % (config['Processing']['gps_coords'][0], config['Processing']['gps_coords'][1]))
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['dark'] ))
 
-    irradiance_model = irr.build_Model(config['Data'], logger)
+    irradiance_model = irr.build_Model(config['Processing'], logger)
     reflectance_dict = get_reflectance(ref, tar)
 
-    inital_values = config['Processing']
-    range_ = config['Processing']['range_']
+    inital_values = config['Fitting']
+    range_ = config['Fitting']['range_']
 
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_, inital_values)
 
