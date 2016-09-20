@@ -40,11 +40,10 @@ def create_logger(log_config):
 
 
 # Decorators
-def evaluate_spectra(config):
-    logger = create_logger(config['Processing'])
+def evaluate_spectra(config, logger=logging):
     ref = parse_ibsen_file(config['Data']['reference'])
     tar = parse_ibsen_file(config['Data']['target'])
-    dark = parse_ibsen_file(config['Data']['dark'])
+    dark = parse_ibsen_file(config['Data']['darkcurrent'])
     subtract_dark_from_mean(dark, tar, ref)
 
     if tar['UTCTime']:
@@ -52,7 +51,7 @@ def evaluate_spectra(config):
         config['Processing']['utc_time'] = tar['UTCTime']
     logger.info("Date: %s " % config['Processing']['utc_time'])
     logger.info("GPS coords (lat, lon) %s %s" % (config['Processing']['gps_coords'][0], config['Processing']['gps_coords'][1]))
-    logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['dark'] ))
+    logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['darkcurrent'] ))
 
     irradiance_model = irr.build_Model(config['Processing'], logger)
     reflectance_dict = get_reflectance(ref, tar)
@@ -74,7 +73,68 @@ def evaluate_spectra(config):
 
     return params
 
+
+def evaluate_measurements(directory, config, logger=logging):
+    import glob
+    file_prefixes = ['target', 'reference', 'darkcurrent']
+    files = [file_ for file_ in glob.iglob(directory + '%s*' % file_prefixes[0])]
+    utc_times = np.array([])
+    alpha = np.array([])
+    alpha_stderr = np.array([])
+    beta = np.array([])
+    beta_stderr = np.array([])
+    for file_ in sorted(files):
+        for key in file_prefixes:
+            config['Data'][key] = file_.replace(file_prefixes[0], key)
+        try:
+            logger.info("Evaluating file: %s" % file_)
+            params = evaluate_spectra(config)
+            utc_times = np.append(utc_times, config['Processing']['utc_time'])
+            alpha = np.append(alpha, params['alpha']['value'])
+            alpha_stderr = np.append(alpha_stderr, params['alpha']['stderr'])
+            beta = np.append(beta, params['beta']['value'])
+            beta_stderr = np.append(beta_stderr, params['beta']['stderr'])
+        except IOError:
+            logger.error("%s have no corresponding reference or darkcurrentfiles" % file_)
+
+    # Microtops
+    #DELETE later
+    hard_path = '/users/jana_jo/DLR/Codes/MicrotopsData/20160825_DLRRoof/results.ini'
+    import ConfigParser
+    config = ConfigParser.ConfigParser()
+    config.read(hard_path)
+    config_dict = {s: dict(config.items(s)) for s in config.sections()}
+    alpha_microtops = np.array([])
+    beta_microtops = np.array([])
+    for key, item in config_dict.items():
+        alpha_microtops = np.append(alpha_microtops, float(item['alpha']))
+        beta_microtops = np.append(beta_microtops, float(item['beta']))
+
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
+    gs = gridspec.GridSpec(2, 2)
+    ax1 = plt.subplot(gs[0, :])
+    ax2 = plt.subplot(gs[1, :])
+    ax1.plot(utc_times, alpha_microtops, 'r+')
+    ax2.plot(utc_times, beta_microtops, 'r+')
+    ax1.errorbar(utc_times, alpha, yerr=alpha_stderr, ecolor='g', fmt='none')
+    ax2.errorbar(utc_times, beta, yerr=beta_stderr, ecolor='b', fmt='none')
+    ax1.set_title('Aengstrom parameters')
+    ax1.set_ylabel(r'Aengstrom $\alpha$')
+    ax2.set_ylabel(r'Aengstrom $\beta$')
+    ax2.set_xlabel('UTC Time')
+    plt.show()
+
+
 if __name__ == "__main__":
-    default_ini = 'config.ini'
-    config = parse_ini_config(default_ini)
-    evaluate_spectra(config)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', default='config.ini', help='Pass ini-file for processing configurations')
+    parser.add_argument('-m', '--measurement_directory', help='Define measurement directory to sweep through')
+    args = parser.parse_args()
+    config = parse_ini_config(args.config)
+    logger = create_logger(config['Processing'])
+    if args.measurement_directory:
+        evaluate_measurements(args.measurement_directory, config, logger)
+    else:
+        evaluate_spectra(config, logger)
