@@ -50,48 +50,64 @@ def get_parameters(gps, utc_time):
     return data
 
 
-def extract_humidity(data, utc_time):
+def extract_ts(params, data, utc_time):
+    """
+    Args:
+        params: list of parameters to extract from weather conditions
+        data:   parsed dictionary from json get_parameter
+        utc_time: demanded utc_time
+    Return:
+        param_ts: Dictionary with time_series and corresponding parameter series
+    """
+    params_ts = dict()
     fl_vector = np.vectorize(float)
     utc_tmp = copy.copy(utc_time)
-    time_series = np.array([])
-    humidity = np.array([])
-    pressure = np.array([])
+    param_ts = {key: np.array([]) for key in params}
+    param_ts['time'] = np.array([])
 
     for his in data['history']['observations']:
         tmp = copy.copy(utc_time)
         tmp = tmp.replace(hour=int(his['utcdate']['hour']), minute=int(his['utcdate']['min']))
-        time_series = np.append(time_series, tmp)
-        humidity = np.append(humidity, his['hum'])
-        pressure = np.append(pressure, his['pressurem'])
+        param_ts['time'] = np.append(param_ts['time'], tmp)
+        for param in params:
+            param_ts[param] = np.append(param_ts[param], his[param])
 
-    return fl_vector(humidity), fl_vector(pressure), time_series
+    return param_ts
 
 
 # TODO: Use decorators..
-def retrieve_rel_humidity(gps, utc_time, debug=False):
+def retrieve_weather_parameters(params, gps, utc_time, debug=False):
+    scaling_properties = {'hum': lambda x: x / 100, 'pressurem': lambda x: x}
+    utc_param_values = dict()
+    inter = dict()
+    #Retrieving weather condition parameters
     data = get_parameters(gps, utc_time)
-    humidity, pressure, time_series = extract_humidity(data, utc_time)
-    history_stamps = mdates.date2num(time_series)
+
+    #Retrieven series
+    param_ts = extract_ts(params, data, utc_time)
+
+    history_stamps = mdates.date2num(param_ts['time'])
     utc_stamp = mdates.date2num(utc_time)
-    inter = interpolate.interp1d(history_stamps, humidity)
-    inter_press = interpolate.interp1d(history_stamps, pressure)
-    utc_humidity_value = inter(utc_stamp)
-    utc_pressure_value = inter_press(utc_stamp)
+    for param in params:
+        inter[param] = interpolate.interp1d(history_stamps, param_ts[param])
+        utc_param_values[param] = scaling_properties[param](inter[param](utc_stamp))
+
+
     if debug:
         t_new = np.linspace(min(history_stamps), max(history_stamps), 1000)
         fix, ax1 = plt.subplots()
 
-        ax1.plot(time_series, humidity, '+')
-        ax1.plot(utc_stamp, utc_humidity_value, 'o', label=r'rel. hum %.1f' % utc_humidity_value)
-        ax1.plot(t_new, inter(t_new), 'b')
+        ax1.plot(param_ts['time'], param_ts['hum'], '+')
+        ax1.plot(utc_stamp, utc_param_values['hum'] * 100, 'o', label=r'rel. hum %.1f' % utc_param_values['hum'] )
+        ax1.plot(t_new, inter['hum'](t_new), 'b')
         ax1.set_xlabel('Timestamp')
         ax1.set_ylabel('rel. humidity %')
         for tl in ax1.get_yticklabels():
             tl.set_color('b')
         ax2 = ax1.twinx()
-        ax2.plot(time_series, pressure, '+')
-        ax2.plot(utc_stamp, utc_pressure_value, 'o', label=r'rel. press %.1f' % utc_pressure_value)
-        ax2.plot(t_new, inter_press(t_new))
+        ax2.plot(param_ts['time'], param_ts['pressurem'], '+')
+        ax2.plot(utc_stamp, utc_param_values['pressurem'], 'o', label=r'rel. press %.1f' % utc_param_values['pressurem'])
+        ax2.plot(t_new, inter['pressurem'](t_new))
 
         for tl in ax2.get_yticklabels():
             tl.set_color('r')
@@ -99,11 +115,13 @@ def retrieve_rel_humidity(gps, utc_time, debug=False):
         plt.title(utc_time.strftime("Day %d.%m.%Y") )
         plt.legend()
         plt.show()
-    return utc_humidity_value / 100, utc_pressure_value
+
+    return utc_param_values
 
 
 if __name__ == '__main__':
-    GPS_Munich = [48.08, 11.27]
-    utc_time = datetime.strptime('2016-07-28 14:25:00', '%Y-%m-%d %H:%M:%S')
-    humidity = retrieve_rel_humidity(GPS_Munich, utc_time, True)
-
+    GPS_Munich = [48.08617, 11.27970]
+    utc_time = datetime.strptime('2016-09-12 10:43:20', '%Y-%m-%d %H:%M:%S')
+    params = ['hum', 'pressurem']
+    vals = retrieve_weather_parameters(params, GPS_Munich, utc_time, True)
+    print("Rel. Hum: %s and Pressure %s" % (vals['hum'], vals['pressurem']))

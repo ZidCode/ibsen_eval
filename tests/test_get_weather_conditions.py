@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_array_equal
-from evaluation.processing.get_weather_conditions import retrieve_rel_humidity, get_file_format, get_parameters
+from evaluation.processing.get_weather_conditions import retrieve_weather_parameters, get_file_format, get_parameters
 
 
 GPS_MUNICH = [48.08, 11.27]
@@ -21,11 +21,14 @@ def test_get_parameters():
     assert_array_equal(KEYS, data.keys())
 
 
-def test_retrieve_rel_humidity():
-    humidity = retrieve_rel_humidity(GPS_MUNICH, UTC_TIME)
-    assert_almost_equal(humidity, 0.56, decimal=1)
-
+def test_weather_parameters():
+    humidity_key = 'hum'
+    pressure_key = 'pressurem'
+    map_list = [humidity_key, pressure_key]
+    map_dict = retrieve_weather_parameters(map_list, GPS_MUNICH, UTC_TIME)
+    assert_almost_equal(map_dict[humidity_key], 0.56, decimal=1)
+    assert map_dict[pressure_key] == 1017.0
     #Check downloading
     os.remove('data/data_20160728_48.08,11.27.json')
-    humidity = retrieve_rel_humidity(GPS_MUNICH, UTC_TIME)
-    assert_almost_equal(humidity, 0.56, decimal=1)
+    humidity = retrieve_weather_parameters(map_list, GPS_MUNICH, UTC_TIME)
+    assert_almost_equal(map_dict[humidity_key], 0.56, decimal=1)

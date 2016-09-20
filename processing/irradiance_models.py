@@ -4,7 +4,7 @@ from math import exp, log
 from lmfit import Model
 import matplotlib.pyplot as plt
 from solar_zenith import get_sun_zenith
-from get_weather_conditions import retrieve_rel_humidity
+from get_weather_conditions import retrieve_weather_parameters
 from atmospheric_mass import get_atmospheric_path_length
 from get_ssa import get_ssa
 
@@ -27,12 +27,16 @@ def build_Model(config_data, logger=logging):
     """
     sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
     atmos_path = get_atmospheric_path_length(sun_zenith)
-    RH, press_mb = retrieve_rel_humidity(config_data['gps_coords'], config_data['utc_time'])
-    ssa = get_ssa(RH)
-    irr_mod = irradiance_models(atmos_path, RH, ssa, sun_zenith)
+    params = ['hum', 'pressurem']
+    weather_dict = retrieve_weather_parameters(params, config_data['gps_coords'], config_data['utc_time'])
+    humidity = weather_dict['hum']
+    pressure = weather_dict['pressurem']
+    ssa = get_ssa(humidity)
+    irr_mod = irradiance_models(atmos_path, humidity, ssa, sun_zenith)
     logger.info(" \n \t Zenith angle %s" %  sun_zenith)
     logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
-    logger.info(" \n \t  Relative humidity %s" % RH)
+    logger.info(" \n \t  Relative humidity %s" % humidity)
+    logger.info(" \n \t  Pressure %s" % pressure)
     logger.info(" \n \t  Single scattering albedo %s" % ssa)
     return irr_mod
 
@@ -77,28 +81,33 @@ class irradiance_models:
 
 def example():
     # possible values
+    from get_ssa import get_ssa
+    zenith = 53.1836240528
     AM = 1.66450160404
     rel_h = 0.665
-    ssa = 0.968997161171
-    zenith = 20.0
+    
+    ssas = np.array([])
+    AM_type = np.arange(1,11)
+    for AM in AM_type:
 
-    irr = irradiance_models(AM, rel_h, ssa, zenith)
-    x = np.linspace(0.2, 0.8, 100)
-    y = irr.ratio_E_ds_E_d(x, 1.2, 0.06) + np.random.normal(0, 0.01, len(x))
+        ssa = get_ssa(rel_h, AM)
+        irr = irradiance_models(AM, rel_h, ssa, zenith)
+        x = np.linspace(0.2, 0.8, 100)
+        y = irr.ratio_E_ds_E_d(x, 1.2, 0.06) + np.random.normal(0, 0.01, len(x))
+        yerror = np.random.normal(0, 0.1, len(x))
+        weights = 1 / yerror
 
+        gmod = Model(irr.ratio_E_ds_E_d, independent_vars=['x'], param_names=['alpha', 'beta'])
+        print(gmod.param_names)
+        print(gmod.independent_vars)
 
-    gmod = Model(irr.ratio_E_ds_E_d, independent_vars=['x'], param_names=['alpha', 'beta'])
-    print(gmod.param_names)
-    print(gmod.independent_vars)
+        result = gmod.fit(y, x=x, alpha=0.6, beta=0.21, weights=weights)
+        print(result.fit_report())
 
-    result = gmod.fit(y, x=x, alpha=0.6, beta=0.21)
-
-    print(result.fit_report())
-    result.plot()
-
-    plt.plot(x, y,         'bo')
-    plt.plot(x, result.init_fit, 'k--')
-    plt.plot(x, result.best_fit, 'r-')
+        plt.plot(x, y, label='%s' % AM)
+        plt.plot(x, result.init_fit, 'k--')
+        plt.plot(x, result.best_fit, 'r-')
+    plt.legend()
     plt.show()
 
 
