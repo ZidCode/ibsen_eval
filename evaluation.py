@@ -11,7 +11,7 @@ from ast import literal_eval
 import processing.irradiance_models as irr
 from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_parameters
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
-from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance
+from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
 from calibration.ibsen_calibration import subtract_dark_from_mean
 
 
@@ -111,20 +111,7 @@ def evaluate_measurements(directory, config, logger=logging):
         alpha_microtops = np.append(alpha_microtops, float(item['alpha']))
         beta_microtops = np.append(beta_microtops, float(item['beta']))
 
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
-    gs = gridspec.GridSpec(2, 2)
-    ax1 = plt.subplot(gs[0, :])
-    ax2 = plt.subplot(gs[1, :])
-    ax1.plot(utc_times, alpha_microtops, 'r+')
-    ax2.plot(utc_times, beta_microtops, 'r+')
-    ax1.errorbar(utc_times, alpha, yerr=alpha_stderr, ecolor='g', fmt='none')
-    ax2.errorbar(utc_times, beta, yerr=beta_stderr, ecolor='b', fmt='none')
-    ax1.set_title('Aengstrom parameters')
-    ax1.set_ylabel(r'Aengstrom $\alpha$')
-    ax2.set_ylabel(r'Aengstrom $\beta$')
-    ax2.set_xlabel('UTC Time')
-    plt.show()
+    plot_aengstrom_parameters(utc_times, alpha_microtops, beta_microtops, alpha, alpha_stderr, beta, beta_stderr)
 
 
 if __name__ == "__main__":
