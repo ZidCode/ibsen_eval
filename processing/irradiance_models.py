@@ -27,7 +27,7 @@ def build_Model(config_data, logger=logging):
     """
     sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
     atmos_path = get_atmospheric_path_length(sun_zenith)
-    RH = retrieve_rel_humidity(config_data['gps_coords'], config_data['utc_time'])
+    RH, press_mb = retrieve_rel_humidity(config_data['gps_coords'], config_data['utc_time'])
     ssa = get_ssa(RH)
     irr_mod = irradiance_models(atmos_path, RH, ssa, sun_zenith)
     logger.info(" \n \t Zenith angle %s" %  sun_zenith)

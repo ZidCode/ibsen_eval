@@ -55,35 +55,51 @@ def extract_humidity(data, utc_time):
     utc_tmp = copy.copy(utc_time)
     time_series = np.array([])
     humidity = np.array([])
+    pressure = np.array([])
 
     for his in data['history']['observations']:
         tmp = copy.copy(utc_time)
         tmp = tmp.replace(hour=int(his['utcdate']['hour']), minute=int(his['utcdate']['min']))
         time_series = np.append(time_series, tmp)
         humidity = np.append(humidity, his['hum'])
+        pressure = np.append(pressure, his['pressurem'])
 
-    return fl_vector(humidity), time_series
+    return fl_vector(humidity), fl_vector(pressure), time_series
 
 
 # TODO: Use decorators..
 def retrieve_rel_humidity(gps, utc_time, debug=False):
     data = get_parameters(gps, utc_time)
-    humidity, time_series = extract_humidity(data, utc_time)
+    humidity, pressure, time_series = extract_humidity(data, utc_time)
     history_stamps = mdates.date2num(time_series)
     utc_stamp = mdates.date2num(utc_time)
     inter = interpolate.interp1d(history_stamps, humidity)
+    inter_press = interpolate.interp1d(history_stamps, pressure)
     utc_humidity_value = inter(utc_stamp)
+    utc_pressure_value = inter_press(utc_stamp)
     if debug:
         t_new = np.linspace(min(history_stamps), max(history_stamps), 1000)
-        plt.plot(time_series, humidity, '+')
-        plt.plot(utc_stamp, utc_humidity_value, 'o', label=r'rel. hum %.1f' % utc_humidity_value)
-        plt.plot(t_new, inter(t_new))
-        plt.xlabel('Timestamp')
-        plt.ylabel('rel. humidity %')
+        fix, ax1 = plt.subplots()
+
+        ax1.plot(time_series, humidity, '+')
+        ax1.plot(utc_stamp, utc_humidity_value, 'o', label=r'rel. hum %.1f' % utc_humidity_value)
+        ax1.plot(t_new, inter(t_new), 'b')
+        ax1.set_xlabel('Timestamp')
+        ax1.set_ylabel('rel. humidity %')
+        for tl in ax1.get_yticklabels():
+            tl.set_color('b')
+        ax2 = ax1.twinx()
+        ax2.plot(time_series, pressure, '+')
+        ax2.plot(utc_stamp, utc_pressure_value, 'o', label=r'rel. press %.1f' % utc_pressure_value)
+        ax2.plot(t_new, inter_press(t_new))
+
+        for tl in ax2.get_yticklabels():
+            tl.set_color('r')
+        ax2.set_ylabel('Pressure')
         plt.title(utc_time.strftime("Day %d.%m.%Y") )
         plt.legend()
         plt.show()
-    return utc_humidity_value / 100
+    return utc_humidity_value / 100, utc_pressure_value
 
 
 if __name__ == '__main__':
