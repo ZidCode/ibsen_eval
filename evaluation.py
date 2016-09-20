@@ -57,6 +57,7 @@ def evaluate(config):
 
     inital_values = config['Processing']
     range_ = config['Processing']['range_']
+
     params, result = retrieve_aengstrom_parameters(reflectance_dict, irradiance_model, range_, inital_values)
 
     logger.info("%s \n" % result.fit_report())
@@ -64,8 +65,8 @@ def evaluate(config):
 
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_meas(tar, ref, dark)
-        frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
-        frame.to_csv('reflectance.csv', index=False)
+        #frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
+        #frame.to_csv('reflectance.csv', index=False)
         plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
         plot_fitted_reflectance(reflectance_dict, params, result)
 
