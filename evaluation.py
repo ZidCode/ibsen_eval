@@ -14,6 +14,10 @@ from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_colu
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
 from calibration.ibsen_calibration import subtract_dark_from_mean
 from parser.microtops import extract_microtops_inifile
+"""
+    Irradiance measurements does not show calibrated spectra
+    Fit class necessary
+"""
 
 
 def parse_ini_config(ini_file):
