@@ -13,6 +13,7 @@ from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_par
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
 from calibration.ibsen_calibration import subtract_dark_from_mean
+from parser.microtops import extract_microtops_inifile
 
 
 def parse_ini_config(ini_file):
@@ -26,6 +27,7 @@ def parse_ini_config(ini_file):
     config_dict['Fitting']['range_'] = np.array([float(s) for s in config_dict['Fitting']['range_'].split(',')])
     config_dict['Fitting']['alpha'] = float(config_dict['Fitting']['alpha'])
     config_dict['Fitting']['beta'] = float(config_dict['Fitting']['beta'])
+    config_dict['Validation']['validate'] = literal_eval(config_dict['Validation']['validate'])
     return config_dict
 
 
@@ -79,39 +81,25 @@ def evaluate_measurements(directory, config, logger=logging):
     import glob
     file_prefixes = ['target', 'reference', 'darkcurrent']
     files = [file_ for file_ in glob.iglob(directory + '%s*' % file_prefixes[0])]
-    utc_times = np.array([])
-    alpha = np.array([])
-    alpha_stderr = np.array([])
-    beta = np.array([])
-    beta_stderr = np.array([])
+    keys_for_param_dict = ['utc_times', 'alpha', 'alpha_stderr', 'beta', 'beta_stderr']
+    param_dict = {key:np.array([]) for key in keys_for_param_dict}
     for file_ in sorted(files):
         for key in file_prefixes:
             config['Data'][key] = file_.replace(file_prefixes[0], key)
         try:
-            logger.info("Evaluating file: %s" % file_)
+            logger.info("Evaluating file: %s \n" % file_)
             params = evaluate_spectra(config)
-            utc_times = np.append(utc_times, config['Processing']['utc_time'])
-            alpha = np.append(alpha, params['alpha']['value'])
-            alpha_stderr = np.append(alpha_stderr, params['alpha']['stderr'])
-            beta = np.append(beta, params['beta']['value'])
-            beta_stderr = np.append(beta_stderr, params['beta']['stderr'])
+            param_dict['utc_times'] = np.append(param_dict['utc_times'], config['Processing']['utc_time'])
+            param_dict['alpha'] = np.append(param_dict['alpha'], params['alpha']['value'])
+            param_dict['alpha_stderr'] = np.append(param_dict['alpha_stderr'], params['alpha']['stderr'])
+            param_dict['beta'] = np.append(param_dict['beta'], params['beta']['value'])
+            param_dict['beta_stderr'] = np.append(param_dict['beta_stderr'], params['beta']['stderr'])
         except IOError:
             logger.error("%s have no corresponding reference or darkcurrentfiles" % file_)
 
     # Microtops
-    #DELETE later
-    hard_path = '/users/jana_jo/DLR/Codes/MicrotopsData/20160825_DLRRoof/results.ini'
-    import ConfigParser
-    config = ConfigParser.ConfigParser()
-    config.read(hard_path)
-    config_dict = {s: dict(config.items(s)) for s in config.sections()}
-    alpha_microtops = np.array([])
-    beta_microtops = np.array([])
-    for key, item in config_dict.items():
-        alpha_microtops = np.append(alpha_microtops, float(item['alpha']))
-        beta_microtops = np.append(beta_microtops, float(item['beta']))
-
-    plot_aengstrom_parameters(utc_times, alpha_microtops, beta_microtops, alpha, alpha_stderr, beta, beta_stderr)
+    validation = extract_microtops_inifile(config['Validation']['source'], config['Processing']['utc_time'])
+    plot_aengstrom_parameters(param_dict, validation)
 
 
 if __name__ == "__main__":

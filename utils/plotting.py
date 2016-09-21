@@ -61,15 +61,15 @@ def plot_fitted_reflectance(reflectance_dict, params, result):
     plt.show()
 
 
-def plot_aengstrom_parameters(utc_times, alpha_microtops, beta_microtops, alpha, alpha_stderr, beta, beta_stderr):
+def plot_aengstrom_parameters(param_dict, micro):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
 
-    ax1.plot(utc_times, alpha_microtops, 'r+')
-    ax2.plot(utc_times, beta_microtops, 'r+')
-    ax1.errorbar(utc_times, alpha, yerr=alpha_stderr, ecolor='g', fmt='none')
-    ax2.errorbar(utc_times, beta, yerr=beta_stderr, ecolor='b', fmt='none')
+    ax1.plot(micro['utc_times'], micro['alpha'], 'r+')
+    ax2.plot(micro['utc_times'], micro['beta'], 'r+')
+    ax1.errorbar(param_dict['utc_times'], param_dict['alpha'], yerr=param_dict['alpha_stderr'], ecolor='g', fmt='none')
+    ax2.errorbar(param_dict['utc_times'], param_dict['beta'], yerr=param_dict['beta_stderr'], ecolor='b', fmt='none')
 
     ax1.set_title('Aengstrom parameters')
     ax1.set_ylabel(r'Aengstrom $\alpha$')
