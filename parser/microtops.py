@@ -3,9 +3,9 @@ import numpy as np
 from collections import OrderedDict
 
 
-def extract_microtops_inifile(source, utc_time):
+def extract_microtops_inifile(validation, utc_time):
     config = ConfigParser.ConfigParser()
-    config.read(source)
+    config.read(validation['source'])
     config_dict = {s: dict(config.items(s)) for s in config.sections()}
     micro_keys = ['utc_times', 'alpha', 'beta']
     micro_dict = {key: np.array([]) for key in micro_keys}
@@ -25,4 +25,5 @@ def extract_microtops_inifile(source, utc_time):
         micro_dict['utc_times'] = np.append(micro_dict['utc_times'], key)
         micro_dict['alpha'] = np.append(micro_dict['alpha'], float(value['alpha']))
         micro_dict['beta'] = np.append(micro_dict['beta'], float(value['beta']))
+    micro_dict['label'] = validation['label']
     return micro_dict

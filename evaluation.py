@@ -83,6 +83,7 @@ def evaluate_measurements(directory, config, logger=logging):
     files = [file_ for file_ in glob.iglob(directory + '%s*' % file_prefixes[0])]
     keys_for_param_dict = ['utc_times', 'alpha', 'alpha_stderr', 'beta', 'beta_stderr']
     param_dict = {key:np.array([]) for key in keys_for_param_dict}
+    param_dict['label'] = 'Ibsen'
     for file_ in sorted(files):
         for key in file_prefixes:
             config['Data'][key] = file_.replace(file_prefixes[0], key)
@@ -98,8 +99,11 @@ def evaluate_measurements(directory, config, logger=logging):
             logger.error("%s have no corresponding reference or darkcurrentfiles" % file_)
 
     # Microtops
-    validation = extract_microtops_inifile(config['Validation']['source'], config['Processing']['utc_time'])
-    plot_aengstrom_parameters(param_dict, validation)
+    if config['Validation']['validate']:
+        validation = extract_microtops_inifile(config['Validation'], config['Processing']['utc_time'])
+        plot_aengstrom_parameters(param_dict, validation)
+    else:
+        plot_aengstrom_parameters(param_dict)
 
 
 if __name__ == "__main__":

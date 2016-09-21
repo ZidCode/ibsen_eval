@@ -61,15 +61,26 @@ def plot_fitted_reflectance(reflectance_dict, params, result):
     plt.show()
 
 
-def plot_aengstrom_parameters(param_dict, micro):
+def plot_factory(ax1, ax2, param):
+    if 'alpha_stderr' in param:
+        ax1.errorbar(param['utc_times'], param['alpha'], yerr=param['alpha_stderr'], ecolor='g', fmt='none',label=param['label'])
+    else:
+        ax1.plot(param['utc_times'], param['alpha'], 'r+', label=param['label'])
+    if 'beta_stderr' in param:
+        ax2.errorbar(param['utc_times'], param['beta'], yerr=param['beta_stderr'], ecolor='g', fmt='none',label=param['label'])
+    else:
+        ax2.plot(param['utc_times'], param['beta'], 'r+', label=param['label'])
+    return ax1, ax2
+
+
+def plot_aengstrom_parameters(*param_dict):
+
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
 
-    ax1.plot(micro['utc_times'], micro['alpha'], 'r+', label=micro['label'])
-    ax2.plot(micro['utc_times'], micro['beta'], 'r+')
-    ax1.errorbar(param_dict['utc_times'], param_dict['alpha'], yerr=param_dict['alpha_stderr'], ecolor='g', fmt='none',label=param_dict['label'])
-    ax2.errorbar(param_dict['utc_times'], param_dict['beta'],yerr=param_dict['beta_stderr'], ecolor='g', fmt='none')
+    for param in param_dict:
+        ax1, ax2 = plot_factory(ax1, ax2, param)
 
     ax1.set_title('Aengstrom parameters')
     ax1.set_ylabel(r'Aengstrom $\alpha$')
