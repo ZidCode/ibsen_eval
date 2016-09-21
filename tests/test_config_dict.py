@@ -10,5 +10,6 @@ test_config = {'Fitting': {'range_': np.array([0.35, 0.5]), 'alpha': 1.2, 'beta'
                'Data': {'darkcurrent':'../../measurements/Ostsee/T4/ST06/darkcurrent000.asc',
                         'target': '../../measurements/Ostsee/T4/ST06/target000.asc',
                         'reference': '../../measurements/Ostsee/T4/ST06/reference000.asc'},
-               'Validation': {'validate': True, 'source':'users/jana_jo/DLR/Codes/MicrotopsData/20160825_DLRRoof/results.ini'}}
+               'Validation': {'validate': True, 'source':'users/jana_jo/DLR/Codes/MicrotopsData/20160825_DLRRoof/results.ini',
+                              'label': 'microtops'}}
 

@@ -66,13 +66,14 @@ def plot_aengstrom_parameters(param_dict, micro):
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
 
-    ax1.plot(micro['utc_times'], micro['alpha'], 'r+')
+    ax1.plot(micro['utc_times'], micro['alpha'], 'r+', label=micro['label'])
     ax2.plot(micro['utc_times'], micro['beta'], 'r+')
-    ax1.errorbar(param_dict['utc_times'], param_dict['alpha'], yerr=param_dict['alpha_stderr'], ecolor='g', fmt='none')
-    ax2.errorbar(param_dict['utc_times'], param_dict['beta'], yerr=param_dict['beta_stderr'], ecolor='b', fmt='none')
+    ax1.errorbar(param_dict['utc_times'], param_dict['alpha'], yerr=param_dict['alpha_stderr'], ecolor='g', fmt='none',label=param_dict['label'])
+    ax2.errorbar(param_dict['utc_times'], param_dict['beta'],yerr=param_dict['beta_stderr'], ecolor='g', fmt='none')
 
     ax1.set_title('Aengstrom parameters')
     ax1.set_ylabel(r'Aengstrom $\alpha$')
     ax2.set_ylabel(r'Aengstrom $\beta$')
     ax2.set_xlabel('UTC Time')
+    ax1.legend(loc='best')
     plt.show()
