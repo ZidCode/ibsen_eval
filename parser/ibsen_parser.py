@@ -35,7 +35,7 @@ def parse_ibsen_file(filename, maxrows=50):
         time =  header[np.where(np.array([str(s).find('UTCTime') for s in header]) == 0)[0][0]].split()[-1]
         data_dict['UTCTime'] = datetime.strptime(date + ' ' + time, '%Y-%m-%d %H:%M:%S')
     except IndexError:
-        logging.error("No [UTCTime] in measurments. Setting UTCTime to None")
+        #logging.error("No [UTCTime] in measurments. Setting UTCTime to None")
         data_dict['UTCTime'] = None
 
     int_time = header[np.where(header == '[IntTime]')[0][0] + 1]
@@ -60,29 +60,9 @@ def parse_ibsen_file(filename, maxrows=50):
     return data_dict
 
 
-def subtract_dark_from_mean(*args):
-
-    dd = copy.deepcopy(args[0])
-    assert dd['Type'] == 'darkcurrent', 'First parameter has to be darkcurrent'
-    dd['mean'] = get_mean_column(dd)
-    meas = range(len(args) - 1)
-
-    tobe_correct = [a for a in args[1:] if a['darkcurrent_corrected'] == False]
-    for i, arg in enumerate(tobe_correct):
-        meas[i] = arg
-        meas[i]['mean'] = get_mean_column(meas[i])
-        meas[i]['tdata'] -= dd['tdata']
-        meas[i]['mean'] -= dd['mean']
-        meas[i]['darkcurrent_corrected'] = True
-
-
 
 def get_mean_column(ibsen_dict):
     # get mean columnwise tdata
     mean = np.mean(ibsen_dict['tdata'], axis=0)
     return mean
 
-
-def remove_outliers(data):
-    #TODO
-    pass

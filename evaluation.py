@@ -10,8 +10,9 @@ from datetime import datetime
 from ast import literal_eval
 import processing.irradiance_models as irr
 from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_parameters
-from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column, subtract_dark_from_mean
+from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance
+from calibration.ibsen_calibration import subtract_dark_from_mean
 
 
 def parse_ini_config(ini_file):
@@ -44,8 +45,8 @@ def evaluate_spectra(config, logger=logging):
     ref = parse_ibsen_file(config['Data']['reference'])
     tar = parse_ibsen_file(config['Data']['target'])
     dark = parse_ibsen_file(config['Data']['darkcurrent'])
-    subtract_dark_from_mean(dark, tar, ref)
-
+    subtract_dark_from_mean(dark, tar)
+    subtract_dark_from_mean(dark, ref)
     if tar['UTCTime']:
         logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Processing']['utc_time'], tar['UTCTime']))
         config['Processing']['utc_time'] = tar['UTCTime']

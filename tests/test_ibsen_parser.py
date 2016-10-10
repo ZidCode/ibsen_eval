@@ -3,7 +3,7 @@ import copy
 from datetime import datetime
 from numpy.testing import assert_equal, assert_array_equal
 from tempfile import mkstemp
-from evaluation.parser.ibsen_parser import parse_ibsen_file, subtract_dark_from_mean, get_mean_column
+from evaluation.parser.ibsen_parser import parse_ibsen_file, get_mean_column
 
 
 DEFAULT_KEYS = np.array(sorted(['num_of_meas', 'data_mean', 'tdata', 'start_data_index', 'data_std', 'wave', 'IntTime', 'data', 'Type', 'darkcurrent_corrected', 'data_sample_std', 'UTCTime']))
