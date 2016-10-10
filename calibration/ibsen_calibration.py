@@ -56,6 +56,7 @@ def generate_ibsen_calibration_files(directory):
     # Nonlinear correction for ibsen response
     for integration, spectra in cal_dict.items():
         spectra['reference']['mean'] = spectra['reference']['mean'] / np.interp(spectra['reference']['mean'], nonlinear_correction_dict['DN'], nonlinear_correction_dict['nonlinear'])
+        spectra['reference']['mean'] = spectra['reference']['mean'] / integration
     # Generate ibsen response factors for physical units
 
 
