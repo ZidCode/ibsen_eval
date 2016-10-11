@@ -4,6 +4,7 @@ import re
 import numpy as np
 import parser.ibsen_parser as ip
 from extract_nonlinearity import generate_nonlinear_correction, check_nonlinearity
+from extract_response import generate_response_factors
 
 
 def sort_ibsen_by_int(dirname):
@@ -46,7 +47,7 @@ def subtract_dark(cal_dict):
     return cal_dict
 
 
-def generate_ibsen_calibration_files(directory):
+def generate_ibsen_calibration_files(directory, reference):
     # Extract Rasta specific raw data
     cal_dict = sort_ibsen_by_int(directory)
     # Substract darkcurrent from measurements
@@ -58,12 +59,28 @@ def generate_ibsen_calibration_files(directory):
         spectra['reference']['mean'] = spectra['reference']['mean'] / np.interp(spectra['reference']['mean'], nonlinear_correction_dict['DN'], nonlinear_correction_dict['nonlinear'])
         spectra['reference']['mean'] = spectra['reference']['mean'] / integration
     # Generate ibsen response factors for physical units
+    cal_dict, response_dict = generate_response_factors(cal_dict, reference)
+    import matplotlib.pyplot as plt
+    for integration, spectra in cal_dict.items():
+        spectra['reference']['mean'] = spectra['reference']['mean'] / np.interp(spectra['reference']['wave'], response_dict['wave'], response_dict['scale_factors'])
+        plt.plot(spectra['reference']['wave'], spectra['reference']['mean'])
+    plt.xlabel('Wavelength [nm]')
+    plt.ylabel(r'$\frac{mW}{nm m^2 sr}$')
+    plt.show()
+
+    plt.plot(response_dict['wave'], response_dict['intensity'], 'r+', label='Ibsen response')
+    plt.plot(response_dict['wave'], response_dict['halogen'], 'b+', label='Halogen lamp')
+    plt.plot(response_dict['wave'], response_dict['intensity'] / response_dict['scale_factors'], 'y', label='Calibrated ibsen response')
+    plt.xlabel('Wavelength [nm]')
+    plt.legend()
+    plt.show()
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory', help="Add directory with raw data measured by Rasta")
+    parser.add_argument('-r', '--reference_file', default='/users/jana_jo/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
     args = parser.parse_args()
-    print(args.directory)
-    generate_ibsen_calibration_files(args.directory)
+    print(args.reference_file)
+    generate_ibsen_calibration_files(args.directory, args.reference_file)
