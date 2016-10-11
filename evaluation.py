@@ -93,7 +93,7 @@ def evaluate_measurements(directory, config, logger=logging):
             config['Data'][key] = file_.replace(file_prefixes[0], key)
         try:
             logger.info("Evaluating file: %s \n" % file_)
-            params = evaluate_spectra(config)
+            params = evaluate_spectra(config, logger)
             param_dict['utc_times'] = np.append(param_dict['utc_times'], config['Processing']['utc_time'])
             param_dict['alpha'] = np.append(param_dict['alpha'], params['alpha']['value'])
             param_dict['alpha_stderr'] = np.append(param_dict['alpha_stderr'], params['alpha']['stderr'])
