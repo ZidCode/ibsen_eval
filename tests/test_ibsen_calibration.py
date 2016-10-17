@@ -2,9 +2,9 @@ import os
 import copy
 import numpy as np
 from  numpy.testing import assert_array_equal
-from ibsen_calibration import sort_ibsen_by_int, subtract_dark
-from extract_nonlinearity import calculate_nonlinearity_factors, generate_nonlinear_correction
-from extract_response import generate_response_factors
+from evaluation.calibration.ibsen_calibration import sort_ibsen_by_int, subtract_dark
+from evaluation.calibration.extract_nonlinearity import calculate_nonlinearity_factors, generate_nonlinear_correction
+from evaluation.calibration.extract_response import generate_response_factors
 
 IntTime = np.array([260.0, 5.0, 10.0, 140.0, 15.0, 20.0, 280.0, 25.0, 30.0,
                     160.0, 35.0, 40.0, 45.0, 50.0, 180.0, 60.0, 70.0, 200.0,
