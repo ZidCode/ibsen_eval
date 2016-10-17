@@ -45,7 +45,9 @@ def prepare_data():
 
 def test_generate_nonlinearity_correction():
     corrected_calc = prepare_data()
-    result_dict = generate_nonlinear_correction(corrected_calc)
+    nonlinear_config = {'max_lowest_int_time': 1050, 'sigma': 10, 'index_start_spline_fit': 500,
+                        'gaussian_mean_steps': 4}
+    result_dict = generate_nonlinear_correction(corrected_calc, nonlinear_config)
     DEFAULT_nonlinearity = np.genfromtxt('nonlinearity_gesamt.dat')
     DN_ = DEFAULT_nonlinearity[:,0]
     VALUES = DEFAULT_nonlinearity[:,1]

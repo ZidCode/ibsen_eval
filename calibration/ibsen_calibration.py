@@ -52,8 +52,15 @@ def generate_ibsen_calibration_files(directory, reference):
     cal_dict = sort_ibsen_by_int(directory)
     # Substract darkcurrent from measurements
     cal_dict = subtract_dark(cal_dict)
-    nonlinear_correction_dict = generate_nonlinear_correction(cal_dict)
+    nonlinear_config = {'max_lowest_int_time': 1050, 'sigma': 10, 'index_start_spline_fit': 500, 'gaussian_mean_steps':4}
+    nonlinear_correction_dict = generate_nonlinear_correction(cal_dict, nonlinear_config)
     check_nonlinearity(cal_dict, nonlinear_correction_dict)
+    while raw_input('Change settings (y or n)') == 'y':
+        for key in nonlinear_config.keys():
+            nonlinear_config[key] = int(raw_input('%s' %key))
+        nonlinear_correction_dict = generate_nonlinear_correction(cal_dict, nonlinear_config)
+        check_nonlinearity(cal_dict, nonlinear_correction_dict)
+
     # Nonlinear correction for ibsen response
     for integration, spectra in cal_dict.items():
         spectra['reference']['mean'] = spectra['reference']['mean'] / np.interp(spectra['reference']['mean'], nonlinear_correction_dict['DN'], nonlinear_correction_dict['nonlinear'])

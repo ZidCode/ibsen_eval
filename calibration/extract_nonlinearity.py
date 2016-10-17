@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 from numpy.testing import assert_array_equal
 
 
-def generate_nonlinear_correction(cal_dict):
+def generate_nonlinear_correction(cal_dict, nonlinear_config):
     nonlinear_correction_dict = dict()
-    DN, nonlinear_correction = calculate_nonlinearity_factors(cal_dict)
+    DN, nonlinear_correction = calculate_nonlinearity_factors(cal_dict, nonlinear_config)
     nonlinear_correction_dict['DN'] = DN
     nonlinear_correction_dict['nonlinear']= nonlinear_correction
     frame = pd.DataFrame(np.transpose([DN, nonlinear_correction]), columns=['DN', 'nonlinear_correction'])
@@ -16,10 +16,13 @@ def generate_nonlinear_correction(cal_dict):
     return nonlinear_correction_dict
 
 
-def calculate_nonlinearity_factors(cal_dict):
-    max_lowest_int_time = 1050  # pick value manually. Needs to be slightly above the hightest value of the lowest integration time, WTF?
-    intTimes_sorted = sorted(cal_dict.keys())
+def calculate_nonlinearity_factors(cal_dict, nonlinear_config):
 
+    max_lowest_int_time = nonlinear_config['max_lowest_int_time'] # pick value manually. Needs to be slightly above the hightest value of the lowest integration time, WTF?
+    sigma = nonlinear_config['sigma']
+    index_start_spline_fit = nonlinear_config['index_start_spline_fit']
+    gaussian_mean_steps = nonlinear_config['gaussian_mean_steps']
+    intTimes_sorted = sorted(cal_dict.keys())
     dn_Matrix_intTimeperrow = cal_dict[intTimes_sorted[0]]['reference']['mean']
     for intTime in intTimes_sorted[1:]:
         dn_Matrix_intTimeperrow = np.vstack((dn_Matrix_intTimeperrow, cal_dict[intTime]['reference']['mean']))
@@ -41,9 +44,8 @@ def calculate_nonlinearity_factors(cal_dict):
     DN_non = DN_nonlin[sort_indx]
     def kernel(x, shift, sigma):
         return np.exp(-((x - shift) ** 2 / (2 * sigma ** 2)))
-    sigma = 10
-    index_start_spline_fit = 500
-    gaussian_mean_steps = 4
+
+
     averaging_DN = np.arange(min(DN), max(DN), gaussian_mean_steps)
     weighted_data = []
     for i in averaging_DN:
