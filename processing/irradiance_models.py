@@ -87,13 +87,13 @@ def example():
     zenith = 53.1836240528
     AM = 1.66450160404
     rel_h = 0.665
-    
+    pressure = 1020
     ssas = np.array([])
     AM_type = np.arange(1,11)
     for AM in AM_type:
 
         ssa = get_ssa(rel_h, AM)
-        irr = irradiance_models(AM, rel_h, ssa, zenith)
+        irr = irradiance_models(AM, rel_h, ssa, zenith, pressure)
         x = np.linspace(0.2, 0.8, 100)
         y = irr.ratio_E_ds_E_d(x, 1.2, 0.06) + np.random.normal(0, 0.01, len(x))
         yerror = np.random.normal(0, 0.1, len(x))
