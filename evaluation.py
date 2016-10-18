@@ -12,7 +12,7 @@ import processing.irradiance_models as irr
 from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_parameters
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
-from calibration.ibsen_calibration import subtract_dark_from_mean
+from calibration.ibsen_calibration import subtract_dark_from_mean  # KICK OFF CALIBRATION
 from parser.microtops import extract_microtops_inifile
 """
     Irradiance measurements does not show calibrated spectra
@@ -51,8 +51,9 @@ def evaluate_spectra(config, logger=logging):
     ref = parse_ibsen_file(config['Data']['reference'])
     tar = parse_ibsen_file(config['Data']['target'])
     dark = parse_ibsen_file(config['Data']['darkcurrent'])
-    subtract_dark_from_mean(dark, tar)
-    subtract_dark_from_mean(dark, ref)
+    subtract_dark_from_mean(dark, tar)  # DELETE
+    subtract_dark_from_mean(dark, ref)  # DELETE
+
     if tar['UTCTime']:
         logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Processing']['utc_time'], tar['UTCTime']))
         config['Processing']['utc_time'] = tar['UTCTime']
@@ -61,6 +62,11 @@ def evaluate_spectra(config, logger=logging):
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['darkcurrent'] ))
 
     irradiance_model = irr.build_Model(config['Processing'], logger)
+
+    if config['Processing']['spectralon'] == 'reference':
+        print('hallo')
+        spektralon = np.genfromtxt('/users/jana_jo/DLR/Codes/calibration/Spektralon/Spectralon_neu.txt', skip_header=12)
+        ref['mean'] = ref['mean'] / np.interp(ref['wave'], spektralon[:,0], spektralon[:,1])
     reflectance_dict = get_reflectance(ref, tar)
 
     inital_values = config['Fitting']
