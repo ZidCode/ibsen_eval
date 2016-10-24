@@ -11,15 +11,16 @@ def test_retrieve_aengstrom_parameters():
     ssa = 0.968997161171
     zenith = 20
     pressure = 1021
+    config = dict()
 
     irr = irradiance_models(AM, rel_h, ssa, zenith, pressure)
     x = np.linspace(200, 800, 100) / 1000.
-    y = irr.ratio_E_ds_E_d(x, 1.2, 0.06)
+    y = irr.irradiance_ratio(x, 1.2, 0.06)
 
     reflectance_dict = {'wave_mu': x, 'spectra': y, 'std': np.random.normal(0, 0.01, len(y))}
-    w_range = np.array([200., 800.]) / 1000.
-    initial_values = {'alpha': 1.2, 'beta': 0.05}
-    params, result = retrieve_aengstrom_parameters(reflectance_dict, irr, w_range, initial_values)
+    config['range_'] = np.array([200., 800.]) / 1000.
+    config['initial_values'] = [1.2, 0.05]
+    params, result = retrieve_aengstrom_parameters(reflectance_dict, irr, config)
     assert_almost_equal(params['alpha']['value'], 1.2, 1)
 
 

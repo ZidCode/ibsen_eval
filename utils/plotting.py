@@ -40,7 +40,7 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     plt.show()
 
 
-def plot_fitted_reflectance(reflectance_dict, params, result):
+def plot_fitted_reflectance(aero_fit):
     """
     Args:
         reflectance_dict: Reflectance dict with std, wave and spectra
@@ -51,25 +51,28 @@ def plot_fitted_reflectance(reflectance_dict, params, result):
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
 
-    ax1 = result.plot_residuals(ax=ax1)
-    ax2.plot(reflectance_dict['wave_mu'], reflectance_dict['spectra'])
-    ax2.plot(params['wave_range'], result.best_fit, 'r-')
-    ax2.errorbar(params['wave_range'], params['spectra_range'], yerr=params['std'], ecolor='g')
+    ax1 = aero_fit.result.plot_residuals(ax=ax1)
+    ax2.plot(aero_fit.spectra['wave_mu'], aero_fit.spectra['spectra'])
+    ax2.plot(aero_fit.param_dict['wave_range'], aero_fit.result.best_fit, 'r-')
+    ax2.errorbar(aero_fit.param_dict['wave_range'], aero_fit.param_dict['spectra_range'], yerr=aero_fit.param_dict['std'], ecolor='g')
     ax2.set_title('Fitted reflectance')
     ax2.set_ylabel('Reflectance')
     ax2.set_xlabel(r'Wavelength $\left[\mu m\right]$')
     plt.show()
 
+def get_ax(ax, param, param_key, col):
+    #ax.plot(param['utc_times'], param['%s' % param_key], '%s' %col, label=param['label'])
+    ax.errorbar(param['utc_times'], param['%s' % param_key], yerr=param['%s_stderr' % param_key], ecolor='%s' % col, fmt='none',label=param['label'])
+    return ax
+
 
 def plot_factory(ax1, ax2, param):
-    if 'alpha_stderr' in param:
-        ax1.errorbar(param['utc_times'], param['alpha'], yerr=param['alpha_stderr'], ecolor='g', fmt='none',label=param['label'])
-    else:
-        ax1.plot(param['utc_times'], param['alpha'], 'r+', label=param['label'])
-    if 'beta_stderr' in param:
-        ax2.errorbar(param['utc_times'], param['beta'], yerr=param['beta_stderr'], ecolor='g', fmt='none',label=param['label'])
-    else:
-        ax2.plot(param['utc_times'], param['beta'], 'r+', label=param['label'])
+    if param['label'] == 'microtops':
+        ax1 = get_ax(ax1, param, 'alpha', 'r')
+        ax2 =get_ax(ax2, param, 'beta', 'r')
+    elif param['label'] == 'Ibsen':
+        ax1 = get_ax(ax1, param, 'alpha', 'g')
+        ax2 = get_ax(ax2, param, 'beta', 'g')
     return ax1, ax2
 
 
@@ -82,7 +85,6 @@ def plot_aengstrom_parameters(*param_dict):
     for param in param_dict:
         ax1, ax2 = plot_factory(ax1, ax2, param)
 
-    ax1.set_title('Aengstrom parameters')
     ax1.set_ylabel(r'Aengstrom exponent $\alpha$')
     ax2.set_ylabel(r'Turbidity $\beta$')
     ax2.set_xlabel('UTC Time')
