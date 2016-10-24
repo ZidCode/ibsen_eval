@@ -8,6 +8,7 @@ from solar_zenith import get_sun_zenith
 from get_weather_conditions import retrieve_weather_parameters
 from atmospheric_mass import get_atmospheric_path_length
 from get_ssa import get_ssa
+from utils.util import international_barometric_formula
 
 """
 Irradiance model due to Greg and Carder
@@ -30,7 +31,7 @@ def build_Model(config_data, logger=logging):
     atmos_path = get_atmospheric_path_length(sun_zenith)
     weather_dict = retrieve_weather_parameters(config_data['params'], config_data['gps_coords'], config_data['utc_time'])
     humidity = weather_dict['hum']
-    pressure = weather_dict['pressurem']
+    pressure = international_barometric_formula(config_data['gps_coords'][-1])  # height (magic number)
     ssa = get_ssa(humidity)
     irr_mod = irradiance_models(atmos_path, humidity, ssa, sun_zenith, pressure)
     logger.info(" \n \t Zenith angle %s" %  sun_zenith)

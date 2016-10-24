@@ -33,7 +33,7 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
 
     ax1.set_title('Diffuse and direct Irradiance')
     ax2.plot(reflectance['wave_mu'], reflectance['spectra'], '+')
-    ax2.errorbar(reflectance['wave_mu'], reflectance['spectra'], yerr=reflectance['std'], ecolor='g', fmt='none')
+    #ax2.errorbar(reflectance['wave_mu'], reflectance['spectra'], yerr=reflectance['std'], ecolor='g', fmt='none')
     ax2.set_title('Reflectance')
     ax1.legend()
     plt.xlabel('Wavelength [nm]')
@@ -83,8 +83,8 @@ def plot_aengstrom_parameters(*param_dict):
         ax1, ax2 = plot_factory(ax1, ax2, param)
 
     ax1.set_title('Aengstrom parameters')
-    ax1.set_ylabel(r'Aengstrom $\alpha$')
-    ax2.set_ylabel(r'Aengstrom $\beta$')
+    ax1.set_ylabel(r'Aengstrom exponent $\alpha$')
+    ax2.set_ylabel(r'Turbidity $\beta$')
     ax2.set_xlabel('UTC Time')
     ax1.legend(loc='best')
     plt.show()
