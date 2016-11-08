@@ -66,7 +66,7 @@ def evaluate_spectra(config, logger=logging):
     irradiance_model = irr.build_Model(config['Processing'], logger)
 
     # if config['Processing']['spectralon'] == 'reference':
-    #     spektralon = np.genfromtxt('/users/jana_jo/DLR/Codes/calibration/Spektralon/Spectralon_neu.txt', skip_header=12)
+    #     spektralon = np.genfromtxt('/home/jana_jo/DLR/Codes/calibration/Spektralon/Spectralon_neu.txt', skip_header=12)
     #     ref['mean'] = ref['mean'] / np.interp(ref['wave'], spektralon[:,0], spektralon[:,1])
     reflectance_dict = get_reflectance(ref, tar)
 

@@ -86,13 +86,13 @@ def generate_ibsen_calibration_files(directory, reference):
 
 if __name__ == "__main__":
     """Usage:
-        python ibsen_calibration.py -d /users/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/
+        python ibsen_calibration.py -d /home/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/
     """
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory', help="Add directory with raw data measured by Rasta")
-    parser.add_argument('-r', '--reference_file', default='/users/jana_jo/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
+    parser.add_argument('-r', '--reference_file', default='/home/jana_jo/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
     args = parser.parse_args()
     print(args.reference_file)
     generate_ibsen_calibration_files(args.directory, args.reference_file)

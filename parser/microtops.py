@@ -31,7 +31,7 @@ def extract_microtops_inifile(validation, utc_time):
 
 if __name__ == "__main__":
     validation = dict()
-    validation['source'] = '/users/jana_jo/DLR/Codes/MicrotopsData/20160913_DLRRoof/aengstroem_results.txt'
+    validation['source'] = '/home/jana_jo/DLR/Codes/MicrotopsData/20160913_DLRRoof/aengstroem_results.txt'
     validation['label'] = 'microtops'
     UTCTime = datetime.strptime('2016-08-25 00:00:00', '%Y-%m-%d %H:%M:%S')
     print(extract_microtops_inifile(validation, UTCTime))
