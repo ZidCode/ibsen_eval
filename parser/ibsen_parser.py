@@ -19,6 +19,7 @@ ibsen_dict:
     'IntTime': <float>,
     'data': array([[..],..,[..]]) shape(1024, 30)}
 """
+flag_dict = {'[DataRaw]':False, '[DataCalibrated]':True}
 
 
 def parse_ibsen_file(filename, maxrows=50):
@@ -46,7 +47,8 @@ def parse_ibsen_file(filename, maxrows=50):
     data_dict['IntTime'] = data_dict['IntTime'][0]
 
     try:
-        data_dict['start_data_index'] = np.where(header == '[DataRaw]')[0][0] + 1
+        data_dict['start_data_index'] = np.where((header == '[DataRaw]') | (header == '[DataCalibrated]'))[0][0] + 1
+        data_dict['darkcurrent_corrected'] = flag_dict[header[data_dict['start_data_index'] - 1]]
     except IndexError:
         logging.error('No [DataRaw] inside the header (TODO)')
     data = np.genfromtxt(filename, skip_header=data_dict['start_data_index'])
@@ -56,7 +58,6 @@ def parse_ibsen_file(filename, maxrows=50):
     data_dict['data_sample_std'] = np.std(data[:,3:], axis=1, ddof=1)
     data_dict['data'] = data[:, 3:]
     data_dict['tdata'] = np.transpose(data_dict['data'])
-    data_dict['darkcurrent_corrected'] = False
     return data_dict
 
 
