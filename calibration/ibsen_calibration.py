@@ -37,6 +37,7 @@ def subtract_dark_from_mean(darkcurrent, spectra):
     if spectra['darkcurrent_corrected'] == False:
         spectra['mean'] = ip.get_mean_column(spectra)
         spectra['tdata'] -= dd['mean']
+        spectra['data'] = np.transpose(spectra['tdata'])
         spectra['mean'] -= dd['mean']
         spectra['darkcurrent_corrected'] = True
 
