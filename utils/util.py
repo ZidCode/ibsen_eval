@@ -1,5 +1,15 @@
 import numpy as np
 from scipy.constants import atmosphere
+from tempfile import mkstemp
+
+
+def create_meas_file(DEFAULT_MEAS):
+    file_ = mkstemp()
+
+    filename = file_[1]
+    with open(filename, 'w') as fp:
+        fp.write(DEFAULT_MEAS)
+    return filename
 
 
 def construct_weights(std):
