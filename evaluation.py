@@ -12,7 +12,6 @@ import processing.irradiance_models as irr
 from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_parameters, Aerosol_Retrievel
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
-from calibration.ibsen_calibration import subtract_dark_from_mean  # KICK OFF CALIBRATION
 from parser.microtops import extract_microtops_inifile
 """
     Irradiance measurements does not show calibrated spectra
@@ -52,16 +51,13 @@ def create_logger(log_config):
 def evaluate_spectra(config, logger=logging):
     ref = parse_ibsen_file(config['Data']['reference'])
     tar = parse_ibsen_file(config['Data']['target'])
-    dark = parse_ibsen_file(config['Data']['darkcurrent'])
-    subtract_dark_from_mean(dark, tar)  # DELETE
-    subtract_dark_from_mean(dark, ref)  # DELETE
 
     if tar['UTCTime']:
         logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Processing']['utc_time'], tar['UTCTime']))
         config['Processing']['utc_time'] = tar['UTCTime']
     logger.info("Date: %s " % config['Processing']['utc_time'])
     logger.info("GPS coords (lat, lon) %s %s" % (config['Processing']['gps_coords'][0], config['Processing']['gps_coords'][1]))
-    logger.info("Files\n \t ref: %s  \n \t tar: %s \n \t dark: %s" %(config['Data']['reference'], config['Data']['target'], config['Data']['darkcurrent'] ))
+    logger.info("Files\n \t ref: %s  \n \t tar: %s " %(config['Data']['reference'], config['Data']['target']))
 
     irradiance_model = irr.build_Model(config['Processing'], logger)
 
@@ -75,7 +71,7 @@ def evaluate_spectra(config, logger=logging):
     logger.info("%s \n" % aero.result.fit_report())
 
     if config['Processing']['logging_level'] == 'DEBUG':
-        plot_meas(tar, ref, dark)
+        plot_meas(tar, ref)
         #frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
         #frame.to_csv('reflectance.csv', index=False)
         plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
@@ -85,7 +81,7 @@ def evaluate_spectra(config, logger=logging):
 
 def evaluate_measurements(directory, config, logger=logging):
     import glob
-    file_prefixes = ['target', 'reference', 'darkcurrent']
+    file_prefixes = ['target', 'reference']
     files = [file_ for file_ in glob.iglob(directory + '%s*' % file_prefixes[0])]
     keys_for_param_dict = ['utc_times', 'alpha', 'alpha_stderr', 'beta', 'beta_stderr']
     param_dict = {key:np.array([]) for key in keys_for_param_dict}
@@ -104,7 +100,7 @@ def evaluate_measurements(directory, config, logger=logging):
             param_dict['beta'] = np.append(param_dict['beta'], params['beta']['value'])
             param_dict['beta_stderr'] = np.append(param_dict['beta_stderr'], params['beta']['stderr'])
         except IOError:
-            logger.error("%s have no corresponding reference or darkcurrentfiles" % file_)
+            logger.error("%s have no corresponding reference" % file_)
 
     # Microtops
     if config['Validation']['validate']:

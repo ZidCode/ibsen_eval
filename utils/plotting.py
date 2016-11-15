@@ -3,14 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def plot_meas(tar, ref, dark):
-    gs = gridspec.GridSpec(3, 3)
+def plot_meas(tar, ref):
+    gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    ax3 = plt.subplot(gs[2, :])
     map_dicts = {'Target_E_ds': {'plt': ax1, 'meas': tar},
-                 'Reference_E_dd': {'plt': ax2, 'meas': ref},
-                 'Darkcurrent': {'plt': ax3, 'meas':dark}}
+                 'Reference_E_dd': {'plt': ax2, 'meas': ref}}
 
     for k, v in map_dicts.items():
         v['plt'].plot(v['meas']['wave'], v['meas']['data'])

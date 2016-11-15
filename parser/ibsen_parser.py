@@ -58,8 +58,8 @@ def parse_ibsen_file(filename, maxrows=50):
     data_dict['data_sample_std'] = np.std(data[:,3:], axis=1, ddof=1)
     data_dict['data'] = data[:, 3:]
     data_dict['tdata'] = np.transpose(data_dict['data'])
+    data_dict['mean'] = get_mean_column(data_dict)
     return data_dict
-
 
 
 def get_mean_column(ibsen_dict):
