@@ -2,7 +2,7 @@ import numpy as np
 from datetime import datetime
 
 
-test_config = {'Fitting': {'range_': np.array([0.35, 0.5]), 'params':['alpha', 'beta','g_dsa','g_dsr'],
+test_config = {'Fitting': {'range_': np.array([350, 500]), 'params':['alpha', 'beta','g_dsa','g_dsr'],
                            'initial_values':np.array([1.2, 0.03, 0.128, 0.99]),
                            'limits':np.array([np.array([0.255,4]), np.array([0., 4.]), np.array([0.127, 0.129]), np.array([0.98, 1.])])},
                'Processing': {'logging': False, 'logging_level': 'INFO',

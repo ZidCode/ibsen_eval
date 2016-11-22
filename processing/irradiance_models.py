@@ -53,6 +53,7 @@ class irradiance_models:
         self.zenith_rad = np.radians(zenith)
         self.ray = 0.00877
         self.ray_expo = -4.05
+        self.lambda_reference = 550  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
 
     def forward_scat(self, alpha):
         """
@@ -67,10 +68,11 @@ class irradiance_models:
         return F_a
 
     def tau_r(self, x):
-        return - self.ray * (self.pressure / self.p_0) * x ** (self.ray_expo)
+        x_mu = x / 1000
+        return - self.ray * (self.pressure / self.p_0) * (x_mu) ** (self.ray_expo)
 
     def tau_as(self, x, alpha, beta):
-        return - self.ssa * self.AM * beta * x ** (-alpha)
+        return - self.ssa * self.AM * beta * (x / self.lambda_reference)  ** (-alpha)
 
     def sky_radiance(self, x, alpha, beta, g_dd=1, g_dsa=1, g_dsr=1):
         term = g_dsr * (1 - exp_v(0.95 * self.tau_r(x))) * 0.5 + \
@@ -90,23 +92,23 @@ def example():
     zenith = 53.1836240528
     AMass = 1.66450160404
     rel_h = 0.665
-    pressure = 1020
+    pressure = 950
     ssas = np.array([])
     AM = 5
-    iteration = 2
+    iteration = 20
     alphas = np.zeros(len(range(1,iteration))+1)
     for i in range(1,iteration):
         ssa = get_ssa(rel_h, AM)
         print(ssa)
         irr = irradiance_models(AMass, rel_h, ssa, zenith, pressure)
-        x = np.linspace(0.2, 0.8, 100)
-        y = irr.irradiance_ratio(x, 1.2, 0.06) + np.random.normal(0, 0.009, len(x))
-        yerror = np.random.normal(0, 0.1, len(x))
+        x = np.linspace(200, 800, 100)
+        y = irr.irradiance_ratio(x, 1.2, 0.06) + np.random.normal(0, 0.002, len(x))
+        yerror = np.random.normal(0, 0.001, len(x))
         weights = 1 / yerror
 
         gmod = Model(irr.irradiance_ratio, independent_vars=['x'], param_names=['alpha', 'beta','g_dsa','g_dsr'])
 
-        gmod.set_param_hint('alpha', value=1.6, min=-0.2)
+        gmod.set_param_hint('alpha', value=1.0, min=-0.2)
         gmod.set_param_hint('beta', value=0.01)
         gmod.set_param_hint('g_dsa', value=1., min=0.5, max=1.)
         gmod.set_param_hint('g_dsr', value=1., min=0.5, max=1.)
@@ -119,10 +121,11 @@ def example():
         alphas[i] = result.params['alpha'].value
         plt.plot(x, y, label='%s' % AM)
         #plt.plot(x, result.init_fit, 'k--')
-        #plt.plot(x, result.best_fit, 'r-')
+        plt.plot(x, result.best_fit, 'r-')
     #plt.plot(alphas)
     plt.legend()
     plt.show()
+    print(np.mean(alphas))
 
 
 if __name__ == "__main__":

@@ -120,7 +120,7 @@ def compare_measurements(config, logger):
     print(config)
     param_dict, aero_fit = evaluate_spectra(config, logger)
     ax1 = aero_fit.result.plot_residuals(ax=ax1, datafmt='g')
-    ax2.plot(aero_fit.spectra['wave_mu'], aero_fit.spectra['spectra'])
+    ax2.plot(aero_fit.spectra['wave_nm'], aero_fit.spectra['spectra'])
     ax2.plot(aero_fit.param_dict['wave_range'], aero_fit.result.best_fit, 'g-')
     ax2.errorbar(aero_fit.param_dict['wave_range'], aero_fit.param_dict['spectra_range'], yerr=aero_fit.param_dict['std'], ecolor='g')
 
@@ -129,7 +129,7 @@ def compare_measurements(config, logger):
     param_dict, aero = evaluate_spectra(config,logger)
 
     ax1 = aero.result.plot_residuals(ax=ax1, datafmt='b')
-    ax2.plot(aero.spectra['wave_mu'], aero.spectra['spectra'])
+    ax2.plot(aero.spectra['wave_nm'], aero.spectra['spectra'])
     ax2.plot(aero.param_dict['wave_range'], aero.result.best_fit, 'b-', label='second')
     ax2.errorbar(aero.param_dict['wave_range'], aero.param_dict['spectra_range'], yerr=aero.param_dict['std'], ecolor='g')
     ax2.set_title('Fitted reflectance')

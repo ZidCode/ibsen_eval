@@ -30,8 +30,8 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
         ax1.plot(meas['wave'], meas['mean'], label='%s' %key)
 
     ax1.set_title('Diffuse and direct Irradiance')
-    ax2.plot(reflectance['wave_mu'], reflectance['spectra'], '+')
-    #ax2.errorbar(reflectance['wave_mu'], reflectance['spectra'], yerr=reflectance['std'], ecolor='g', fmt='none')
+    ax2.plot(reflectance['wave_nm'], reflectance['spectra'], '+')
+    #ax2.errorbar(reflectance['wave_nm'], reflectance['spectra'], yerr=reflectance['std'], ecolor='g', fmt='none')
     ax2.set_title('Reflectance')
     ax1.legend()
     plt.xlabel('Wavelength [nm]')
@@ -50,12 +50,12 @@ def plot_fitted_reflectance(aero_fit):
     ax2 = plt.subplot(gs[1, :])
 
     ax1 = aero_fit.result.plot_residuals(ax=ax1)
-    ax2.plot(aero_fit.spectra['wave_mu'], aero_fit.spectra['spectra'])
+    ax2.plot(aero_fit.spectra['wave_nm'], aero_fit.spectra['spectra'])
     ax2.plot(aero_fit.param_dict['wave_range'], aero_fit.result.best_fit, 'r-')
     ax2.errorbar(aero_fit.param_dict['wave_range'], aero_fit.param_dict['spectra_range'], yerr=aero_fit.param_dict['std'], ecolor='g')
     ax2.set_title('Fitted reflectance')
     ax2.set_ylabel('Reflectance')
-    ax2.set_xlabel(r'Wavelength $\left[\mu m\right]$')
+    ax2.set_xlabel(r'Wavelength $\left[nm\right]$')
     plt.show()
 
 def get_ax(ax, param, param_key, col):

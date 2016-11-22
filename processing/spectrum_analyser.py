@@ -20,7 +20,7 @@ def get_reflectance(E_d, E_up):
     reflectance = get_spectral_irradiance_reflectance(E_d['mean'], E_up['mean'])
     reflectance_std = get_error_of_spectral_reflectance(E_d['mean'], E_up['mean'], E_d['data_sample_std'], E_up['data_sample_std'])
 
-    reflectance_dict = {'wave_mu': E_d['wave'] / 1000.0, 'spectra': reflectance, 'std': reflectance_std, 'var': reflectance_std ** 2}
+    reflectance_dict = {'wave_nm': E_d['wave'], 'spectra': reflectance, 'std': reflectance_std, 'var': reflectance_std ** 2}
     return reflectance_dict
 
 
@@ -44,9 +44,9 @@ class Aerosol_Retrievel(object):
         return ', '.join("%s: %s" % item for item in var.items())
 
     def _cut_range(self):
-        start = np.where(self.spectra['wave_mu'] <= self.fit_range[0])[0][-1]
-        end = np.where(self.spectra['wave_mu'] >= self.fit_range[1])[0][0]
-        self.param_dict['wave_range'] = self.spectra['wave_mu'][start:end]
+        start = np.where(self.spectra['wave_nm'] <= self.fit_range[0])[0][-1]
+        end = np.where(self.spectra['wave_nm'] >= self.fit_range[1])[0][0]
+        self.param_dict['wave_range'] = self.spectra['wave_nm'][start:end]
         self.param_dict['spectra_range'] = self.spectra['spectra'][start:end]
         self.param_dict['std'] = self.spectra['std'][start:end]
 
@@ -81,20 +81,20 @@ def example():
     ssa = get_ssa(rel_h, AM_type)
 
     irr = irradiance_models(AMass, rel_h, ssa, zenith, pressure)
-    spectra['wave_mu'] = np.linspace(0.2, 0.8, 100)
-    spectra['spectra'] = irr.irradiance_ratio(spectra['wave_mu'], 1.2, 0.06) + np.random.normal(0, 0.005, len(spectra['wave_mu']))
-    spectra['std'] = np.random.normal(0, 0.1, len(spectra['wave_mu']))
+    spectra['wave_nm'] = np.linspace(200, 800, 100)
+    spectra['spectra'] = irr.irradiance_ratio(spectra['wave_nm'], 1.2, 0.06) + np.random.normal(0, 0.005, len(spectra['wave_nm']))
+    spectra['std'] = np.random.normal(0, 0.1, len(spectra['wave_nm']))
     weights = 1 / spectra['std']
 
     config_fitting = {'params': np.array(['alpha', 'beta', 'g_dsa', 'g_dsr']), \
-                      'initial_values': np.array([ 1. ,  0.6,  1. ,  1. ]), 'range_': np.array([ 0.36,  0.65])}
+                      'initial_values': np.array([ 1. ,  0.6,  1. ,  1. ]), 'range_': np.array([360,  650])}
 
     aero = Aerosol_Retrievel(irr, config_fitting, spectra)
     aero.fit()
     print(aero.result.fit_report())
     getattr(aero, 'params')
 
-    plt.plot(spectra['wave_mu'], spectra['spectra'])
+    plt.plot(spectra['wave_nm'], spectra['spectra'])
     plt.plot(aero.param_dict['wave_range'], aero.result.init_fit, 'k--')
     plt.plot(aero.param_dict['wave_range'], aero.result.best_fit, 'r-')
     plt.legend()
