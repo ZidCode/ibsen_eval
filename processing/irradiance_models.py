@@ -60,7 +60,10 @@ class irradiance_models:
         Reference: Greg and Carder
         empirical values
         """
-        cos_theta = -0.1417 * alpha + 0.82
+        if alpha > 1.2:
+            cos_theta = 0.65
+        else:
+            cos_theta = -0.1417 * alpha + 0.82
         B_3 = log(1 - cos_theta)
         B_2 = B_3 * (0.0783 + B_3 * (-0.3824 - 0.5874 * B_3))
         B_1 = B_3 * (1.459 + B_3 * (0.1595 + 0.4129 * B_3))
@@ -68,8 +71,10 @@ class irradiance_models:
         return F_a
 
     def tau_r(self, x):
-        x_mu = x / 1000
-        return - self.ray * (self.pressure / self.p_0) * (x_mu) ** (self.ray_expo)
+        #x_mu = x / 1000
+        #return - self.ray * (self. AM * self.pressure / self.p_0) * (x_mu) ** (self.ray_expo)
+        y = - ( self.AM * self.pressure/self.p_0) / (115.640 * (x/1000) ** 4 - 1.335 * (x/1000)**2)
+        return y
 
     def tau_as(self, x, alpha, beta):
         return - self.ssa * self.AM * beta * (x / self.lambda_reference)  ** (-alpha)
@@ -97,13 +102,13 @@ def example():
     AM = 5
     iteration = 20
     alphas = np.zeros(len(range(1,iteration))+1)
-    for i in range(1,iteration):
+    for i in range(0,iteration):
         ssa = get_ssa(rel_h, AM)
         print(ssa)
         irr = irradiance_models(AMass, rel_h, ssa, zenith, pressure)
         x = np.linspace(200, 800, 100)
-        y = irr.irradiance_ratio(x, 1.2, 0.06) + np.random.normal(0, 0.002, len(x))
-        yerror = np.random.normal(0, 0.001, len(x))
+        y = irr.irradiance_ratio(x, 1.5, 0.06) + np.random.normal(0, 0.009, len(x))
+        yerror = np.random.normal(0, 0.009, len(x))
         weights = 1 / yerror
 
         gmod = Model(irr.irradiance_ratio, independent_vars=['x'], param_names=['alpha', 'beta','g_dsa','g_dsr'])
@@ -116,16 +121,16 @@ def example():
         print(gmod.param_names)
         print(gmod.independent_vars)
 
-        result = gmod.fit(y, x=x, weights=weights)
+        result = gmod.fit(y, x=x)
         print(result.fit_report())
         alphas[i] = result.params['alpha'].value
         plt.plot(x, y, label='%s' % AM)
-        #plt.plot(x, result.init_fit, 'k--')
         plt.plot(x, result.best_fit, 'r-')
-    #plt.plot(alphas)
     plt.legend()
     plt.show()
+    print(alphas)
     print(np.mean(alphas))
+    print(np.std(alphas))
 
 
 if __name__ == "__main__":
