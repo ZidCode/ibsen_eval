@@ -31,8 +31,8 @@ def calibrate_meas(data_file, dark_file, nonlinear_correction_file, response_fil
 def process_level0to1(meas_files, dark_file, nonlinear_correction_file, response_file):
 
     for meas_file in meas_files:
-        print('File to calibrate %s \n' % meas_file)
-        print('Dark %s \n' % dark_file)
+        print('File to calibrate %s \n' % meas_file.split('/')[-1])
+        print('\t with Dark %s \n' % dark_file.split('/')[-1])
         cal_dict = calibrate_meas(meas_file, dark_file, nonlinear_correction_file, response_file)
         write_to_file(cal_dict, meas_file)
 
@@ -73,6 +73,5 @@ if __name__ == "__main__":
                         help='Nonlinear correction file for corresponding ibsen')
     parser.add_argument('-r', '--response', default='/home/jana_jo/DLR/Codes/evaluation/calibration/Ibsen_0109_5313264_calibration_files/response.txt',
                         help='Response file for corresponding ibsen')
-
     args = parser.parse_args()
     start_level0to1(args.directory, args.nonlinear, args.response)
