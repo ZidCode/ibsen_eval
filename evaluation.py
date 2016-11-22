@@ -9,7 +9,7 @@ import pandas as pd
 from datetime import datetime
 from ast import literal_eval
 import processing.irradiance_models as irr
-from processing.spectrum_analyser import get_reflectance, retrieve_aengstrom_parameters, Aerosol_Retrievel
+from processing.spectrum_analyser import get_reflectance, Aerosol_Retrievel
 from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
 from parser.microtops import extract_microtops_inifile

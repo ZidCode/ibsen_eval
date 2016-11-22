@@ -2,7 +2,6 @@ import numpy as np
 from lmfit import Model
 import matplotlib.pyplot as plt
 from irradiance_models import irradiance_models
-from utils.util import construct_weights, cut_range
 
 
 def get_spectral_irradiance_reflectance(E_d, E_up):
@@ -23,28 +22,6 @@ def get_reflectance(E_d, E_up):
 
     reflectance_dict = {'wave_mu': E_d['wave'] / 1000.0, 'spectra': reflectance, 'std': reflectance_std, 'var': reflectance_std ** 2}
     return reflectance_dict
-
-
-def retrieve_aengstrom_parameters(spectra, irr_model, config):
-    initial_values = config['initial_values']
-    wave_range = config['range_']
-    param_dict = dict()
-    x_cut, y_cut, std_cut = cut_range(wave_range, spectra['wave_mu'], spectra['spectra'], spectra['std'])
-    param_dict['wave_range'] = x_cut
-    param_dict['spectra_range'] = y_cut
-    param_dict['std'] = std_cut
-
-    # WRONG construct weights with variance
-    # cutting new method
-    weights = construct_weights(param_dict['std'])
-    gmod = Model(irr_model.irradiance_ratio, independent_vars=['x'], param_names=['alpha', 'beta'])
-    result = gmod.fit(param_dict['spectra_range'], x=param_dict['wave_range'], alpha=initial_values[0], beta=initial_values[1], weights=weights)
-
-    for key in result.params.keys():
-        param_dict[key] = dict()
-        param_dict[key]['stderr'] = result.params[key].stderr
-        param_dict[key]['value'] = result.params[key].value
-    return param_dict, result
 
 
 class Aerosol_Retrievel(object):
