@@ -50,10 +50,11 @@ class irradiance_models:
         self.ssa = ssa
         self.pressure = pressure
         self.p_0 = atmosphere / 100.0
+        print(self.p_0)
         self.zenith_rad = np.radians(zenith)
         self.ray = 0.00877
         self.ray_expo = -4.05
-        self.lambda_reference = 550  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
+        self.lambda_reference = 1000  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
 
     def forward_scat(self, alpha):
         """
@@ -94,29 +95,37 @@ class irradiance_models:
 def example():
     # possible values
     from get_ssa import get_ssa
+    from Model import IrradianceModel
     zenith = 53.1836240528
     AMass = 1.66450160404
     rel_h = 0.665
     pressure = 950
-    ssas = np.array([])
     AM = 5
+    ssa = get_ssa(rel_h, AM)
     iteration = 20
     alphas = np.zeros(len(range(1,iteration))+1)
+
+    x = np.linspace(200, 800, 100)
+    irr = irradiance_models(AMass, rel_h, ssa, zenith, pressure)
+    irr_symbol = IrradianceModel(x, zenith, AMass, pressure, ssa)
+
+    func = irr_symbol._irradiance_ratio()
+
+    y = irr.irradiance_ratio(x, 2.5, 0.06, 0.0, 1., 1.)
     for i in range(0,iteration):
         ssa = get_ssa(rel_h, AM)
         print(ssa)
         irr = irradiance_models(AMass, rel_h, ssa, zenith, pressure)
-        x = np.linspace(200, 800, 100)
-        y = irr.irradiance_ratio(x, 1.5, 0.06) + np.random.normal(0, 0.009, len(x))
         yerror = np.random.normal(0, 0.009, len(x))
+        y = irr.irradiance_ratio(x, 1.5, 0.06, 0.0, 0.6, 0.9) + yerror
         weights = 1 / yerror
 
         gmod = Model(irr.irradiance_ratio, independent_vars=['x'], param_names=['alpha', 'beta','g_dsa','g_dsr'])
 
-        gmod.set_param_hint('alpha', value=1.0, min=-0.2)
-        gmod.set_param_hint('beta', value=0.01)
-        gmod.set_param_hint('g_dsa', value=1., min=0.5, max=1.)
-        gmod.set_param_hint('g_dsr', value=1., min=0.5, max=1.)
+        gmod.set_param_hint('alpha', value=1.0, min=-0.2, max=2.5)
+        gmod.set_param_hint('beta', value=0.01, min=0.0, max = 2.)
+        gmod.set_param_hint('g_dsa', value=0.6, min=0., max=1.)
+        gmod.set_param_hint('g_dsr', value=0.9, min=0., max=1.)
         print(gmod.param_hints)
         print(gmod.param_names)
         print(gmod.independent_vars)
@@ -124,13 +133,14 @@ def example():
         result = gmod.fit(y, x=x)
         print(result.fit_report())
         alphas[i] = result.params['alpha'].value
-        plt.plot(x, y, label='%s' % AM)
-        plt.plot(x, result.best_fit, 'r-')
+
+        # plt.plot(x, y, label='%s' % AM)
+        # plt.plot(x, result.best_fit, 'r-', label='fit')
+    y = irr.irradiance_ratio(x, 1.5, 0.06, 0.0, 0.6, 0.9)
+    y2 = irr.irradiance_ratio(x, 1.5, 0.08, 0.0, 0.6, 0.9)
+
     plt.legend()
     plt.show()
-    print(alphas)
-    print(np.mean(alphas))
-    print(np.std(alphas))
 
 
 if __name__ == "__main__":
