@@ -3,11 +3,17 @@ import ibsen_calibration as ic
 from parser.ibsen_parser import parse_ibsen_file
 "This module will be deleted"
 
-def calibrate_meas(data_file, dark_file, nonlinear_correction_file, response_file):
-    import matplotlib.pyplot as plt
-    non_linear = np.genfromtxt(nonlinear_correction_file, skip_header=1, delimiter=',')
+
+def read_nonlinear_correction_file(_file):
+    non_linear = np.genfromtxt(_file, skip_header=1, delimiter=',')
     DN = non_linear[:, 0]
     correction_values = non_linear[:, 1]
+    return DN, correction_values
+
+
+def calibrate_meas(data_file, dark_file, nonlinear_correction_file, response_file):
+    import matplotlib.pyplot as plt
+    DN, correction_values = read_nonlinear_correction_file(nonlinear_correction_file)
 
     response = np.genfromtxt(response_file, skip_header=1, delimiter=',')
     wave = response[:,0]
