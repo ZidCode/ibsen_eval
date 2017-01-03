@@ -6,28 +6,30 @@ import matplotlib.pyplot as plt
 from numpy.testing import assert_array_equal
 
 
-def generate_nonlinear_correction(cal_dict, nonlinear_config):
+def generate_nonlinear_correction(cal_dict, nonlinear_config, noise_dict):
     nonlinear_correction_dict = dict()
-    DN, nonlinear_correction = calculate_nonlinearity_factors(cal_dict, nonlinear_config)
+    DN, nonlinear_correction = calculate_nonlinearity_factors(cal_dict, nonlinear_config, noise_dict)
     nonlinear_correction_dict['DN'] = DN
     nonlinear_correction_dict['nonlinear']= nonlinear_correction
     frame = pd.DataFrame(np.transpose([DN, nonlinear_correction]), columns=['DN', 'nonlinear_correction'])
-    frame.to_csv('nonlinearity_correstion.txt', index=False)
+    frame.to_csv('nonlinearity_correction.txt', index=False)
     return nonlinear_correction_dict
 
 
-def calculate_nonlinearity_factors(cal_dict, nonlinear_config):
-
+def calculate_nonlinearity_factors(cal_dict, nonlinear_config, noise_dict):
     max_lowest_int_time = nonlinear_config['max_lowest_int_time'] # pick value manually. Needs to be slightly above the hightest value of the lowest integration time, WTF?
     sigma = nonlinear_config['sigma']
     index_start_spline_fit = nonlinear_config['index_start_spline_fit']
     gaussian_mean_steps = nonlinear_config['gaussian_mean_steps']
+
     intTimes_sorted = sorted(cal_dict.keys())
-    dn_Matrix_intTimeperrow = cal_dict[intTimes_sorted[0]]['reference']['mean']
+    dn_Matrix_intTimeperrow = cal_dict[intTimes_sorted[0]]['reference']['mean'] - noise_dict['noise']
+
     for intTime in intTimes_sorted[1:]:
-        dn_Matrix_intTimeperrow = np.vstack((dn_Matrix_intTimeperrow, cal_dict[intTime]['reference']['mean']))
+        noise_corrected = cal_dict[intTime]['reference']['mean'] - noise_dict['noise']
+        dn_Matrix_intTimeperrow = np.vstack((dn_Matrix_intTimeperrow, noise_corrected))
     DN_Matrix_intTimepercolumn = np.transpose(dn_Matrix_intTimeperrow)
-    assert_array_equal(DN_Matrix_intTimepercolumn[:,4], cal_dict[intTimes_sorted[4]]['reference']['mean'])
+    assert_array_equal(DN_Matrix_intTimepercolumn[:,4], cal_dict[intTimes_sorted[4]]['reference']['mean'] - noise_dict['noise'])
 
     values = np.array([max(x) for x in DN_Matrix_intTimepercolumn])
     index = np.where(values > max_lowest_int_time)[0]
@@ -44,7 +46,6 @@ def calculate_nonlinearity_factors(cal_dict, nonlinear_config):
     DN_non = DN_nonlin[sort_indx]
     def kernel(x, shift, sigma):
         return np.exp(-((x - shift) ** 2 / (2 * sigma ** 2)))
-
 
     averaging_DN = np.arange(min(DN), max(DN), gaussian_mean_steps)
     weighted_data = []
@@ -68,7 +69,6 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
     chosen_keys = [key for key in sorted_keys[min:max:step]]
 
     std_old = np.array([])
-    std_new = np.array([])
 
     import matplotlib.pyplot as plt
     for key in chosen_keys:
@@ -83,34 +83,40 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
     ax2 = plt.subplot(gs[1, :])
     ax3 = plt.subplot(gs[2, :])
     for key in chosen_keys:
-        ax1.plot(cal_dict[key]['reference']['wave'], cal_dict[key]['reference']['mean'] / key, label='%s' %key)
+        # Darkcurrent subtraction
+        darkcurrent_corrected_mean = (cal_dict[key]['reference']['mean'] - cal_dict[key]['darkcurrent']['mean']) / key
+        ax1.plot(cal_dict[key]['reference']['wave'], darkcurrent_corrected_mean, label='%s' %key)
         try:
-            std_old = np.vstack((std_old, cal_dict[key]['reference']['mean'] / key))
+            std_old = np.vstack((std_old, darkcurrent_corrected_mean))
         except ValueError:
-            std_old = cal_dict[key]['reference']['mean'] / key
-
-    if correction_dict:
-        for key in chosen_keys:
-            calibrated_mean = cal_dict[key]['reference']['mean'] / \
-                                             np.interp(cal_dict[key]['reference']['mean'], correction_dict['DN'], correction_dict['nonlinear'])
-            ax2.plot(cal_dict[key]['reference']['wave'], calibrated_mean / key, label='%s' %key)
-            try:
-                std_new = np.vstack((std_new, calibrated_mean / key))
-            except ValueError:
-                std_new = calibrated_mean / key
+            std_old = darkcurrent_corrected_mean
 
     std_old = np.std(std_old, axis=0)
     ax3.plot(cal_dict[key]['reference']['wave'], std_old, label='not corrected',color='r')
+
     if correction_dict:
-        std_new = np.std(std_new, axis=0)
-        ax3.plot(cal_dict[key]['reference']['wave'], std_new, label='corrected')
+        if type(correction_dict) is not list: correction_dict = [correction_dict]
+        for corr_dict in correction_dict:
+            std_new = np.array([])
+            for key in chosen_keys:
+                calibrated_mean = (cal_dict[key]['reference']['mean']) / \
+                                                 np.interp(cal_dict[key]['reference']['mean'], corr_dict['DN'], corr_dict['nonlinear'])
+                # Darkcurrent subtraction
+                calibrated_mean = (calibrated_mean - cal_dict[key]['darkcurrent']['mean'])/ key
+                ax2.plot(cal_dict[key]['reference']['wave'], calibrated_mean, label='%s' %key)
+                try:
+                    std_new = np.vstack((std_new, calibrated_mean))
+                except ValueError:
+                    std_new = calibrated_mean
+            std_new = np.std(std_new, axis=0)
+            ax3.plot(cal_dict[key]['reference']['wave'], std_new, label='corrected')
+
     ax1.set_title('Not nonlinear corrected')
     ax2.set_title('nonlinear corrected')
     ax1.set_ylabel('DN')
     ax2.set_ylabel('DN')
     ax2.set_xlabel('Wavelength [nm]')
     ax3.set_ylabel('std error [DN]')
-    #ax2.legend(title='IntTime [ms]', bbox_to_anchor=(1.3, 1.4))
     ax3.legend(loc='best')
     plt.show()
 

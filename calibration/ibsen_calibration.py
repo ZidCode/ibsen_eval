@@ -1,10 +1,11 @@
+import os
 import copy
 import glob
 import re
 import numpy as np
+import pandas as pd
 import parser.ibsen_parser as ip
 from extract_nonlinearity import generate_nonlinear_correction, check_nonlinearity
-from extract_response import generate_response_factors
 
 
 def sort_ibsen_by_int(dirname):
@@ -48,21 +49,64 @@ def subtract_dark(cal_dict):
     return cal_dict
 
 
+def read_file(offset_file, cal_dict=None):
+    noise_dict = dict()
+    print("Bias file detected in %s" % offset_file)
+    data = np.genfromtxt(offset_file, skip_header=1, delimiter=',')
+    noise_dict['channel'] = data[:, 0]
+    noise_dict['noise'] = data[:, 1]
+    return noise_dict
+
+
+def calc_offset(offset_file, cal_dict):
+    noise_dict = dict()
+    sorted_keys = sorted(cal_dict.keys())
+    tmp_channels = range(len(cal_dict[sorted_keys[0]]['darkcurrent']['wave']))
+    IntTimes = np.array(sorted_keys)
+    noise = np.array([])
+    for channel in tmp_channels:
+        noise_dict[channel] = dict()
+        dark = np.array([cal_dict[key]['darkcurrent']['mean'][channel] for key in sorted_keys])
+        noise_dict[channel]['dark'] = dark
+        coeffs_dark = np.polyfit(sorted_keys, dark, deg=1)
+        noise = np.append(noise, coeffs_dark[1])
+    noise_dict['noise'] = noise
+    noise_dict['channel'] = tmp_channels
+    frame = pd.DataFrame(np.transpose([tmp_channels, noise]), columns=['ch', 'bias'])
+    frame.to_csv(offset_file, index=False)
+    return noise_dict
+
+
+def get_noise(flag):
+    if flag:
+        return read_file
+    else:
+        return calc_offset
+
+
 def generate_ibsen_calibration_files(directory, reference):
     # Extract Rasta specific raw data
     cal_dict = sort_ibsen_by_int(directory)
+    cal_dict_tmp = copy.deepcopy(cal_dict)
+    bias_file = directory + 'assumed_bias/' + 'bias.txt'
+    flag = os.path.exists(bias_file) 
+    noise_dict = get_noise(flag)(bias_file, cal_dict)
+
     # Substract darkcurrent from measurements
-    cal_dict = subtract_dark(cal_dict)
-    nonlinear_config = {'max_lowest_int_time': 1050, 'sigma': 10, 'index_start_spline_fit': 500, 'gaussian_mean_steps':4}
-    nonlinear_correction_dict = generate_nonlinear_correction(cal_dict, nonlinear_config)
-    check_nonlinearity(cal_dict, nonlinear_correction_dict)
+    nonlinear_config = {'max_lowest_int_time': 2323, 'sigma': 10, 'index_start_spline_fit': 700, 'gaussian_mean_steps':4}
+    nonlinear_correction_dict = generate_nonlinear_correction(cal_dict_tmp, nonlinear_config, noise_dict)
+    noise_dict['noise'] = np.zeros(len(noise_dict['channel']))  # Setting offset to zero
+    cal_dict_tmp = subtract_dark(cal_dict_tmp)
+    nonlinear_correction_dark = generate_nonlinear_correction(cal_dict_tmp, nonlinear_config, noise_dict)
+    check_nonlinearity(cal_dict, [nonlinear_correction_dict, nonlinear_correction_dark])
+
     while raw_input('Change settings (y or n)') == 'y':
         for key in nonlinear_config.keys():
             nonlinear_config[key] = int(raw_input('%s' %key))
-        nonlinear_correction_dict = generate_nonlinear_correction(cal_dict, nonlinear_config)
+        nonlinear_correctiony_dict = generate_nonlinear_correction(cal_dict, nonlinear_config)
         check_nonlinearity(cal_dict, nonlinear_correction_dict)
 
-    # Nonlinear correction for ibsen response
+    #Nonlinear correction for ibsen response
     for integration, spectra in cal_dict.items():
         spectra['reference']['mean'] = spectra['reference']['mean'] / np.interp(spectra['reference']['mean'], nonlinear_correction_dict['DN'], nonlinear_correction_dict['nonlinear'])
         spectra['reference']['mean'] = spectra['reference']['mean'] / integration
@@ -75,7 +119,7 @@ def generate_ibsen_calibration_files(directory, reference):
     plt.xlabel('Wavelength [nm]')
     plt.ylabel(r'$\frac{mW}{nm m^2 sr}$')
     plt.show()
-
+    
     plt.plot(response_dict['wave'], response_dict['intensity'], 'r+', label='Ibsen response')
     plt.plot(response_dict['wave'], response_dict['halogen'], 'b+', label='Halogen lamp')
     plt.plot(response_dict['wave'], response_dict['intensity'] / response_dict['scale_factors'], 'y', label='Calibrated ibsen response')
@@ -86,13 +130,13 @@ def generate_ibsen_calibration_files(directory, reference):
 
 if __name__ == "__main__":
     """Usage:
-        python ibsen_calibration.py -d /home/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/
+        python ibsen_calibration.py -d /home/joanna/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/
     """
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--directory', help="Add directory with raw data measured by Rasta")
-    parser.add_argument('-r', '--reference_file', default='/home/jana_jo/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
+    parser.add_argument('-d', '--directory', default='/home/joanna/DLR/Codes/calibration/Ibsen_0109_Serialnumber_missing/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
+    parser.add_argument('-r', '--reference_file', default='/home/joanna/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
     args = parser.parse_args()
     print(args.reference_file)
     generate_ibsen_calibration_files(args.directory, args.reference_file)
