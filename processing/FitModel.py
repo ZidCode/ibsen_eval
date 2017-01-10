@@ -19,9 +19,8 @@ class FitModel:
         leastsq
         tnc
     """
-    def __init__(self, method_dict={'method':'TNC', 'jac_flag': True}):
+    def __init__(self, method_dict={'method':'TNC'}):
         self.method = method_dict['method']
-        self.jac_flag = method_dict['jac_flag']
         self.result = None
 
     def _minimize(self, thcallable, start, y, bounds, jacobian=False):
