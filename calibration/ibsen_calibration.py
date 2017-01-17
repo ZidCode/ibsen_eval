@@ -94,11 +94,12 @@ def generate_ibsen_calibration_files(directory, reference):
     cal_dict = sort_ibsen_by_int(directory)
     cal_dict_tmp = copy.deepcopy(cal_dict)
     bias_file = directory + 'assumed_bias/' + 'bias.txt'
-    flag = os.path.exists(bias_file) 
+    flag = os.path.exists(bias_file)
     noise_dict = get_noise(flag)(bias_file, cal_dict)
 
     # Substract darkcurrent from measurements
-    nonlinear_config = {'max_lowest_int_time': 2323, 'sigma': 10, 'index_start_spline_fit': 700, 'gaussian_mean_steps':4}
+    nonlinear_config = {'max_lowest_int_time': 2323, 'sigma': 100, 'index_start_spline_fit': 1400, 'gaussian_mean_steps':4}
+    #nonlinear_config = {'max_lowest_int_time': 1156, 'sigma': 50, 'index_start_spline_fit': 1400, 'gaussian_mean_steps':4}
     nonlinear_correction_dict = generate_nonlinear_correction(cal_dict_tmp, nonlinear_config, noise_dict)
     noise_dict['noise'] = np.zeros(len(noise_dict['channel']))  # Setting offset to zero
     cal_dict_tmp = subtract_dark(cal_dict_tmp)
@@ -124,7 +125,7 @@ def generate_ibsen_calibration_files(directory, reference):
     plt.xlabel('Wavelength [nm]')
     plt.ylabel(r'$\frac{mW}{nm m^2 sr}$')
     plt.show()
-    
+
     plt.plot(response_dict['wave'], response_dict['intensity'], 'r+', label='Ibsen response')
     plt.plot(response_dict['wave'], response_dict['halogen'], 'b+', label='Halogen lamp')
     plt.plot(response_dict['wave'], response_dict['intensity'] / response_dict['scale_factors'], 'y', label='Calibrated ibsen response')
@@ -135,13 +136,13 @@ def generate_ibsen_calibration_files(directory, reference):
 
 if __name__ == "__main__":
     """Usage:
-        python ibsen_calibration.py -d /home/joanna/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/
+        python ibsen_calibration.py -d /home/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/
     """
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--directory', default='/home/joanna/DLR/Codes/calibration/Ibsen_0109_Serialnumber_missing/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
-    parser.add_argument('-r', '--reference_file', default='/home/joanna/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
+    parser.add_argument('-d', '--directory', default='/home/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
+    parser.add_argument('-r', '--reference_file', default='/home/jana_jo/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
     args = parser.parse_args()
     print(args.reference_file)
     generate_ibsen_calibration_files(args.directory, args.reference_file)
