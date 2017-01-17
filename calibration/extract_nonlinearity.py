@@ -91,12 +91,14 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
         except ValueError:
             std_old = darkcurrent_corrected_mean
 
+    std_old_mean = np.mean(std_old, axis=0)
     std_old = np.std(std_old, axis=0)
-    ax3.plot(cal_dict[key]['reference']['wave'], std_old, label='not corrected',color='r')
+    ax3.plot(cal_dict[key]['reference']['wave'], std_old / std_old_mean, label='Not corrected',color='r')
 
+    if len(correction_dict) == 2: legends = ['Offset', 'Darkcurrent']
     if correction_dict:
         if type(correction_dict) is not list: correction_dict = [correction_dict]
-        for corr_dict in correction_dict:
+        for i, corr_dict in enumerate(correction_dict):
             std_new = np.array([])
             for key in chosen_keys:
                 calibrated_mean = (cal_dict[key]['reference']['mean']) / \
@@ -108,16 +110,20 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
                     std_new = np.vstack((std_new, calibrated_mean))
                 except ValueError:
                     std_new = calibrated_mean
+            std_mean = np.mean(std_new, axis=0)
             std_new = np.std(std_new, axis=0)
-            ax3.plot(cal_dict[key]['reference']['wave'], std_new, label='corrected')
+            ax3.plot(cal_dict[key]['reference']['wave'], std_new/std_mean, label='%s corrected' % legends[i])
 
     ax1.set_title('Not nonlinear corrected')
-    ax2.set_title('nonlinear corrected')
+    ax2.set_title('Nonlinear corrected')
     ax1.set_ylabel('DN')
     ax2.set_ylabel('DN')
-    ax2.set_xlabel('Wavelength [nm]')
-    ax3.set_ylabel('std error [DN]')
+    ax3.set_xlabel('Wavelength [nm]')
+    ax3.set_ylabel(r'$\Delta$ $\%$')
     ax3.legend(loc='best')
+    leg = plt.gca().get_legend()
+    ltext  = leg.get_texts()
+    plt.setp(ltext, fontsize='small')
     plt.show()
 
 
