@@ -82,17 +82,16 @@ def temperature():
 
 def test_offset_subtraction():
     """ testing of offset subtraction or darkcurrent subtraction is better"""
-    test_directory = '/home/joanna/DLR/Codes/calibration/test_nonlinearity/labor/ibsen_nonlinearity_verschoeben2/' 
-    offset = 'offset_corrected_calibration/' 
+    test_directory = '/home/jana_jo/DLR/Codes/calibration/test_nonlinearity/labor/ibsen_nonlinearity_verschoeben2/'
+    offset = 'offset_corrected_calibration/'
     dark_ = 'darkcurrent_corrected_calibration/'
     _file = 'nonlinearity_correction.txt'
     nonlinear_correction_dict = dict()
+    nonlinear_correction_dict_dark = dict()
     cal_dict = sort_ibsen_by_int(test_directory)
-    print(cal_dict)
-    nonlinear_correction_dict['DN'], nonlinear_correction_dict['nonlinear'] = read_nonlinear_correction_file(dark_ + _file)
-    check_nonlinearity(cal_dict, nonlinear_correction_dict) 
     nonlinear_correction_dict['DN'], nonlinear_correction_dict['nonlinear'] = read_nonlinear_correction_file(offset + _file)
-    check_nonlinearity(cal_dict, nonlinear_correction_dict) 
+    nonlinear_correction_dict_dark['DN'], nonlinear_correction_dict_dark['nonlinear'] = read_nonlinear_correction_file(dark_ + _file)
+    check_nonlinearity(cal_dict, [nonlinear_correction_dict,nonlinear_correction_dict_dark])
 
 
 if __name__  == "__main__":
@@ -101,7 +100,7 @@ if __name__  == "__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--directory', default='/home/joanna/DLR/Codes/calibration/Ibsen_0109_Serialnumber_missing/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
+    parser.add_argument('-d', '--directory', default='/home/jana_jo/DLR/Codes/calibration/Ibsen_0109_Serialnumber_missing/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
     args = parser.parse_args()
     test_offset_subtraction()
     #darkcurrent_channel_analyse(args.directory)
