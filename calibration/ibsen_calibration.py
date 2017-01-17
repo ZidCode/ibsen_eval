@@ -21,6 +21,11 @@ def sort_ibsen_by_int(dirname):
     cal_dict = {}
     for file_ in glob.iglob('%s*.asc' % dirname):
         ibsen_dict = ip.parse_ibsen_file(file_)
+        # Skip saturated pixel
+        ibsen_dict['wave'] = ibsen_dict['wave'][50:]
+        ibsen_dict['mean'] = ibsen_dict['mean'][50:]
+        ibsen_dict['tdata'] = ibsen_dict['tdata'][:, 50:]
+        print(len(ibsen_dict['wave']))
         file_ = filter(None, file_.split(dirname))[0]
         file_key = filter(None, re.split('[0-9]{3,}\.asc', file_))[0]
         try:
