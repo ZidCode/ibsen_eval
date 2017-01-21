@@ -148,5 +148,5 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.setLevel(args.level)
-    start(logger)
+    #start(logger)
     start2D(logger)
