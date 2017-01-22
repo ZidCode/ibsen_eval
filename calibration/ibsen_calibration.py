@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import parser.ibsen_parser as ip
 from extract_nonlinearity import generate_nonlinear_correction, check_nonlinearity
-
+from extract_response import generate_response_factors
 
 def sort_ibsen_by_int(dirname):
     """ marshal, xml, or json pickel packages - todo"""
@@ -25,7 +25,7 @@ def sort_ibsen_by_int(dirname):
         ibsen_dict['wave'] = ibsen_dict['wave'][50:]
         ibsen_dict['mean'] = ibsen_dict['mean'][50:]
         ibsen_dict['tdata'] = ibsen_dict['tdata'][:, 50:]
-        print(len(ibsen_dict['wave']))
+        ibsen_dict['data'] = np.transpose(ibsen_dict['tdata'])
         file_ = filter(None, file_.split(dirname))[0]
         file_key = filter(None, re.split('[0-9]{3,}\.asc', file_))[0]
         try:
@@ -98,14 +98,14 @@ def generate_ibsen_calibration_files(directory, reference):
     noise_dict = get_noise(flag)(bias_file, cal_dict)
 
     # Substract darkcurrent from measurements
-    nonlinear_config = {'max_lowest_int_time': 2323, 'sigma': 100, 'index_start_spline_fit': 1400, 'gaussian_mean_steps':4}
+    nonlinear_config = {'max_lowest_int_time': 2323 , 'sigma': 100, 'index_start_spline_fit': 1500, 'gaussian_mean_steps':4}
     #nonlinear_config = {'max_lowest_int_time': 1156, 'sigma': 50, 'index_start_spline_fit': 1400, 'gaussian_mean_steps':4}
     nonlinear_correction_dict = generate_nonlinear_correction(cal_dict_tmp, nonlinear_config, noise_dict)
     noise_dict['noise'] = np.zeros(len(noise_dict['channel']))  # Setting offset to zero
     cal_dict_tmp = subtract_dark(cal_dict_tmp)
     nonlinear_correction_dark = generate_nonlinear_correction(cal_dict_tmp, nonlinear_config, noise_dict)
     check_nonlinearity(cal_dict, [nonlinear_correction_dict, nonlinear_correction_dark])
-
+    cal_dict = subtract_dark(cal_dict)
     while raw_input('Change settings (y or n)') == 'y':
         for key in nonlinear_config.keys():
             nonlinear_config[key] = int(raw_input('%s' %key))

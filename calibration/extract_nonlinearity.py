@@ -4,6 +4,7 @@ import matplotlib.gridspec as gridspec
 import scipy.interpolate as inter
 import matplotlib.pyplot as plt
 from numpy.testing import assert_array_equal
+from matplotlib.font_manager import FontProperties
 
 
 def generate_nonlinear_correction(cal_dict, nonlinear_config, noise_dict):
@@ -82,6 +83,14 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
     ax3 = plt.subplot(gs[2, :])
+    FONTSTYLE = 'serif'
+    FONTSIZE = 12
+    hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+    fontP = FontProperties()
+    fontP.set_family(FONTSTYLE)
+    fontP.set_size('small')
+
+
     for key in chosen_keys:
         # Darkcurrent subtraction
         darkcurrent_corrected_mean = (cal_dict[key]['reference']['mean'] - cal_dict[key]['darkcurrent']['mean']) / key
@@ -93,7 +102,7 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
 
     std_old_mean = np.mean(std_old, axis=0)
     std_old = np.std(std_old, axis=0)
-    ax3.plot(cal_dict[key]['reference']['wave'], std_old / std_old_mean, label='Not corrected',color='r')
+    ax3.plot(cal_dict[key]['reference']['wave'], std_old / std_old_mean * 100, label='Not corrected',color='r')
 
     if len(correction_dict) == 2: legends = ['Offset', 'Darkcurrent']
     if correction_dict:
@@ -112,19 +121,21 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
                     std_new = calibrated_mean
             std_mean = np.mean(std_new, axis=0)
             std_new = np.std(std_new, axis=0)
-            ax3.plot(cal_dict[key]['reference']['wave'], std_new/std_mean, label='%s corrected' % legends[i])
+            ax3.plot(cal_dict[key]['reference']['wave'], std_new/std_mean * 100, label='%s corrected' % legends[i])
 
-    ax1.set_title('Not nonlinear corrected')
-    ax2.set_title('Nonlinear corrected')
-    ax1.set_ylabel('DN')
-    ax2.set_ylabel('DN')
-    ax3.set_xlabel('Wavelength [nm]')
-    ax3.set_ylabel(r'$\Delta$ $\%$')
-    ax3.legend(loc='best')
+    ax1.set_title('Uncorrected spectra', **hfont)
+    ax2.set_title('Nonlinear corrected spectra', **hfont)
+    ax1.set_ylabel('DN [a.u.]', **hfont)
+    ax2.set_ylabel('DN [a.u.]', **hfont)
+    ax3.set_xlabel('Wavelength [nm]', **hfont)
+    ax3.set_ylabel(r'$\Delta$ $\%$', **hfont)
+    ax3.legend(loc='best', prop=fontP)
     leg = plt.gca().get_legend()
     ltext  = leg.get_texts()
     plt.setp(ltext, fontsize='small')
+    plt.tight_layout()
     plt.show()
+
 
 
 
