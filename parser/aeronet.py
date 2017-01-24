@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
-
+import matplotlib.pyplot as plt
 
 
 class AeronetParser:
@@ -35,6 +35,7 @@ class AeronetParser:
         data = np.genfromtxt(aeronet_file, skip_header=7, delimiter=',', dtype=str)
         for idx, column in enumerate(self.column_names):
             self.aeronet_dict[column] = data[:, idx]
+        return self.aeronet_dict
 
     def get_Timeline(self):
         time = self.aeronet_dict['Time(hh:mm:ss)']
@@ -67,6 +68,15 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--file', default=default_file)
     args = parser.parse_args()
     Parser = AeronetParser()
-    Parser.parse(args.file)
+    aeronaet = Parser.parse(args.file)
+    time = Parser.get_Timeline()
     Parser.show('Exact_Wavelengths_of_AOD(um)')
     Parser.pretty_print()
+    plt.plot(time, aeronaet['440-870_Angstrom_Exponent'], '+', label='440-870')
+    plt.plot(time, aeronaet['380-500_Angstrom_Exponent'], '+', label='380-500')
+    plt.plot(time, aeronaet['440-675_Angstrom_Exponent'], '+', label='440-675')
+    plt.plot(time, aeronaet['500-870_Angstrom_Exponent'], '+', label='500-870')
+    # plt.plot(time, aeronaet['340-440_Angstrom_Exponent'])
+    # plt.plot(time, aeronaet['440-675_Angstrom_Exponent[Polar]'])
+    plt.legend()
+    plt.show()

@@ -54,6 +54,15 @@ def test_main():
     result_lmfit = gmod.fit(y_python, x=x)
     print(result_lmfit.fit_report())
 
+    plt.plot(x, y_theano)
+    x_new = np.linspace(300, 900,150)
+    irr_symbol.set_wavelengthAOI(x_new)
+    getIrrRatio = irr_symbol.getcompiledModel('ratio')
+    y_new = getIrrRatio(*expected_values)
+    plt.plot(x_new, y_new, '+', label='different wavelengths')
+    plt.legend()
+    plt.show()
+
 
 def example_gaussian():
     #Config output

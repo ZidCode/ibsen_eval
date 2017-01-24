@@ -9,37 +9,39 @@ from get_weather_conditions import retrieve_weather_parameters
 from atmospheric_mass import get_atmospheric_path_length
 from get_ssa import get_ssa
 from utils.util import international_barometric_formula
-from Model import IrradianceModel_python
+from Model import IrradianceModel_python, IrradianceModel_sym
 """
 Irradiance model due to Greg and Carder
 """
 
 
 """Pseudo Factory"""
-def build_Model(config_data, logger=logging):
+def build_Model(wave, config, logger=logging):
     """
     This method constructs a class object with calculated parameters from gps
     position and utc_time
     Args:
-        config_data: Dict with gps_coords (list of floats) and utc_time
+        config['Processing']: Dict with gps_coords (list of floats) and utc_time
         (datetime)
         logger: available logger
     Returns:
         irr_mod: irradiance_modles object
     """
-    sun_zenith = get_sun_zenith(config_data['utc_time'], *config_data['gps_coords'])
+    model_map = {'python': IrradianceModel_python, 'sym': IrradianceModel_sym}
+    sun_zenith = get_sun_zenith(config['Processing']['utc_time'], *config['Processing']['gps_coords'])
     atmos_path = get_atmospheric_path_length(sun_zenith)
-    weather_dict = retrieve_weather_parameters(config_data['params'], config_data['gps_coords'], config_data['utc_time'])
+    weather_dict = retrieve_weather_parameters(config['Processing']['params'], config['Processing']['gps_coords'], config['Processing']['utc_time'])
     humidity = weather_dict['hum']
-    pressure = international_barometric_formula(config_data['gps_coords'][-1])  # height (magic number)
+    pressure = international_barometric_formula(config['Processing']['gps_coords'][-1])  # height (magic number)
     ssa = get_ssa(humidity)
-    irr_mod = IrradianceModel_python(atmos_path, humidity, ssa, sun_zenith, pressure)
+
+    model = model_map[config['Fitting']['package']](sun_zenith, atmos_path, pressure, ssa, wave, config['Fitting']['params'])
     logger.info(" \n \t Zenith angle %s" %  sun_zenith)
     logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
     logger.info(" \n \t  Relative humidity %s" % humidity)
     logger.info(" \n \t  Pressure %s" % pressure)
     logger.info(" \n \t  Single scattering albedo %s" % ssa)
-    return irr_mod
+    return model
 
 
 

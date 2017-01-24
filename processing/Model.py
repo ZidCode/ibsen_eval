@@ -9,9 +9,8 @@ exp_v = np.vectorize(exp)
 
 class IrradianceModel_python:
 
-    def __init__(self, AM, RH, ssa, zenith, pressure):
+    def __init__(self, zenith, AM, pressure, ssa, _, __):
         self.AM = AM
-        self.RH = RH
         self.ssa = ssa
         self.pressure = pressure
         self.p_0 = atmosphere / 100.0
@@ -57,7 +56,7 @@ class IrradianceModel_python:
 
 class IrradianceModel_sym:
     """ Only symbolic representation"""
-    def __init__(self, wave, zenith=0, AM=0, pressure=0, ssa=0, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
+    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
         #private
         self.variables = variables
         self.wavelength = theano.shared(wave, 'wavelength')
@@ -70,6 +69,9 @@ class IrradianceModel_sym:
         #public
         self.model_dict = {'ratio': self._irradiance_ratio, 'nadir': self._radiance_nadir, 'E_d': self._irradiance}
         self.symbols = {'alpha': T.scalar('alpha'), 'beta': T.scalar('beta'), 'g_dsa': T.scalar('g_dsa'), 'g_dsr': T.scalar('g_dsr')}
+
+    def set_wavelengthAOI(self, wave):
+        self.wavelength = theano.shared(wave, 'wavelength')
 
     def get_Symbols(self):
         return [self.getVariable(name) for name in self.variables if type(self.getVariable(name)) == T.TensorVariable]

@@ -64,6 +64,7 @@ def get_ax(ax, param, param_key, col):
     return ax
 
 
+
 def plot_factory(ax1, ax2, param):
     if param['label'] == 'microtops':
         ax1 = get_ax(ax1, param, 'alpha', 'r')

@@ -57,12 +57,11 @@ def evaluate_spectra(config, logger=logging):
     logger.info("Files\n \t ref: %s  \n \t tar: %s " %(config['Data']['reference'], config['Data']['target']))
     # Reflectance
     reflectance_dict = get_reflectance(ref, tar)
-
-    irradiance_model = factory.build_Model(config['Processing'], logger)
-
+    irradiance_model = factory.build_Model(ref['wave'], config, logger)
     aero = Aerosol_Retrievel(irradiance_model, config['Fitting'], reflectance_dict)
-    aero.fit()
-    logger.info("%s \n" % aero.result.fit_report())
+    result, param_dict, x = aero.fit()
+
+    logger.info("%s \n" % result)
 
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_meas(tar, ref)

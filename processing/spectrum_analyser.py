@@ -1,7 +1,9 @@
 import numpy as np
 from lmfit import Model
 import matplotlib.pyplot as plt
-from irradiance_models import irradiance_models
+from Model import IrradianceModel_python, IrradianceModel_sym
+from Residuum import Residuum
+from FitModel import FitWrapper, FitModel
 
 
 def get_spectral_irradiance_reflectance(E_d, E_up):
@@ -27,15 +29,13 @@ def get_reflectance(E_d, E_up):
 class Aerosol_Retrievel(object):
 
     def __init__(self, irr_model, config, spectra):
+        # ARGS
+        self.retrievel_methods = {'sym': self.scipyfit, 'python': self.LMfit}
         self.spectra = spectra
         self.irr_model = irr_model
-        self.fit_range = config['range_']
-        self.params = config['params']
-        self.initial_values = config['initial_values']
-        self.limits = config['limits']
-        self.fit_model = None
+        self.config = config
         self.weights = None
-
+        # RETURN
         self.result = None
         self.param_dict = dict()
 
@@ -44,8 +44,8 @@ class Aerosol_Retrievel(object):
         return ', '.join("%s: %s" % item for item in var.items())
 
     def _cut_range(self):
-        start = np.where(self.spectra['wave_nm'] <= self.fit_range[0])[0][-1]
-        end = np.where(self.spectra['wave_nm'] >= self.fit_range[1])[0][0]
+        start = np.where(self.spectra['wave_nm'] <= self.config['range_'][0])[0][-1]
+        end = np.where(self.spectra['wave_nm'] >= self.config['range_'][1])[0][0]
         self.param_dict['wave_range'] = self.spectra['wave_nm'][start:end]
         self.param_dict['spectra_range'] = self.spectra['spectra'][start:end]
         self.param_dict['std'] = self.spectra['std'][start:end]
@@ -53,21 +53,41 @@ class Aerosol_Retrievel(object):
     def _construct_weights(self):
         self.weights = 1 / self.param_dict['std']
 
-    def set_params(self):
-        for param, ini, limits in zip(self.params, self.initial_values, self.limits):
-            self.fit_model.set_param_hint(param, value=ini, min=limits[0], max=limits[1])
-
     def fit(self):
         self._cut_range()
-        self._construct_weights()
-        self.fit_model = Model(self.irr_model.irradiance_ratio, independent_vars=['x'], param_names=self.params)
-        self.set_params()
-        self.result = self.fit_model.fit(self.param_dict['spectra_range'], x=self.param_dict['wave_range'], weights=self.weights)
+        #  self._construct_weights()
+        Fit = FitModel(self.config['method'])
+        return self.retrievel_methods[self.config['package']](Fit)
 
+    def scipyfit(self, Fit):
+        self.irr_model.set_wavelengthAOI(self.param_dict['wave_range'])
+        print(self.config['model'])
+        res = Residuum(self.irr_model, 'ratio')
+        return self._minimize(Fit, res)
+
+    def LMfit(self, Fit):
+        print('In Lmfit')
+        self.result = Fit.LMfit(self.param_dict['wave_range'], self.irr_model.irradiance_ratio, self.config['params'],
+                           self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'], jacobial=False)
         for key in self.result.params.keys():
             self.param_dict[key] = dict()
             self.param_dict[key]['stderr'] = self.result.params[key].stderr
             self.param_dict[key]['value'] = self.result.params[key].value
+
+    def _least_squares(self, Fit, res):
+        print('In least_squares')
+        residuals = FitWrapper(res.getResiduals())
+        resultls = Fit.least_squares(residuals, self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'])
+        print("Got %s" % resultls.x)
+        return resultls.x, self.param_dict['wave_range']
+
+    def _minimize(self, Fit, res):
+        print('In scipy-minimize')
+        residuum = FitWrapper(res.getResiduum())
+        resultls = Fit.minimize(residuum, self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'])
+        print("Got %s" % resultls.x)
+        return resultls.x, self.param_dict['wave_range']
+
 
 def example():
     # possible values
