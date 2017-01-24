@@ -2,9 +2,8 @@ import theano
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import Model
-from Model import IrradianceModel, TmpModel
+from Model import IrradianceModel_sym, IrradianceModel_python, GaussModel
 from FitModel import FitWrapper, FitModel
-from irradiance_models import irradiance_models
 from Residuum import Residuum
 
 
@@ -28,7 +27,7 @@ def test_main():
     bounds = [(-0.2, 4), (0., 3), (0., 2.), (0., 2.)]  # config
 
     # Theano
-    irr_symbol = IrradianceModel(x, zenith, AMass, pressure, ssa, variables)
+    irr_symbol = IrradianceModel_sym(x, zenith, AMass, pressure, ssa, variables)
     getIrrRatio = irr_symbol.getcompiledModel('ratio')
     y_theano = getIrrRatio(*expected_values)
     res = Residuum(irr_symbol, 'ratio')
@@ -43,7 +42,7 @@ def test_main():
 
 
     # Python
-    IrradianceObject = irradiance_models(AMass, rel_h, ssa, zenith, pressure)
+    IrradianceObject = IrradianceModel_python(AMass, rel_h, ssa, zenith, pressure)
     y_python = IrradianceObject.irradiance_ratio(x, 2.5, 0.06,0.0, 0.6, 0.5)
 
     gmod = Model(IrradianceObject.irradiance_ratio, independent_vars=['x'], param_names=variables)
@@ -68,7 +67,7 @@ def example_gaussian():
     y = gaussian(x, guess) + np.random.normal(0, 0.1, len(x))
 
     #Auswertung
-    model= TmpModel(x, variables)
+    model= GaussModel(x, variables)
     res = Residuum(model, 'gauss')
     function_to_fit = FitWrapper(res.getResiduum())
     test = FitModel(function_to_fit)

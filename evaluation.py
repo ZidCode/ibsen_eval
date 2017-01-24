@@ -1,16 +1,13 @@
 #!/usr/bin/env python
-import os
 import re
-import copy
 import logging
 import ConfigParser
 import numpy as np
-import pandas as pd
 from datetime import datetime
 from ast import literal_eval
-import processing.irradiance_models as irr
+import processing.model_factory as factory
 from processing.spectrum_analyser import get_reflectance, Aerosol_Retrievel
-from parser.ibsen_parser import parse_ibsen_file, get_mean_column, get_mean_column
+from parser.ibsen_parser import parse_ibsen_file
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
 from parser.microtops import extract_microtops_inifile
 """
@@ -58,13 +55,10 @@ def evaluate_spectra(config, logger=logging):
     logger.info("Date: %s " % config['Processing']['utc_time'])
     logger.info("GPS coords (lat, lon) %s %s" % (config['Processing']['gps_coords'][0], config['Processing']['gps_coords'][1]))
     logger.info("Files\n \t ref: %s  \n \t tar: %s " %(config['Data']['reference'], config['Data']['target']))
-
-    irradiance_model = irr.build_Model(config['Processing'], logger)
-
-    # if config['Processing']['spectralon'] == 'reference':
-    #     spektralon = np.genfromtxt('/home/jana_jo/DLR/Codes/calibration/Spektralon/Spectralon_neu.txt', skip_header=12)
-    #     ref['mean'] = ref['mean'] / np.interp(ref['wave'], spektralon[:,0], spektralon[:,1])
+    # Reflectance
     reflectance_dict = get_reflectance(ref, tar)
+
+    irradiance_model = factory.build_Model(config['Processing'], logger)
 
     aero = Aerosol_Retrievel(irradiance_model, config['Fitting'], reflectance_dict)
     aero.fit()
@@ -72,8 +66,6 @@ def evaluate_spectra(config, logger=logging):
 
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_meas(tar, ref)
-        #frame = pd.DataFrame(np.transpose([tar['wave'], reflectance_dict['spectra']]), columns=['Wavelength', 'Reflectance'])
-        #frame.to_csv('reflectance.csv', index=False)
         plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
         plot_fitted_reflectance(aero)
     return aero.param_dict, aero
@@ -109,10 +101,10 @@ def evaluate_measurements(directory, config, logger=logging):
     else:
         plot_aengstrom_parameters(param_dict)
 
+
 def compare_measurements(config, logger):
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
-
 
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
