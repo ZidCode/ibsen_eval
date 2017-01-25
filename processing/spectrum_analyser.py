@@ -28,13 +28,15 @@ def get_reflectance(E_d, E_up):
 
 class Aerosol_Retrievel(object):
 
-    def __init__(self, irr_model, config, spectra):
+    def __init__(self, irr_model, config, spectra, logger):
         # ARGS
         self.retrievel_methods = {'sym': self.scipyfit, 'python': self.LMfit}
         self.spectra = spectra
         self.irr_model = irr_model
         self.config = config
         self.weights = None
+        self.model = config['model']
+        self.logger = logger
         # RETURN
         self.result = None
         self.param_dict = dict()
@@ -56,37 +58,37 @@ class Aerosol_Retrievel(object):
     def fit(self):
         self._cut_range()
         #  self._construct_weights()
-        Fit = FitModel(self.config['method'])
+        Fit = FitModel(self.logger, self.config['method'])
+        self.logger.info("Using Method %s " % self.config['method'])
         return self.retrievel_methods[self.config['package']](Fit)
 
     def scipyfit(self, Fit):
         self.irr_model.set_wavelengthAOI(self.param_dict['wave_range'])
-        print(self.config['model'])
+        self.logger.info("%s Model to fit" % self.model)
         res = Residuum(self.irr_model, 'ratio')
         return self._minimize(Fit, res)
 
     def LMfit(self, Fit):
-        print('In Lmfit')
+        self.logger.info('In Lmfit')
         self.result = Fit.LMfit(self.param_dict['wave_range'], self.irr_model.irradiance_ratio, self.config['params'],
                            self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'], jacobial=False)
         for key in self.result.params.keys():
             self.param_dict[key] = dict()
             self.param_dict[key]['stderr'] = self.result.params[key].stderr
             self.param_dict[key]['value'] = self.result.params[key].value
+        return self.result, self.param_dict
 
     def _least_squares(self, Fit, res):
         print('In least_squares')
         residuals = FitWrapper(res.getResiduals())
         resultls = Fit.least_squares(residuals, self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'])
-        print("Got %s" % resultls.x)
-        return resultls.x, self.param_dict['wave_range']
+        return resultls.x, self.param_dict
 
     def _minimize(self, Fit, res):
         print('In scipy-minimize')
         residuum = FitWrapper(res.getResiduum())
         resultls = Fit.minimize(residuum, self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'])
-        print("Got %s" % resultls.x)
-        return resultls.x, self.param_dict['wave_range']
+        return resultls.x, self.param_dict
 
 
 def example():

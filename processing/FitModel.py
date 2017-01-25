@@ -19,10 +19,11 @@ class FitModel:
         curve_fit
         least_squares
     """
-    def __init__(self, method='TNC', fit_model=None):
+    def __init__(self, logger, method='TNC', fit_model=None):
         self.method = method
         self.result = None
         self.fit_model = fit_model
+        self.logger = logger
 
     def minimize(self, thcallable, start, y, bounds, jacobian=False):
         self.result = minimize(thcallable, start, args=(y), jac=jacobian, method=self.method, bounds=bounds)
@@ -44,4 +45,5 @@ class FitModel:
 
     def _set_params(self, params, initial_values, limits):
         for param, ini, limits in zip(params, initial_values, limits):
+            self.logger.info("Setting for %s: initial: %s and bound %s" %(param, ini, limits))
             self.fit_model.set_param_hint(param, value=ini, min=limits[0], max=limits[1])

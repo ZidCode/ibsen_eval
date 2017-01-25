@@ -41,6 +41,7 @@ def build_Model(wave, config, logger=logging):
     logger.info(" \n \t  Relative humidity %s" % humidity)
     logger.info(" \n \t  Pressure %s" % pressure)
     logger.info(" \n \t  Single scattering albedo %s" % ssa)
+    logger.info(" \n \t  Using %s model <<<< FIT" % config['Fitting']['package'] )
     return model
 
 

@@ -7,6 +7,7 @@ from scipy.constants import atmosphere
 
 exp_v = np.vectorize(exp)
 
+
 class IrradianceModel_python:
 
     def __init__(self, zenith, AM, pressure, ssa, _, __):
@@ -14,11 +15,14 @@ class IrradianceModel_python:
         self.ssa = ssa
         self.pressure = pressure
         self.p_0 = atmosphere / 100.0
-        print(self.p_0)
         self.zenith_rad = np.radians(zenith)
         self.ray = 0.00877
         self.ray_expo = -4.05
         self.lambda_reference = 1000  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
+        self.model_dict = {'ratio': self.irradiance_ratio, 'nadir': None}
+
+    def getModel(self, name):
+        return self.model_dict[name]
 
     def forward_scat(self, alpha):
         """

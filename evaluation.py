@@ -37,7 +37,7 @@ def create_logger(log_config):
     log_dict = {'DEBUG': logging.DEBUG, 'INFO': logging.INFO}
     logger = logging.getLogger('eval')
     ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s - %(funcName)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.setLevel(log_config['logging_level'])
@@ -58,8 +58,8 @@ def evaluate_spectra(config, logger=logging):
     # Reflectance
     reflectance_dict = get_reflectance(ref, tar)
     irradiance_model = factory.build_Model(ref['wave'], config, logger)
-    aero = Aerosol_Retrievel(irradiance_model, config['Fitting'], reflectance_dict)
-    result, param_dict, x = aero.fit()
+    aero = Aerosol_Retrievel(irradiance_model, config['Fitting'], reflectance_dict, logger)
+    result, param_dict = aero.fit()
 
     logger.info("%s \n" % result)
 

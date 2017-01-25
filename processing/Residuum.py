@@ -16,7 +16,7 @@ class Residuum:
         self.args = to_list(self.reference) + self.symbols
 
     def getsymResiduum(self):
-        R = 0.5* T.sum((self.model - self.reference)**2)
+        R = 0.5 * T.sum((self.model - self.reference) ** 2)
         return R
 
     def getResiduum(self):
