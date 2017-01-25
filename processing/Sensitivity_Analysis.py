@@ -38,8 +38,8 @@ def start(logger):
     setup = set_up()
     model_param = get_model_param()
     parameters = {'alpha': 0, 'beta': 1, 'g_dsa': 2, 'g_dsr': 3}
-    input_parameters = {'alpha': np.linspace(1.0, 2.5, 101), 'beta': np.linspace(0.02, 0.2, 101),
-                        'g_dsa': np.linspace(0., 1., 101), 'g_dsr': np.linspace(0., 1., 101)}
+    input_parameters = {'alpha': np.linspace(1.0, 2.5, 101), 'beta': np.linspace(0.02, 0.1, 101),
+                        'g_dsa': np.linspace(.1, .5, 101), 'g_dsr': np.linspace(0.1, .5, 101)}
 
     for rand in range(30):
         for biased_parameter, biased_idx in parameters.items():
@@ -68,16 +68,16 @@ def start(logger):
             frame = pd.DataFrame(result['output'], columns=variables)
             frame.insert(0, '%s' % biased_parameter, result['input'])
             frame.insert(0, 'expected', result['expected'])
-            frame.to_csv('results/biased_%s_%s.txt' % (rand, biased_parameter), index=False)
+            frame.to_csv('results/single_analyse_kak2D/biased_%s_%s.txt' % (rand, biased_parameter), index=False)
 
 
 def start2D(logger):
     model_param = get_model_param()
     setup = set_up()
     r_setup = copy.copy(set_up())
-    noise_count = 40
-    global_var = {'param': 'g_dsr', 'input': np.linspace(.1,.5,101), 'idx':3}
-    local_var = {'param': 'g_dsa', 'input': np.linspace(.1,.5,101) ,'idx':2}
+    noise_count = 30
+    global_var = {'param': 'g_dsr', 'input': np.linspace(.16,.5,41), 'idx':3}
+    local_var = {'param': 'g_dsa', 'input': np.linspace(.1,.5,41) ,'idx':2}
     for key in setup.keys():
         del r_setup[key][global_var['idx']]
         del r_setup[key][local_var['idx']]
