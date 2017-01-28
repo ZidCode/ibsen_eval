@@ -1,5 +1,7 @@
 from lmfit import Model
 from scipy.optimize import minimize, least_squares
+from Model import IrradianceModel_python, IrradianceModel_sym
+from Residuum import Residuum
 
 
 class FitWrapper:
@@ -12,38 +14,114 @@ class FitWrapper:
         return res
 
 
-class FitModel:
-    """
-    lmfit/scipy
-        minimize
-        curve_fit
-        least_squares
-    """
-    def __init__(self, logger, method='TNC', fit_model=None):
-        self.method = method
-        self.result = None
-        self.fit_model = fit_model
+class FitModelFactory:
+
+    def __init__(self, wp, config, wavelengths, logger):
+
+        if config['package'] == 'lmfit':
+            self.model = IrradianceModel_python(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa)
+        else:
+            irr = IrradianceModel_sym(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa, wavelengths, config['params'])
+            self.model = Residuum(irr, 'ratio')
+
+    def get_fitmodel(self):
+        return self.model
+
+
+class FitMethodFactory:
+
+    def __init__(self, config, logger):
+        self.config = config
         self.logger = logger
 
-    def minimize(self, thcallable, start, y, bounds, jacobian=False):
-        self.result = minimize(thcallable, start, args=(y), jac=jacobian, method=self.method, bounds=bounds)
-        return self.result
+    def get_method(self):
+        if self.config['package'] =='lmfit':
+            self.logger.info("Using lmfit package")
+            return LMFit
+        elif self.config['package'] == 'least_squares':
+            self.logger.info("Using least_squares package")
+            return LeastSquaresFit
+        elif self.config['package'] == 'minimize':
+            self.logger.info("Using minimize package")
+            return Minimize
 
-    def least_squares(self, thecallable, start, y, bounds, jacobian=False):
-        bounds = tuple(map(list, zip(*bounds)))  # [(min,max),(min1,max1)..] -> ([min,min1,..], [max,max1..])
-        if jacobian:
-            self.result = least_squares(thecallable, start, jac=jacobian, args=(y,), bounds=bounds)
-        else:
-            self.result = least_squares(thecallable, start, args=(y,), bounds=bounds)
-        return self.result
 
-    def LMfit(self, wavelength, thecallable, params, start, y, bounds, jacobial=False):
-        self.fit_model = Model(thecallable, independent_vars=['x'], param_names=params)
-        self._set_params(params, start, bounds)
-        self.result = self.fit_model.fit(y, x=wavelength)
-        return self.result
+class LMFit:
 
-    def _set_params(self, params, initial_values, limits):
+    def __init__(self, model, config, param_dict, logger):
+        self.config = config
+        self.param_dict = param_dict
+        self.logger = logger
+        self.callable = model.irradiance_ratio
+
+    def fit(self):
+        self.logger.info('Method %s' % self.config['method'])
+        gmod = Model(self.callable, independent_vars=['x'], param_names=self.config['params'], method=self.config['method'])
+        self._set_params(self.config['params'], self.config['initial_values'], self.config['limits'], gmod)
+        self.result = gmod.fit(self.param_dict['spectra_range'], x=self.param_dict['wave_range'])
+        for key in self.result.params.keys():
+            self.param_dict[key] = dict()
+            self.param_dict[key]['stderr'] = self.result.params[key].stderr
+            self.param_dict[key]['value'] = self.result.params[key].value
+        return self.result, self.param_dict
+
+    def _set_params(self, params, initial_values, limits, fit_model):
         for param, ini, limits in zip(params, initial_values, limits):
-            self.logger.info("Setting for %s: initial: %s and bound %s" %(param, ini, limits))
-            self.fit_model.set_param_hint(param, value=ini, min=limits[0], max=limits[1])
+            self.logger.info("Setting for %s: initial: %s and bound %s" % (param, ini, limits))
+            fit_model.set_param_hint(param, value=ini, min=limits[0], max=limits[1])
+
+
+class Minimize:
+
+    def __init__(self, model, config, param_dict, logger):
+        self.callable = FitWrapper(model.getResiduum())
+        self.symbols = model.get_original_model().get_Symbols()
+        self.param_dict = param_dict
+        self.config = config
+        self.logger = logger
+        if config['jac_flag']:
+            logger.info("Using jacobian")
+            self.jacobian = FitWrapper(model.getDerivative())
+        else:
+            assert config['jac_flag'] == False
+            self.jacobian = False
+
+    def fit(self):
+        self.logger.info('Method %s' % self.config['method'])
+        self.result = minimize(self.callable, self.config['initial_values'], args=(self.param_dict['spectra_range']), jac=self.jacobian,
+                               method=self.config['method'], bounds=self.config['limits'])
+        for idx, symbol in enumerate(self.symbols):
+            self.param_dict[symbol] = dict()
+            self.param_dict[symbol]['stderr'] = None
+            self.param_dict[symbol]['value'] = self.result.x[idx]
+
+        return Result(self.result), self.param_dict
+
+
+class LeastSquaresFit:
+
+    def __init__(self, model, config, param_dict, logger):
+        self.config = config
+        self.symbols = model.get_original_model().get_Symbols()
+        self.param_dict = param_dict
+        self.callable = FitWrapper(model.getResiduals())
+        self.logger = logger
+
+    def fit(self):
+        self.logger.info('Method %s' % self.config['method'])
+        bounds = tuple(map(list, zip(*self.config['limits'])))  # [(min,max),(min1,max1)..] -> ([min,min1,..], [max,max1..])
+        self.result = least_squares(self.callable, self.config['initial_values'], args=(self.param_dict['spectra_range'],), bounds=bounds)
+        for idx, symbol in enumerate(self.symbols):
+            self.param_dict[symbol] = dict()
+            self.param_dict[symbol]['stderr'] = None
+            self.param_dict[symbol]['value'] = self.result.x[idx]
+
+        return Result(self.result), self.param_dict
+
+
+class Result:
+    def __init__(self, result):
+        self.result = result
+
+    def fit_report(self):
+        print(self.result)

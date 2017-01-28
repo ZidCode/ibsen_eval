@@ -15,34 +15,21 @@ Irradiance model due to Greg and Carder
 """
 
 
-"""Pseudo Factory"""
-def build_Model(wave, config, logger=logging):
-    """
-    This method constructs a class object with calculated parameters from gps
-    position and utc_time
-    Args:
-        config['Processing']: Dict with gps_coords (list of floats) and utc_time
-        (datetime)
-        logger: available logger
-    Returns:
-        irr_mod: irradiance_modles object
-    """
-    model_map = {'python': IrradianceModel_python, 'sym': IrradianceModel_sym}
-    sun_zenith = get_sun_zenith(config['Processing']['utc_time'], *config['Processing']['gps_coords'])
-    atmos_path = get_atmospheric_path_length(sun_zenith)
-    weather_dict = retrieve_weather_parameters(config['Processing']['params'], config['Processing']['gps_coords'], config['Processing']['utc_time'])
-    humidity = weather_dict['hum']
-    pressure = international_barometric_formula(config['Processing']['gps_coords'][-1])  # height (magic number)
-    ssa = get_ssa(humidity)
+class WeatherAtmosphereParameter:
 
-    model = model_map[config['Fitting']['package']](sun_zenith, atmos_path, pressure, ssa, wave, config['Fitting']['params'])
-    logger.info(" \n \t Zenith angle %s" %  sun_zenith)
-    logger.info(" \n \t  Atmospheric path length %s" % atmos_path)
-    logger.info(" \n \t  Relative humidity %s" % humidity)
-    logger.info(" \n \t  Pressure %s" % pressure)
-    logger.info(" \n \t  Single scattering albedo %s" % ssa)
-    logger.info(" \n \t  Using %s model <<<< FIT" % config['Fitting']['package'] )
-    return model
+    def __init__(self, logger, config, wavelength):
+        self.sun_zenith = get_sun_zenith(config['Processing']['utc_time'], *config['Processing']['gps_coords'])
+        self.atmos_path = get_atmospheric_path_length(self.sun_zenith)
+        weather_dict = retrieve_weather_parameters(config['Processing']['params'], config['Processing']['gps_coords'], config['Processing']['utc_time'])
+        humidity = weather_dict['hum']
+        self.pressure = international_barometric_formula(config['Processing']['gps_coords'][-1])  # height (magic number)
+        self.ssa = get_ssa(humidity)
+        logger.info(" \n \t Zenith angle %s" %  self.sun_zenith)
+        logger.info(" \n \t  Atmospheric path length %s" % self.atmos_path)
+        logger.info(" \n \t  Relative humidity %s" % humidity)
+        logger.info(" \n \t  Pressure %s" % self.pressure)
+        logger.info(" \n \t  Single scattering albedo %s" % self.ssa)
+        logger.info(" \n \t  Using %s model <<<< FIT" % config['Fitting']['package'] )
 
 
 

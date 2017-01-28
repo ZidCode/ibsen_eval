@@ -5,7 +5,7 @@ import ConfigParser
 import numpy as np
 from datetime import datetime
 from ast import literal_eval
-import processing.model_factory as factory
+from processing.model_factory import WeatherAtmosphereParameter
 from processing.spectrum_analyser import get_reflectance, Aerosol_Retrievel
 from parser.ibsen_parser import parse_ibsen_file
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
@@ -29,6 +29,7 @@ def parse_ini_config(ini_file):
     config_dict['Fitting']['range_'] = convert_to_array(config_dict['Fitting']['range_'], float)
     config_dict['Fitting']['params']  = convert_to_array(config_dict['Fitting']['params'], str)
     config_dict['Fitting']['initial_values'] = convert_to_array(config_dict['Fitting']['initial_values'], float)
+    config_dict['Fitting']['jac_flag'] = literal_eval(config_dict['Fitting']['jac_flag'])
     config_dict['Validation']['validate'] = literal_eval(config_dict['Validation']['validate'])
     return config_dict
 
@@ -57,17 +58,19 @@ def evaluate_spectra(config, logger=logging):
     logger.info("Files\n \t ref: %s  \n \t tar: %s " %(config['Data']['reference'], config['Data']['target']))
     # Reflectance
     reflectance_dict = get_reflectance(ref, tar)
-    irradiance_model = factory.build_Model(ref['wave'], config, logger)
-    aero = Aerosol_Retrievel(irradiance_model, config['Fitting'], reflectance_dict, logger)
-    result, param_dict = aero.fit()
 
-    logger.info("%s \n" % result)
+    WeatherParams = WeatherAtmosphereParameter(logger, config, ref['wave'])
 
-    if config['Processing']['logging_level'] == 'DEBUG':
-        plot_meas(tar, ref)
-        plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
-        plot_fitted_reflectance(aero)
-    return aero.param_dict, aero
+    aero = Aerosol_Retrievel(WeatherParams, config['Fitting'], reflectance_dict, logger)
+    result, param_dict = aero.getParams()
+
+    logger.info("%s \n" % result.fit_report())
+
+    # if config['Processing']['logging_level'] == 'DEBUG':
+    #     plot_meas(tar, ref)
+    #     plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
+    #     plot_fitted_reflectance(aero)
+    # return aero.param_dict, aero
 
 
 def evaluate_measurements(directory, config, logger=logging):

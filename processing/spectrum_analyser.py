@@ -3,7 +3,7 @@ from lmfit import Model
 import matplotlib.pyplot as plt
 from Model import IrradianceModel_python, IrradianceModel_sym
 from Residuum import Residuum
-from FitModel import FitWrapper, FitModel
+from FitModel import FitWrapper, FitModelFactory, FitMethodFactory
 
 
 def get_spectral_irradiance_reflectance(E_d, E_up):
@@ -28,14 +28,12 @@ def get_reflectance(E_d, E_up):
 
 class Aerosol_Retrievel(object):
 
-    def __init__(self, irr_model, config, spectra, logger):
+    def __init__(self, WeatherParams, config, spectra, logger):
         # ARGS
-        self.retrievel_methods = {'sym': self.scipyfit, 'python': self.LMfit}
         self.spectra = spectra
-        self.irr_model = irr_model
+        self.weatherparams = WeatherParams
         self.config = config
         self.weights = None
-        self.model = config['model']
         self.logger = logger
         # RETURN
         self.result = None
@@ -55,41 +53,17 @@ class Aerosol_Retrievel(object):
     def _construct_weights(self):
         self.weights = 1 / self.param_dict['std']
 
-    def fit(self):
+    def getParams(self):
         self._cut_range()
         #  self._construct_weights()
-        Fit = FitModel(self.logger, self.config['method'])
-        self.logger.info("Using Method %s " % self.config['method'])
-        return self.retrievel_methods[self.config['package']](Fit)
-
-    def scipyfit(self, Fit):
-        self.irr_model.set_wavelengthAOI(self.param_dict['wave_range'])
-        self.logger.info("%s Model to fit" % self.model)
-        res = Residuum(self.irr_model, 'ratio')
-        return self._minimize(Fit, res)
-
-    def LMfit(self, Fit):
-        self.logger.info('In Lmfit')
-        self.result = Fit.LMfit(self.param_dict['wave_range'], self.irr_model.irradiance_ratio, self.config['params'],
-                           self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'], jacobial=False)
-        for key in self.result.params.keys():
-            self.param_dict[key] = dict()
-            self.param_dict[key]['stderr'] = self.result.params[key].stderr
-            self.param_dict[key]['value'] = self.result.params[key].value
-        return self.result, self.param_dict
-
-    def _least_squares(self, Fit, res):
-        print('In least_squares')
-        residuals = FitWrapper(res.getResiduals())
-        resultls = Fit.least_squares(residuals, self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'])
-        return resultls.x, self.param_dict
-
-    def _minimize(self, Fit, res):
-        print('In scipy-minimize')
-        residuum = FitWrapper(res.getResiduum())
-        resultls = Fit.minimize(residuum, self.config['initial_values'], self.param_dict['spectra_range'], self.config['limits'])
-        return resultls.x, self.param_dict
-
+        modelfactory = FitModelFactory(self.weatherparams, self.config, self.param_dict['wave_range'], self.logger)
+        model = modelfactory.get_fitmodel()
+        methodfactory = FitMethodFactory(self.config, self.logger)
+        method = methodfactory.get_method()
+        print(self.param_dict.keys())
+        test = method(model, self.config, self.param_dict, self.logger)
+        result, param_dict = test.fit()
+        return result, param_dict
 
 def example():
     # possible values

@@ -63,7 +63,7 @@ class AeronetParser:
 
 if __name__ == "__main__":
     import argparse
-    default_file = '/home/jana_jo/DLR/Codes/measurements/Aeronet/20161128_20161130_Munich_University.lev15'
+    default_file = '/home/joanna/DLR/Codes/measurements/Aeronet/20161128_20161130_Munich_University/20161128_20161130_Munich_University.lev15'
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', default=default_file)
     args = parser.parse_args()

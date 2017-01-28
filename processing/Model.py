@@ -10,7 +10,7 @@ exp_v = np.vectorize(exp)
 
 class IrradianceModel_python:
 
-    def __init__(self, zenith, AM, pressure, ssa, _, __):
+    def __init__(self, zenith, AM, pressure, ssa):
         self.AM = AM
         self.ssa = ssa
         self.pressure = pressure
