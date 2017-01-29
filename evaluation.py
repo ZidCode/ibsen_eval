@@ -66,11 +66,11 @@ def evaluate_spectra(config, logger=logging):
 
     logger.info("%s \n" % result.fit_report())
 
-    # if config['Processing']['logging_level'] == 'DEBUG':
-    #     plot_meas(tar, ref)
-    #     plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
-    #     plot_fitted_reflectance(aero)
-    # return aero.param_dict, aero
+    if config['Processing']['logging_level'] == 'DEBUG':
+        plot_meas(tar, ref)
+        plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
+        plot_fitted_reflectance(result, param_dict, reflectance_dict)
+    return aero.param_dict, aero
 
 
 def evaluate_measurements(directory, config, logger=logging):

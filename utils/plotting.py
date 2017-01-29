@@ -38,7 +38,7 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     plt.show()
 
 
-def plot_fitted_reflectance(aero_fit):
+def plot_fitted_reflectance(result, param_dict, measurement):
     """
     Args:
         reflectance_dict: Reflectance dict with std, wave and spectra
@@ -49,20 +49,20 @@ def plot_fitted_reflectance(aero_fit):
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
 
-    ax1 = aero_fit.result.plot_residuals(ax=ax1)
-    ax2.plot(aero_fit.spectra['wave_nm'], aero_fit.spectra['spectra'])
-    ax2.plot(aero_fit.param_dict['wave_range'], aero_fit.result.best_fit, 'r-')
-    ax2.errorbar(aero_fit.param_dict['wave_range'], aero_fit.param_dict['spectra_range'], yerr=aero_fit.param_dict['std'], ecolor='g')
+    ax1 = result.plot_residuals(ax=ax1)
+    ax2.plot(measurement['wave_nm'], measurement['spectra'])
+    ax2.plot(param_dict['wave_range'], result.best_fit, 'r-')
+    ax2.errorbar(param_dict['wave_range'], param_dict['spectra_range'], yerr=param_dict['std'], ecolor='g')
     ax2.set_title('Fitted reflectance')
     ax2.set_ylabel('Reflectance')
     ax2.set_xlabel(r'Wavelength $\left[nm\right]$')
     plt.show()
 
+
 def get_ax(ax, param, param_key, col):
     #ax.plot(param['utc_times'], param['%s' % param_key], '%s' %col, label=param['label'])
     ax.errorbar(param['utc_times'], param['%s' % param_key], yerr=param['%s_stderr' % param_key], ecolor='%s' % col, fmt='none',label=param['label'])
     return ax
-
 
 
 def plot_factory(ax1, ax2, param):

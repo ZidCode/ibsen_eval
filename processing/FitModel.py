@@ -21,8 +21,7 @@ class FitModelFactory:
         if config['package'] == 'lmfit':
             self.model = IrradianceModel_python(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa)
         else:
-            irr = IrradianceModel_sym(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa, wavelengths, config['params'])
-            self.model = Residuum(irr, 'ratio')
+            self.model = IrradianceModel_sym(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa, wavelengths, config['params'])
 
     def get_fitmodel(self):
         return self.model
@@ -74,14 +73,16 @@ class LMFit:
 class Minimize:
 
     def __init__(self, model, config, param_dict, logger):
-        self.callable = FitWrapper(model.getResiduum())
-        self.symbols = model.get_original_model().get_Symbols()
+        self.model = model
+        self.res = Residuum(model, 'ratio')
+        self.callable = FitWrapper(self.res.getResiduum())
+        self.symbols = model.get_Symbols()
         self.param_dict = param_dict
         self.config = config
         self.logger = logger
         if config['jac_flag']:
             logger.info("Using jacobian")
-            self.jacobian = FitWrapper(model.getDerivative())
+            self.jacobian = FitWrapper(self.res.getDerivative())
         else:
             assert config['jac_flag'] == False
             self.jacobian = False
@@ -94,17 +95,28 @@ class Minimize:
             self.param_dict[symbol] = dict()
             self.param_dict[symbol]['stderr'] = None
             self.param_dict[symbol]['value'] = self.result.x[idx]
+        self._calc_fitted_spectra()
+        self._calc_residuals()
+        return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
 
-        return Result(self.result), self.param_dict
+    def _calc_fitted_spectra(self):
+        f = self.model.getcompiledModel('ratio')
+        self.fitted_spectra = f(*self.result.x)
+
+    def _calc_residuals(self):
+        #TODO
+        self.residuals = self.param_dict['spectra_range'] - self.fitted_spectra
 
 
 class LeastSquaresFit:
 
     def __init__(self, model, config, param_dict, logger):
         self.config = config
-        self.symbols = model.get_original_model().get_Symbols()
+        self.model = model
+        self.res = Residuum(model, 'ratio')
+        self.callable = FitWrapper(self.res.getResiduals())
+        self.symbols = self.model.get_Symbols()
         self.param_dict = param_dict
-        self.callable = FitWrapper(model.getResiduals())
         self.logger = logger
 
     def fit(self):
@@ -115,13 +127,22 @@ class LeastSquaresFit:
             self.param_dict[symbol] = dict()
             self.param_dict[symbol]['stderr'] = None
             self.param_dict[symbol]['value'] = self.result.x[idx]
-
         return Result(self.result), self.param_dict
 
 
 class Result:
-    def __init__(self, result):
+    def __init__(self, result, fitted_spectra, residuals, wavelength):
+        #public
         self.result = result
+        self.best_fit = fitted_spectra
+        self.residuals = residuals
+        self.wavelength = wavelength
 
     def fit_report(self):
         print(self.result)
+
+    def plot_residuals(self, ax):
+        ax1 = ax.plot(self.wavelength, self.residuals)
+        return ax1
+
+
