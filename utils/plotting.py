@@ -1,6 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.font_manager import FontProperties
+
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
 
 
 def plot_meas(tar, ref):
@@ -59,33 +67,62 @@ def plot_fitted_reflectance(result, param_dict, measurement):
     plt.show()
 
 
-def get_ax(ax, param, param_key, col):
-    #ax.plot(param['utc_times'], param['%s' % param_key], '%s' %col, label=param['label'])
-    ax.errorbar(param['utc_times'], param['%s' % param_key], yerr=param['%s_stderr' % param_key], ecolor='%s' % col, fmt='none',label=param['label'])
-    return ax
-
-
-def plot_factory(ax1, ax2, param):
-    if param['label'] == 'microtops':
-        ax1 = get_ax(ax1, param, 'alpha', 'r')
-        ax2 =get_ax(ax2, param, 'beta', 'r')
-    elif param['label'] == 'Ibsen':
-        ax1 = get_ax(ax1, param, 'alpha', 'g')
-        ax2 = get_ax(ax2, param, 'beta', 'g')
-    return ax1, ax2
-
-
-def plot_aengstrom_parameters(*param_dict):
+def plot_aengstrom_parameters(results, validation, title):
 
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-
-    for param in param_dict:
-        ax1, ax2 = plot_factory(ax1, ax2, param)
-
-    ax1.set_ylabel(r'Aengstrom exponent $\alpha$')
-    ax2.set_ylabel(r'Turbidity $\beta$')
-    ax2.set_xlabel('UTC Time')
-    ax1.legend(loc='best')
+    ax1.errorbar(results['sun_zenith'], results['alpha'], yerr=results['alpha_stderr'], ecolor='b',label='Ibsen')
+    ax1.errorbar(validation['utc_times'], validation['alpha'], yerr=validation['alpha_stderr'], ecolor='g',label='Microtops')
+    ax2.errorbar(results['sun_zenith'], results['beta'], yerr=results['beta_stderr'], ecolor='b' ,label='Ibsen')
+    ax2.errorbar(validation['utc_times'], validation['beta'], yerr=validation['beta_stderr'], ecolor='g',label='Microtops')
+    ax1.legend(loc='best', prop=fontP)
+    ax2.legend(loc='best', prop=fontP)
+    ax1.set_ylabel(r'Aengstrom exponent $\alpha$', **hfont)
+    ax2.set_ylabel(r'Turbidity $\beta$', **hfont)
+    ax2.set_xlabel('UTC Time', **hfont)
+    ax1.set_title('%s' % title, **hfont)
+    plt.tight_layout()
     plt.show()
+
+
+def plot_aengstrom_parameters_aeronet(results, validation, title):
+
+    gs = gridspec.GridSpec(4, 4)
+    ax1 = plt.subplot(gs[0, :])
+    ax2 = plt.subplot(gs[1, :])
+    ax3 = plt.subplot(gs[2, :])
+    ax4 = plt.subplot(gs[3, :])
+    ax1.errorbar(results['utc_times'], results['alpha'], yerr=results['alpha_stderr'], ecolor='b',label='Ibsen')
+    ax1.plot(validation['utc_times'], validation['440-870_Angstrom_Exponent'], '+', label='440-870')
+    ax1.plot(validation['utc_times'], validation['380-500_Angstrom_Exponent'], '+', label='380-500')
+    ax1.plot(validation['utc_times'], validation['440-675_Angstrom_Exponent'], '+', label='440-675')
+    ax1.plot(validation['utc_times'], validation['500-870_Angstrom_Exponent'], '+', label='500-870')
+
+    ax2.errorbar(results['utc_times'], results['beta'], yerr=results['beta_stderr'], ecolor='b' ,label='Ibsen')
+    ax2.errorbar(validation['utc_times'], validation['Turbidity'], yerr=validation['Turbidity_stderror'], fmt='None', ecolor='g', label='Aeronet')
+
+    ax3.errorbar(results['utc_times'], results['g_dsr'], yerr=results['g_dsr_stderr'], ecolor='b',label='Ibsen')
+    ax4.errorbar(results['utc_times'], results['g_dsa'], yerr=results['g_dsa_stderr'], ecolor='b', label='Ibsen')
+
+    ax1.legend(loc='best', prop=fontP)
+    ax2.legend(loc='best', prop=fontP)
+    ax3.legend(loc='best', prop=fontP)
+    ax4.legend(loc='best', prop=fontP)
+
+    ax1.set_ylabel(r'Aengstrom exponent $\alpha$', **hfont)
+    ax2.set_ylabel(r'Turbidity $\beta$', **hfont)
+    ax3.set_ylabel(r'$g_{dsr}$', **hfont)
+    ax4.set_ylabel(r'$g_{dsa}$', **hfont)
+    ax2.set_xlabel('Sun zenith $^{\circ}$', **hfont)
+    ax1.set_title('%s' % title, **hfont)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_turbidity(wave, aods, wave_new, fitted):
+    plt.plot(wave, aods, 'b+')
+    plt.plot(wave_new, fitted, 'g')
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'AOD', **hfont)
+    return plt

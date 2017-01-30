@@ -9,7 +9,7 @@ from processing.model_factory import WeatherAtmosphereParameter
 from processing.spectrum_analyser import get_reflectance, Aerosol_Retrievel
 from parser.ibsen_parser import parse_ibsen_file
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
-from parser.microtops import extract_microtops_inifile
+
 """
     Irradiance measurements does not show calibrated spectra
     Fit class necessary
@@ -30,7 +30,6 @@ def parse_ini_config(ini_file):
     config_dict['Fitting']['params']  = convert_to_array(config_dict['Fitting']['params'], str)
     config_dict['Fitting']['initial_values'] = convert_to_array(config_dict['Fitting']['initial_values'], float)
     config_dict['Fitting']['jac_flag'] = literal_eval(config_dict['Fitting']['jac_flag'])
-    config_dict['Validation']['validate'] = literal_eval(config_dict['Validation']['validate'])
     return config_dict
 
 
@@ -104,34 +103,6 @@ def evaluate_measurements(directory, config, logger=logging, output_file='RENAME
     frame = pd.DataFrame(result_timeline)
     frame.to_csv(output_file, index=False)
 
-
-def compare_measurements(config, logger):
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
-
-    gs = gridspec.GridSpec(2, 2)
-    ax1 = plt.subplot(gs[0, :])
-    ax2 = plt.subplot(gs[1, :])
-    print(config)
-    param_dict, aero_fit = evaluate_spectra(config, logger)
-    ax1 = aero_fit.result.plot_residuals(ax=ax1, datafmt='g')
-    ax2.plot(aero_fit.spectra['wave_nm'], aero_fit.spectra['spectra'])
-    ax2.plot(aero_fit.param_dict['wave_range'], aero_fit.result.best_fit, 'g-')
-    ax2.errorbar(aero_fit.param_dict['wave_range'], aero_fit.param_dict['spectra_range'], yerr=aero_fit.param_dict['std'], ecolor='g')
-
-    config['Fitting'] = {'params': np.array(['alpha', 'beta', 'g_dsa', 'g_dsr'], dtype='|S5'), 'initial_values': np.array([ 1.2 ,  0.03,  0.9 ,  0.9 ]),
-                         'range_': np.array([ 0.4 ,  0.65]), 'limits': [np.array([-0.255,  4.   ]), np.array([ 0.,  4.]), np.array([ 0.,  1.]), np.array([ 0.,  1.])]}
-    param_dict, aero = evaluate_spectra(config,logger)
-
-    ax1 = aero.result.plot_residuals(ax=ax1, datafmt='b')
-    ax2.plot(aero.spectra['wave_nm'], aero.spectra['spectra'])
-    ax2.plot(aero.param_dict['wave_range'], aero.result.best_fit, 'b-', label='second')
-    ax2.errorbar(aero.param_dict['wave_range'], aero.param_dict['spectra_range'], yerr=aero.param_dict['std'], ecolor='g')
-    ax2.set_title('Fitted reflectance')
-    ax2.set_ylabel('Reflectance')
-    ax2.set_xlabel(r'Wavelength $\left[\mu m\right]$')
-    ax2.legend()
-    plt.show()
 
 
 if __name__ == "__main__":
