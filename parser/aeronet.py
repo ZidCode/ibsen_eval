@@ -63,7 +63,7 @@ class AeronetParser:
 
 if __name__ == "__main__":
     import argparse
-    default_file = '/home/joanna/DLR/Codes/measurements/Aeronet/20161128_20161130_Munich_University/20161128_20161130_Munich_University.lev15'
+    default_file = '/home/jana_jo/DLR/Codes/measurements/Aeronet/20161128_20161130_Munich_University/20161128_20161130_Munich_University.lev15'
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', default=default_file)
     args = parser.parse_args()
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     aeronaet = Parser.parse(args.file)
     time = Parser.get_Timeline()
     Parser.show('Exact_Wavelengths_of_AOD(um)')
+    Parser.show('Solar_Zenith_Angle(Degrees)')
     Parser.pretty_print()
     plt.plot(time, aeronaet['440-870_Angstrom_Exponent'], '+', label='440-870')
     plt.plot(time, aeronaet['380-500_Angstrom_Exponent'], '+', label='380-500')
