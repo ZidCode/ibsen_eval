@@ -127,7 +127,17 @@ class LeastSquaresFit:
             self.param_dict[symbol] = dict()
             self.param_dict[symbol]['stderr'] = None
             self.param_dict[symbol]['value'] = self.result.x[idx]
-        return Result(self.result), self.param_dict
+        self._calc_fitted_spectra()
+        self._calc_residuals()
+        return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
+
+    def _calc_fitted_spectra(self):
+        f = self.model.getcompiledModel('ratio')
+        self.fitted_spectra = f(*self.result.x)
+
+    def _calc_residuals(self):
+        #TODO
+        self.residuals = self.param_dict['spectra_range'] - self.fitted_spectra
 
 
 class Result:
