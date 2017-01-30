@@ -63,45 +63,46 @@ def evaluate_spectra(config, logger=logging):
 
     aero = Aerosol_Retrievel(WeatherParams, config['Fitting'], reflectance_dict, logger)
     result, param_dict = aero.getParams()
-
     logger.info("%s \n" % result.fit_report())
 
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_meas(tar, ref)
         plot_used_irradiance_and_reflectance(tar, ref, reflectance_dict)
         plot_fitted_reflectance(result, param_dict, reflectance_dict)
-    return aero.param_dict, aero
+    return param_dict, result
 
 
-def evaluate_measurements(directory, config, logger=logging):
+def evaluate_measurements(directory, config, logger=logging, output_file='RENAME_ME.csv'):
     import glob
+    import pandas as pd
     file_prefixes = ['target', 'reference']
     files = [file_ for file_ in glob.iglob(directory + '%s*' % file_prefixes[0])]
-    keys_for_param_dict = ['utc_times', 'alpha', 'alpha_stderr', 'beta', 'beta_stderr']
-    param_dict = {key:np.array([]) for key in keys_for_param_dict}
-    param_dict['label'] = 'Ibsen'
-
+    keys_for_param_dict = ['sun_zenith','utc_times', 'alpha', 'alpha_stderr', 'beta', 'beta_stderr', 'g_dsa', 'g_dsa_stderr', 'g_dsr', 'g_dsr_stderr']
+    result_timeline = {key:np.array([]) for key in keys_for_param_dict}
 
     for file_ in sorted(files):
         for key in file_prefixes:
             config['Data'][key] = file_.replace(file_prefixes[0], key)
         try:
+            print(config)
+            pass
             logger.info("Evaluating file: %s \n" % file_)
-            params, aero = evaluate_spectra(config, logger)
-            param_dict['utc_times'] = np.append(param_dict['utc_times'], config['Processing']['utc_time'])
-            param_dict['alpha'] = np.append(param_dict['alpha'], params['alpha']['value'])
-            param_dict['alpha_stderr'] = np.append(param_dict['alpha_stderr'], params['alpha']['stderr'])
-            param_dict['beta'] = np.append(param_dict['beta'], params['beta']['value'])
-            param_dict['beta_stderr'] = np.append(param_dict['beta_stderr'], params['beta']['stderr'])
+            params, result = evaluate_spectra(config, logger)
+            result_timeline['utc_times'] = np.append(result_timeline['utc_times'], config['Processing']['utc_time'])
+            result_timeline['sun_zenith'] = np.append(result_timeline['sun_zenith'], params['sun_zenith'])
+            result_timeline['alpha'] = np.append(result_timeline['alpha'], params['alpha']['value'])
+            result_timeline['alpha_stderr'] = np.append(result_timeline['alpha_stderr'], params['alpha']['stderr'])
+            result_timeline['beta'] = np.append(result_timeline['beta'], params['beta']['value'])
+            result_timeline['beta_stderr'] = np.append(result_timeline['beta_stderr'], params['beta']['stderr'])
+            result_timeline['g_dsa'] = np.append(result_timeline['g_dsa'], params['g_dsa']['value'])
+            result_timeline['g_dsa_stderr'] = np.append(result_timeline['g_dsa_stderr'], params['g_dsa']['stderr'])
+            result_timeline['g_dsr'] = np.append(result_timeline['g_dsr'], params['g_dsr']['value'])
+            result_timeline['g_dsr_stderr'] = np.append(result_timeline['g_dsr_stderr'], params['g_dsr']['stderr'])
         except IOError:
             logger.error("%s have no corresponding reference" % file_)
 
-    # Microtops
-    if config['Validation']['validate']:
-        validation = extract_microtops_inifile(config['Validation'], config['Processing']['utc_time'])
-        plot_aengstrom_parameters(param_dict, validation)
-    else:
-        plot_aengstrom_parameters(param_dict)
+    frame = pd.DataFrame(result_timeline)
+    frame.to_csv(output_file, index=False)
 
 
 def compare_measurements(config, logger):
@@ -138,10 +139,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', default='config.ini', help='Pass ini-file for processing configurations')
     parser.add_argument('-m', '--measurement_directory', help='Define measurement directory to sweep through')
+    parser.add_argument('-o', '--output_file', help='Write timeline results into output file')
     args = parser.parse_args()
     config = parse_ini_config(args.config)
     logger = create_logger(config['Processing'])
     if args.measurement_directory:
-        evaluate_measurements(args.measurement_directory, config, logger)
+        evaluate_measurements(args.measurement_directory, config, logger, args.output_file)
     else:
         evaluate_spectra(config, logger)

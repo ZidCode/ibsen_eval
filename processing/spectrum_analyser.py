@@ -60,9 +60,9 @@ class Aerosol_Retrievel(object):
         model = modelfactory.get_fitmodel()
         methodfactory = FitMethodFactory(self.config, self.logger)
         method = methodfactory.get_method()
-        print(self.param_dict.keys())
         test = method(model, self.config, self.param_dict, self.logger)
         result, param_dict = test.fit()
+        param_dict['sun_zenith'] = self.weatherparams.sun_zenith
         return result, param_dict
 
 def example():
