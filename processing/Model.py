@@ -18,7 +18,7 @@ class IrradianceModel_python:
         self.zenith_rad = np.radians(zenith)
         self.ray = 0.00877
         self.ray_expo = -4.05
-        self.lambda_reference = 1000  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
+        self.lambda_reference = 550  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
         self.model_dict = {'ratio': self.irradiance_ratio, 'nadir': None}
 
     def getModel(self, name):
@@ -69,7 +69,7 @@ class IrradianceModel_sym:
         self.pressure = theano.shared(pressure, 'pressure')
         self.ssa = theano.shared(ssa, 'ssa')
 
-        self._lambda_reference = T.constant(1000.)
+        self._lambda_reference = T.constant(550.)
         #public
         self.model_dict = {'ratio': self._irradiance_ratio, 'nadir': self._radiance_nadir, 'E_d': self._irradiance}
         self.symbols = {'alpha': T.scalar('alpha'), 'beta': T.scalar('beta'), 'g_dsa': T.scalar('g_dsa'), 'g_dsr': T.scalar('g_dsr')}
