@@ -19,7 +19,7 @@ class IrradianceModel_python:
         self.ray = 0.00877
         self.ray_expo = -4.05
         self.lambda_reference = 550  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
-        self.model_dict = {'ratio': self.irradiance_ratio, 'nadir': self.lsky_Ed_ratio}
+        self.model_dict = {'ratio': self.irradiance_ratio, 'l_sky_ratio': self.lsky_Ed_ratio}
 
     def getModel(self, name):
         return self.model_dict[name]
@@ -46,21 +46,24 @@ class IrradianceModel_python:
     def tau_as(self, x, alpha, beta):
         return - self.ssa * self.AM * beta * (x / self.lambda_reference)  ** (-alpha)
 
-    def sky_radiance(self, x, alpha, beta, g_dsa=1, g_dsr=1, g_dd=1):
+    def ratio_sky_radiance(self, x, alpha, beta, g_dsr=1, g_dsa=1, g_dd=1):
         term = g_dsr * (1 - exp_v(0.95 * self.tau_r(x))) * 0.5 + \
                g_dsa * exp_v(1.5 * self.tau_r(x)) * (1 - exp_v(self.tau_as(x, alpha, beta))) * self.forward_scat(alpha) +  \
                g_dd * exp_v(self.tau_as(x, alpha, beta) + self.tau_r(x))
         return term
 
-    def irradiance_ratio(self, x, alpha, beta, g_dsa=1, g_dsr=1, g_dd=0):
-        term = self.sky_radiance(x, alpha, beta, g_dsa, g_dsr, g_dd)
-        nom = self.sky_radiance(x, alpha, beta)
+    def irradiance_ratio(self, x, alpha, beta, g_dsr=1, g_dsa=1, g_dd=0):
+        term = self.ratio_sky_radiance(x, alpha, beta, g_dsa=g_dsa, g_dsr=g_dsr, g_dd=g_dd)
+        nom = self.ratio_sky_radiance(x, alpha, beta)
         return term / nom
 
-    def lsky_Ed_ratio(self, x, alpha, beta, l_dsa, l_dsr, g_dsa=0.5, g_dsr=0.5, l_dd=0, g_dd=1):
-        term = self.sky_radiance(x, alpha, beta, l_dsa, l_dsr, l_dd)
-        norm = self.sky_radiance(x, alpha, beta, g_dsa, g_dsr, g_dd)
+    def lsky_Ed_ratio(self, x, alpha, beta, l_dsa, l_dsr, g_dsr=0.4, g_dsa=0.4, l_dd=0, g_dd=1):
+        term = self.ratio_sky_radiance(x, alpha, beta, g_dsr=l_dsr, g_dsa=l_dsa, g_dd=l_dd)
+        norm = self.ratio_sky_radiance(x, alpha, beta, g_dsr=g_dsr, g_dsa=g_dsa, g_dd=g_dd)
         return term / norm
+
+    def lsky_nadir(self):
+        pass
 
 
 class IrradianceModel_sym:
