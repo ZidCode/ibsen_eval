@@ -93,6 +93,11 @@ def evaluate_measurements(directory, config, logger=logging, output_file='RENAME
             pass
             logger.info("Evaluating file: %s \n" % file_)
             params, result = evaluate_spectra(config, logger)
+            while raw_input('Change initial (y or n)') == 'y':
+                for idx, value in enumerate(config['Fitting']['initial_values']):
+                    config['Fitting']['initial_values'][idx] = float(raw_input('Old: %s in %s' % (value,idx)))
+                params, result = evaluate_spectra(config, logger)
+
             result_timeline['utc_times'] = np.append(result_timeline['utc_times'], config['Processing']['utc_time'])
             result_timeline['sun_zenith'] = np.append(result_timeline['sun_zenith'], params['sun_zenith'])
             result_timeline['alpha'] = np.append(result_timeline['alpha'], params['alpha']['value'])
