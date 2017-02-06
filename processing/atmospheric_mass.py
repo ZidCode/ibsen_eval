@@ -19,3 +19,7 @@ def get_atmospheric_path_length(zenith):
     AM = (a * cos(theta_rad)**2 + b * cos(theta_rad) + c) / \
          (cos(theta_rad) ** 3 + aa * cos(theta_rad)**2 + bb * cos(theta_rad) + cc)
     return AM
+
+def get_ozone_path_length(zenith):
+    theta_rad = np.radians(zenith)
+    return 1.0035 / np.sqrt(cos(theta_rad) ** 2 + 0.007)

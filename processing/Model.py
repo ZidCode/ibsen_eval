@@ -46,6 +46,23 @@ class IrradianceModel_python:
     def tau_as(self, x, alpha, beta):
         return - self.ssa * self.AM * beta * (x / self.lambda_reference)  ** (-alpha)
 
+    def tau_aa(self, x, alpha, beta):
+        return - (1 - self.ssa) * self.AM * beta * (x / self.lambda_reference)  ** (-alpha)
+
+    def tau_oz(self):
+        return - self.hitran_oz * self.H_oz * self.AM_ozone
+
+    def tau_o(self):
+        term = -1.41 * self.hitran_o * ( self.AM * self.pressure/self.p_0)
+        norm = (1 + 118.3 * self.hitran_o * ( self.AM * self.pressure/self.p_0)) ** 0.45
+        return term / norm
+
+    def tau_wv(self, WV):
+        term = -0.2385 * self.hitran_wv * WV * self.AM
+        norm = (1 + 20.07 * self.hitran_wv * WV * self.AM) ** 0.45
+        return term / norm
+
+
     def ratio_sky_radiance(self, x, alpha, beta, g_dsr=1, g_dsa=1, g_dd=1):
         term = g_dsr * (1 - exp_v(0.95 * self.tau_r(x))) * 0.5 + \
                g_dsa * exp_v(1.5 * self.tau_r(x)) * (1 - exp_v(self.tau_as(x, alpha, beta))) * self.forward_scat(alpha) +  \
@@ -62,8 +79,8 @@ class IrradianceModel_python:
         norm = self.ratio_sky_radiance(x, alpha, beta, g_dsr=g_dsr, g_dsa=g_dsa, g_dd=g_dd)
         return term / norm
 
-    def lsky_nadir(self):
-        pass
+    #def lsky_nadir(self):
+    #
 
 
 class IrradianceModel_sym:
