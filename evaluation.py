@@ -9,6 +9,7 @@ from processing.model_factory import WeatherAtmosphereParameter
 from processing.spectrum_analyser import get_reflectance, Aerosol_Retrievel
 from parser.ibsen_parser import parse_ibsen_file
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance, plot_aengstrom_parameters
+from spektralon.spektralon import scale_to_irradiance
 
 """
     Irradiance measurements does not show calibrated spectra
@@ -21,6 +22,7 @@ def parse_ini_config(ini_file):
     config = ConfigParser.ConfigParser()
     config.read(ini_file)
     config_dict = {s: dict(config.items(s)) for s in config.sections()}
+    config_dict['Processing']['spectralon'] = literal_eval(config_dict['Processing']['spectralon'])
     config_dict['Processing']['logging'] = literal_eval(config_dict['Processing']['logging'])
     config_dict['Processing']['gps_coords'] = convert_to_array(config_dict['Processing']['gps_coords'], float)
     config_dict['Processing']['utc_time'] = datetime.strptime(config_dict['Processing']['utc_time'], '%Y-%m-%d %H:%M:%S')
@@ -55,6 +57,10 @@ def evaluate_spectra(config, logger=logging):
     logger.info("Date: %s " % config['Processing']['utc_time'])
     logger.info("GPS coords (lat, lon) %s %s" % (config['Processing']['gps_coords'][0], config['Processing']['gps_coords'][1]))
     logger.info("Files\n \t ref: %s  \n \t tar: %s " %(config['Data']['reference'], config['Data']['target']))
+
+    if config['Processing']['spectralon']:
+        ref = scale_to_irradiance(ref)
+
     # Reflectance
     reflectance_dict = get_reflectance(ref, tar)
 
