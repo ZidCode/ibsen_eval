@@ -15,15 +15,18 @@ def plot_meas(tar, ref):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    map_dicts = {'Target_E_ds': {'plt': ax1, 'meas': tar},
-                 'Reference_E_dd': {'plt': ax2, 'meas': ref}}
+    map_dicts = {r'Radiance $L_{sky}$ Zenith': {'plt': ax1, 'meas': tar},
+                 r'Irradiance $E_d$': {'plt': ax2, 'meas': ref}}
 
     for k, v in map_dicts.items():
         v['plt'].plot(v['meas']['wave'], v['meas']['data'])
-        v['plt'].set_title('%s' % k)
+        v['plt'].set_title('%s' % k, **hfont)
 
+
+    plt.xlabel('Wavelength [nm]', **hfont)
+    ax1.set_ylabel(r'$\frac{mW}{nm m^2 sr}$', **hfont)
+    ax2.set_ylabel(r'$\frac{mW}{nm m^2}$', **hfont)
     plt.tight_layout()
-    plt.xlabel('Wavelength [nm]')
     plt.show()
 
 
@@ -31,23 +34,22 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    map_dict = {'E_ds_mean': tarmd, 'E_dd_mean': refmd}
+    map_dict = {'L_sky_mean': tarmd, 'E_d_mean': refmd}
 
     for key, meas in map_dict.items():
         ax1.plot(meas['wave'], meas['data'], alpha=0.1)
         ax1.plot(meas['wave'], meas['mean'], label='%s' %key)
 
-    ax1.set_title('Diffuse and direct Irradiance')
+    ax1.set_title(r'$L_{sky}$ and $E_{d}$', **hfont)
     ax2.plot(reflectance['wave_nm'], reflectance['spectra'], '+')
-    #ax2.errorbar(reflectance['wave_nm'], reflectance['spectra'], yerr=reflectance['std'], ecolor='g', fmt='none')
-    ax2.set_title('Reflectance')
-    ax1.legend()
-    plt.xlabel('Wavelength [nm]')
+    ax2.set_ylabel(r'Ratio [$\%$]', **hfont)
+    ax1.legend(loc='best', prop=fontP)
+    plt.xlabel('Wavelength [nm]', **hfont)
     plt.show()
 
 
 def plot_fitted_reflectance(result, param_dict, measurement):
-    """
+    """$
     Args:
         reflectance_dict: Reflectance dict with std, wave and spectra
         params: Lmfit fitted values for corresponding spectra
@@ -61,9 +63,9 @@ def plot_fitted_reflectance(result, param_dict, measurement):
     ax2.plot(measurement['wave_nm'], measurement['spectra'])
     ax2.plot(param_dict['wave_range'], result.best_fit, 'r-')
     ax2.errorbar(param_dict['wave_range'], param_dict['spectra_range'], yerr=param_dict['std'], ecolor='g')
-    ax2.set_title('Fitted reflectance')
-    ax2.set_ylabel('Reflectance')
-    ax2.set_xlabel(r'Wavelength $\left[nm\right]$')
+    ax2.set_title('Fitted reflectance', **hfont)
+    ax2.set_ylabel('Reflectance', **hfont)
+    ax2.set_xlabel(r'Wavelength $\left[nm\right]$', **hfont)
     plt.show()
 
 
