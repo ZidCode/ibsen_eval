@@ -51,10 +51,11 @@ class LMFit:
         self.config = config
         self.param_dict = param_dict
         self.logger = logger
-        self.callable = model.irradiance_ratio
+        self.callable = model.getModel(config['model'])
 
     def fit(self):
         self.logger.info('Method %s' % self.config['method'])
+        self.logger.info('Parameter  names %s' % self.config['params'])
         gmod = Model(self.callable, independent_vars=['x'], param_names=self.config['params'], method=self.config['method'])
         self._set_params(self.config['params'], self.config['initial_values'], self.config['limits'], gmod)
         self.result = gmod.fit(self.param_dict['spectra_range'], x=self.param_dict['wave_range'])
