@@ -2,6 +2,7 @@ import ConfigParser
 import numpy as np
 from datetime import datetime
 from collections import OrderedDict
+import codecs
 
 
 def med_time(utc_time, start, end):
@@ -15,17 +16,20 @@ float_v = np.vectorize(float)
 utc_calc = np.vectorize(med_time)
 
 
-def parse_microtops_inifile(file_, utc_time):
-    data = np.genfromtxt(file_, skip_header=2, delimiter=',', dtype=str)
+def parse_microtops_inifile(file_):
 
+    with codecs.open(file_, "r", encoding="utf-8-sig") as fp:
+        UTC = fp.readline()
+        UTCTime = datetime.strptime('%s 00:00:00' % UTC, '%d.%m.%Y %H:%M:%S')
+
+    data = np.genfromtxt(file_, skip_header=2, delimiter=',', dtype=str)
     micro_keys = ['utc_times', 'alpha', 'beta']
     micro_dict = {key: np.array([]) for key in micro_keys}
-
     micro_dict['alpha'] = float_v(data[:,2])
     micro_dict['alpha_stderr'] = float_v(data[:, 3])
     micro_dict['beta'] = float_v(data[:, 4])
     micro_dict['beta_stderr'] = float_v(data[:, 5])
-    micro_dict['utc_times'] = utc_calc(utc_time, data[:,0], data[:,1])
+    micro_dict['utc_times'] = utc_calc(UTCTime, data[:,0], data[:,1])
     micro_dict['label'] = 'microtops'
     return micro_dict
 

@@ -1,7 +1,11 @@
 import numpy as np
 from scipy.constants import atmosphere
 from tempfile import mkstemp
+from datetime import datetime
 
+
+
+convert2datetime = lambda d: datetime.strptime(d, '%Y-%m-%d %H:%M:%S')
 
 def create_meas_file(DEFAULT_MEAS):
     file_ = mkstemp()

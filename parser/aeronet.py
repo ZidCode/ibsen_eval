@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from lmfit import Model
 import ConfigParser
 from utils.plotting import plot_turbidity
-from ast import literal_eval
+
 
 
 def parse_aeronet_config(ini_file):
@@ -36,17 +36,6 @@ class AeronetParser:
         return self.column_names
 
     def parse(self, aeronet_file, skip_head=6, rows=7, padding=7):
-        """
-        Line:
-        1: AERONET VERSION
-        2: Place
-        3: Version again, AOD Level
-        5: Contact
-        6: Notification
-        7: Columns
-        8:end - Data
-        """
-        # reference wavelength for turbidity calculation
         self.logger.info("Parsing %s" % aeronet_file)
         self.padding = np.array([str(i) for i in range(padding)])
         frame = pd.read_csv(aeronet_file, header=skip_head, nrows=rows)
@@ -63,7 +52,7 @@ class AeronetParser:
         date = self.aeronet_dict['Date(dd-mm-yyyy)']
         concatenate_timeline = map(self.merge,zip(date, time))
         self.timeline = map(self.convert2datetime, concatenate_timeline)
-        return self.timeline
+        self.aeronet_dict['utc_times'] = self.timeline
 
     def show(self, key):
         import matplotlib.pyplot as plt
@@ -153,12 +142,12 @@ def main(config_file):
 
     Parser = AeronetParser()
     aeronaet = Parser.parse(config['source'])
-    time = Parser.get_Timeline()
+    Parser.get_Timeline()
     #Parser.show('Solar_Zenith_Angle(Degrees)')
     #Parser.pretty_print()
     Parser.get_turbidity(config['aod_range'])
     #plt.plot(time, aeronaet['500-870_Angstrom_Exponent'], '+', label='440-870')
-    plt.errorbar(time, aeronaet['Turbidity'], yerr=aeronaet['Turbidity_stderror'], ecolor='g', fmt=None)
+    plt.errorbar(aeronaet['utc_times'], aeronaet['Turbidity'], yerr=aeronaet['Turbidity_stderror'], ecolor='g', fmt=None)
     plt.legend()
     plt.show()
 

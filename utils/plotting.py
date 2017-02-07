@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.font_manager import FontProperties
 
+
+
 FONTSTYLE = 'serif'
 FONTSIZE = 12
 hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
@@ -88,26 +90,24 @@ def plot_aengstrom_parameters(results, validation, title):
     plt.show()
 
 
-def plot_aengstrom_parameters_aeronet(results, validation, micro, title):
+def plot_turbidity(wave, aods, wave_new, fitted):
+    plt.plot(wave, aods, 'b+')
+    plt.plot(wave_new, fitted, 'g')
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'AOD', **hfont)
+    return plt
 
+
+def plot_aengstrom_parameters_aeronet(object_list, title):
+
+    fig = plt.figure()
     gs = gridspec.GridSpec(4, 4)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
     ax3 = plt.subplot(gs[2, :])
     ax4 = plt.subplot(gs[3, :])
-    ax1.errorbar(results['utc_times'], results['alpha'], yerr=results['alpha_stderr'], ecolor='b',label='Ibsen')
-    ax1.plot(validation['utc_times'], validation['440-870_Angstrom_Exponent'], '+', label='440-870')
-    ax1.plot(validation['utc_times'], validation['380-500_Angstrom_Exponent'], '+', label='380-500')
-    ax1.plot(validation['utc_times'], validation['440-675_Angstrom_Exponent'], '+', label='440-675')
-    ax1.plot(validation['utc_times'], validation['500-870_Angstrom_Exponent'], '+', label='500-870')
-    ax1.errorbar(micro['utc_times'], micro['alpha'], yerr=micro['alpha_sterr'], ecolor='g', label='Microtops')
-
-    ax2.errorbar(results['utc_times'], results['beta'], yerr=results['beta_stderr'], ecolor='b' ,label='Ibsen')
-    ax2.errorbar(validation['utc_times'], validation['Turbidity'], yerr=validation['Turbidity_stderror'], fmt='None', ecolor='g', label='Aeronet')
-    ax2.errorbar(micro['utc_times'], micro['beta'], yerr=micro['beta_stderr'], ecolor='r' ,label='Microtops')
-
-    ax3.errorbar(results['utc_times'], results['g_dsr'], yerr=results['g_dsr_stderr'], ecolor='b',label='Ibsen')
-    ax4.errorbar(results['utc_times'], results['g_dsa'], yerr=results['g_dsa_stderr'], ecolor='b', label='Ibsen')
+    for obj in object_list:
+        obj.get_plot([ax1, ax2, ax3, ax4])
 
     ax1.legend(loc='best', prop=fontP)
     ax2.legend(loc='best', prop=fontP)
@@ -124,9 +124,31 @@ def plot_aengstrom_parameters_aeronet(results, validation, micro, title):
     plt.show()
 
 
-def plot_turbidity(wave, aods, wave_new, fitted):
-    plt.plot(wave, aods, 'b+')
-    plt.plot(wave_new, fitted, 'g')
-    plt.xlabel('Wavelength [nm]', **hfont)
-    plt.ylabel(r'AOD', **hfont)
-    return plt
+def ibsen_plot(frame, ax1, ax2, ax3, ax4):
+    ax1.errorbar(frame['utc_times'], frame['alpha'], yerr=frame['alpha_stderr'],fmt='o',
+                 label='Ibsen', markersize='2', color='b', ecolor='b')
+    ax2.errorbar(frame['utc_times'], frame['beta'], yerr=frame['beta_stderr'], label='Ibsen', fmt='o', markersize='2', color='b', ecolor='b')
+    ax3.errorbar(frame['utc_times'], frame['g_dsr'], yerr=frame['g_dsr_stderr'],
+                 label='Ibsen')
+    ax4.errorbar(frame['utc_times'], frame['g_dsa'], yerr=frame['g_dsa_stderr'],
+                 label='Ibsen')
+    return ax1, ax2, ax3, ax4
+
+
+def aeronet_plot(aeronet, ax1, ax2, _, __):
+    ax1.plot(aeronet['utc_times'], aeronet['440-870_Angstrom_Exponent'], '+', label='440-870')
+    ax1.plot(aeronet['utc_times'], aeronet['380-500_Angstrom_Exponent'], '+', label='380-500')
+    ax1.plot(aeronet['utc_times'], aeronet['440-675_Angstrom_Exponent'], '+', label='440-675')
+    ax1.plot(aeronet['utc_times'], aeronet['500-870_Angstrom_Exponent'], '+', label='500-870')
+    ax2.errorbar(aeronet['utc_times'], aeronet['Turbidity'], yerr=aeronet['Turbidity_stderror'],fmt='o',
+                 label='Aeronet', color='r', ecolor='r')
+
+    return ax1
+
+
+def micro_plot(micro_dict, ax1, ax2, _, __):
+    ax1.errorbar(micro_dict['utc_times'], micro_dict['alpha'], yerr=micro_dict['alpha_stderr'],
+                 label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
+    ax2.errorbar(micro_dict['utc_times'], micro_dict['beta'], yerr=micro_dict['beta_stderr'],
+                 label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
+    return ax1, ax2

@@ -1,32 +1,69 @@
-import pandas as pd
-from datetime import datetime
 from evaluation import parse_ini_config
-from parser.microtops import parse_microtops_inifile
-from utils.plotting import plot_aengstrom_parameters, plot_aengstrom_parameters_aeronet
+from utils.plotting import plot_aengstrom_parameters_aeronet, micro_plot, ibsen_plot, aeronet_plot
 from parser.aeronet import AeronetParser
-
-convert2datetime = lambda d: datetime.strptime(d, '%Y-%m-%d %H:%M:%S')
-
-
-
-def validate(config, results, title):
-    frame = pd.read_csv(results)
-    frame['utc_times'] = [convert2datetime(utc) for utc in frame['utc_times']]
-    validation = dict()
-    # Aeronet
-    Parser = AeronetParser()
-    aeronaet = Parser.parse(config['aeronet'])
-    UTCTime = datetime.strptime('2016-11-29 00:00:00', '%Y-%m-%d %H:%M:%S')
-    #Microtops
-    micro_dict = parse_microtops_inifile(config['micro'], UTCTime)
-    time = Parser.get_Timeline()
-    Parser.get_turbidity()
-    aeronaet['utc_times'] = time
-    plot_aengstrom_parameters_aeronet(frame, aeronaet, micro_dict, title)
+from parser.microtops import parse_microtops_inifile
+import pandas as pd
+from utils.util import convert2datetime
 
 
 def validate(config):
-    pass
+
+    PlotWrapper = ValidationFactory(config)
+    obj_list = PlotWrapper()
+    plot_aengstrom_parameters_aeronet(obj_list, config['title'])
+
+
+class ValidationFactory:
+
+    def __init__(self, config):
+        self.config = config
+
+    def __call__(self):
+        map_validation = {'results': IbsenPlot, 'micro': MicroPlot, 'aeronet': AeronetPlot}
+        obj_list = [value(self.config[key], self.config['aod_range']) for key, value in map_validation.items() if self.config[key]]
+        return obj_list
+
+
+class IbsenPlot:
+
+    def __init__(self, source, _):
+        print("IbsenPlot Constructor")
+        self.frame = pd.read_csv(source)
+        self.frame['utc_times'] = [convert2datetime(utc) for utc in self.frame['utc_times']]
+
+    def get_plot(self, ax):
+        return ibsen_plot(self.frame, *ax)
+
+
+class AeronetPlot:
+
+    def __init__(self, source, aod_range):
+        print("AeronetPlot Constructor")
+        Parser = AeronetParser()
+        self.aeronet = Parser.parse(source)
+        Parser.get_Timeline()
+        Parser.get_turbidity(aod_range)
+
+    def get_plot(self, ax):
+        return aeronet_plot(self.aeronet, *ax)
+
+
+class MicroPlot():
+
+    def __init__(self, source, _):
+        print("MicroPlot Constructor")
+        self.micro_dict = parse_microtops_inifile(source)
+
+    def get_plot(self, ax):
+        return micro_plot(self.micro_dict, *ax)
+
+
+class PlotWrapper:
+    def __init__(self, object_list):
+        self.objs = object_list
+
+    def get_plot(self):
+        return [obj.get_plot() for obj in self.objs]
 
 
 if __name__ == "__main__":
