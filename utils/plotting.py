@@ -88,7 +88,7 @@ def plot_aengstrom_parameters(results, validation, title):
     plt.show()
 
 
-def plot_aengstrom_parameters_aeronet(results, validation, title):
+def plot_aengstrom_parameters_aeronet(results, validation, micro, title):
 
     gs = gridspec.GridSpec(4, 4)
     ax1 = plt.subplot(gs[0, :])
@@ -100,9 +100,11 @@ def plot_aengstrom_parameters_aeronet(results, validation, title):
     ax1.plot(validation['utc_times'], validation['380-500_Angstrom_Exponent'], '+', label='380-500')
     ax1.plot(validation['utc_times'], validation['440-675_Angstrom_Exponent'], '+', label='440-675')
     ax1.plot(validation['utc_times'], validation['500-870_Angstrom_Exponent'], '+', label='500-870')
+    ax1.errorbar(micro['utc_times'], micro['alpha'], yerr=micro['alpha_sterr'], ecolor='g', label='Microtops')
 
     ax2.errorbar(results['utc_times'], results['beta'], yerr=results['beta_stderr'], ecolor='b' ,label='Ibsen')
     ax2.errorbar(validation['utc_times'], validation['Turbidity'], yerr=validation['Turbidity_stderror'], fmt='None', ecolor='g', label='Aeronet')
+    ax2.errorbar(micro['utc_times'], micro['beta'], yerr=micro['beta_stderr'], ecolor='r' ,label='Microtops')
 
     ax3.errorbar(results['utc_times'], results['g_dsr'], yerr=results['g_dsr_stderr'], ecolor='b',label='Ibsen')
     ax4.errorbar(results['utc_times'], results['g_dsa'], yerr=results['g_dsa_stderr'], ecolor='b', label='Ibsen')
