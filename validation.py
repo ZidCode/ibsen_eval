@@ -20,7 +20,7 @@ class ValidationFactory:
 
     def __call__(self):
         map_validation = {'results': IbsenPlot, 'micro': MicroPlot, 'aeronet': AeronetPlot}
-        obj_list = [value(self.config[key], self.config['aod_range']) for key, value in map_validation.items() if self.config[key]]
+        obj_list = [value(self.config[key], self.config['aod_range']) for key, value in map_validation.items() if key in self.config['validate']]
         return obj_list
 
 
