@@ -17,7 +17,7 @@ def plot_meas(tar, ref):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    map_dicts = {r'Radiance $E_{ds}$ Zenith': {'plt': ax1, 'meas': tar},
+    map_dicts = {r'Radiance $E_{ds}$': {'plt': ax1, 'meas': tar},
                  r'Irradiance $E_d$': {'plt': ax2, 'meas': ref}}
 
     for k, v in map_dicts.items():
@@ -26,8 +26,8 @@ def plot_meas(tar, ref):
 
 
     plt.xlabel('Wavelength [nm]', **hfont)
-    ax1.set_ylabel(r'$\frac{mW}{nm m^2 sr}$', **hfont)
-    ax2.set_ylabel(r'$\frac{mW}{nm m^2}$', **hfont)
+    ax1.set_ylabel(r'$\frac{mW}{m^2 \cdot nm\cdot sr}$', **hfont)
+    ax2.set_ylabel(r'$\frac{mW}{m^2 \cdot nm}$', **hfont)
     plt.tight_layout()
     plt.show()
 
@@ -44,7 +44,7 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
 
     ax1.set_title(r'$E_{ds}$ and $E_{d}$', **hfont)
     ax2.plot(reflectance['wave_nm'], reflectance['spectra'], '+')
-    ax1.set_ylabel(r'$\frac{mW}{nm m^2}$', **hfont)
+    ax1.set_ylabel(r'$\frac{mW}{m^2 \cdot nm}$', **hfont)
     ax2.set_ylabel(r'Ratio [$\%$]', **hfont)
     ax1.legend(loc='best', prop=fontP)
     plt.xlabel('Wavelength [nm]', **hfont)
@@ -68,7 +68,7 @@ def plot_fitted_reflectance(result, param_dict, measurement):
     ax2.errorbar(param_dict['wave_range'], param_dict['spectra_range'], yerr=param_dict['std'], ecolor='g')
     ax2.set_title('Fitted ratio', **hfont)
     ax2.set_ylabel('Ratio', **hfont)
-    ax2.set_xlabel(r'Wavelength $\left[nm\right]$', **hfont)
+    ax2.set_xlabel(r'Wavelength [nm]', **hfont)
     plt.show()
 
 
@@ -144,7 +144,7 @@ def aeronet_plot(aeronet, ax1, ax2, _, __):
     ax2.errorbar(aeronet['utc_times'], aeronet['Turbidity'], yerr=aeronet['Turbidity_stderror'],fmt='o',
                  label='Aeronet', color='r', ecolor='r', markersize='2')
 
-    return ax1
+    return ax1, ax2
 
 
 def micro_plot(micro_dict, ax1, ax2, _, __):
