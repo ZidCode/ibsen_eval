@@ -75,7 +75,7 @@ class Minimize:
 
     def __init__(self, model, config, param_dict, logger):
         self.model = model
-        self.res = Residuum(model, 'ratio')
+        self.res = Residuum(model, config['model'])
         self.callable = FitWrapper(self.res.getResiduum())
         self.symbols = model.get_Symbols()
         self.param_dict = param_dict
@@ -114,7 +114,7 @@ class LeastSquaresFit:
     def __init__(self, model, config, param_dict, logger):
         self.config = config
         self.model = model
-        self.res = Residuum(model, 'ratio')
+        self.res = Residuum(model, config['model'])
         self.callable = FitWrapper(self.res.getResiduals())
         self.symbols = self.model.get_Symbols()
         self.param_dict = param_dict
