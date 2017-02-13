@@ -3,7 +3,8 @@ import numpy as np
 from math import exp, log
 from theano import tensor as T
 from scipy.constants import atmosphere
-
+from wasi_reader import get_wasi_parameters
+from atmospheric_mass import get_ozone_path_length
 
 exp_v = np.vectorize(exp)
 
@@ -19,8 +20,11 @@ class IrradianceModel_python:
         self.ray = 0.00877
         self.ray_expo = -4.05
         self.lambda_reference = 550  # [nm] Gege, 1000 nm Greg and Carder + Bringfried
+        self.wasi = get_wasi_parameters()  # dict
+        self.AM_ozone = get_ozone_path_length(zenith)  # zenith = degrees
         self.model_dict = {'ratio': self.irradiance_ratio, 'l_sky_ratio': self.lsky_Ed_ratio}
 
+    # public
     def getModel(self, name):
         return self.model_dict[name]
 
@@ -49,19 +53,22 @@ class IrradianceModel_python:
     def tau_aa(self, x, alpha, beta):
         return - (1 - self.ssa) * self.AM * beta * (x / self.lambda_reference)  ** (-alpha)
 
-    def tau_oz(self):
-        return - self.hitran_oz * self.H_oz * self.AM_ozone
+    def tau_oz(self, x, H_oz):
+        "Ozone Transmittance"
+        oz = np.interp(x, self.wasi['o3']['wave'], self.wasi['o3']['values'])
+        return - oz * H_oz * self.AM_ozone
 
-    def tau_o(self):
-        term = -1.41 * self.hitran_o * ( self.AM * self.pressure/self.p_0)
-        norm = (1 + 118.3 * self.hitran_o * ( self.AM * self.pressure/self.p_0)) ** 0.45
+    def tau_o2(self, x):
+        o2 = np.interp(x, self.wasi['o2']['wave'], self.wasi['o2']['values'])
+        term = -1.41 * o2 * ( self.AM * self.pressure/self.p_0)
+        norm = (1 + 118.3 * o2 * ( self.AM * self.pressure/self.p_0)) ** 0.45
         return term / norm
 
-    def tau_wv(self, WV):
-        term = -0.2385 * self.hitran_wv * WV * self.AM
-        norm = (1 + 20.07 * self.hitran_wv * WV * self.AM) ** 0.45
+    def tau_wv(self, WV, x):
+        wv = np.interp(x, self.wasi['wv']['wave'], self.wasi['wv']['values'])
+        term = -0.2385 * wv * WV * self.AM
+        norm = (1 + 20.07 * wv * WV * self.AM) ** 0.45
         return term / norm
-
 
     def ratio_sky_radiance(self, x, alpha, beta, g_dsr=1, g_dsa=1, g_dd=1):
         term = g_dsr * (1 - exp_v(0.95 * self.tau_r(x))) * 0.5 + \
@@ -79,8 +86,12 @@ class IrradianceModel_python:
         norm = self.ratio_sky_radiance(x, alpha, beta, g_dsr=g_dsr, g_dsa=g_dsa, g_dd=g_dd)
         return term / norm
 
-    #def lsky_nadir(self):
-    #
+    def sky_radiance(self, x, alpha, beta, H_oz, wv, l_dsr, l_dsa):
+        E0 = np.interp(x, self.wasi['e0']['wave'], self.wasi['e0']['values'])
+        non_aerosol_term = E0 * np.cos(self.zenith_rad) * exp_v(self.tau_oz(x, H_oz)) * exp_v(self.tau_o2(x)) * exp_v(self.tau_wv(wv, x))
+        aerosol_term  = l_dsr * (1 - exp_v(0.95 * self.tau_r(x))) * 0.5 + \
+                        l_dsa * exp_v(1.5 * self.tau_r(x)) * (1 - exp_v(self.tau_as(x, alpha, beta))) * self.forward_scat(alpha)
+        return non_aerosol_term * aerosol_term
 
 
 class IrradianceModel_sym:

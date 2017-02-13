@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import Model
 from Model import IrradianceModel_sym, IrradianceModel_python, GaussModel
-from FitModel import FitWrapper, FitModel
+from FitModel import FitWrapper
 from Residuum import Residuum
 
 
@@ -22,6 +22,7 @@ def test_main():
     x = np.linspace(200, 800, 100)  # config
     variables = ['alpha', 'beta', 'g_dsa', 'g_dsr']  # config
     expected_values = [2.5, 0.06, 0.6, 0.5]
+
     print('Expected: %s' % expected_values)
     guess = [1.0, 0.01, 0.5, 0.8]  # config
     bounds = [(-0.2, 4), (0., 3), (0., 2.), (0., 2.)]  # config
@@ -34,11 +35,11 @@ def test_main():
     residuum = FitWrapper(res.getResiduum())
     residuals = FitWrapper(res.getResiduals())
     derivative = FitWrapper(res.getDerivative())
-    Fit = FitModel()
-    result = Fit._minimize(residuum, guess, y_theano, bounds, jacobian=derivative)
-    print("Got %s" % result.x)
-    resultls = Fit._least_squares(residuals, guess, y_theano, bounds)
-    print("Got %s" % resultls.x)
+
+    # result = Fit._minimize(residuum, guess, y_theano, bounds, jacobian=derivative)
+    # print("Got %s" % result.x)
+    # resultls = Fit._least_squares(residuals, guess, y_theano, bounds)
+    # print("Got %s" % resultls.x)
 
 
     # Python
@@ -64,31 +65,30 @@ def test_main():
     plt.show()
 
 
-def example_gaussian():
-    #Config output
-    x = np.linspace(-20, 20, 100)
-    a = 3.4
-    b = 2.4
-    c = 5
-    bounds = [(3, 4), (2, 3), (4.2, 5.2)]
-    guess = [a,b,c]
-    variables = ['a', 'b', 'c']
-    y = gaussian(x, guess) + np.random.normal(0, 0.1, len(x))
+def sky_radiance():
+    from get_ssa import get_ssa
+    zenith = 53.1836240528
+    AMass = 1.66450160404
+    rel_h = 0.665
+    pressure = 950
+    AM = 5
+    ssa = get_ssa(rel_h, AM)
+    x = np.linspace(200, 800, 1000)  # config
+    H_oz = 0.1
+    wv = 0.25
+    alpha = 1.6
+    beta = 0.06
+    l_dsr = 0.02
+    l_dsa = 0.02
 
-    #Auswertung
-    model= GaussModel(x, variables)
-    res = Residuum(model, 'gauss')
-    function_to_fit = FitWrapper(res.getResiduum())
-    test = FitModel(function_to_fit)
-    result = test.fit(guess, y, bounds)
-
-    y_fitted = gaussian(x, result.x)
-
-    plt.plot(x,y, 'b')
-    plt.plot(x, y_fitted, 'r')
-
+    model = IrradianceModel_python(zenith, AM, pressure, ssa)
+    y = model.sky_radiance(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+    print(y)
+    plt.plot(x, y)
+    plt.ylabel('sky radiance')
+    plt.show()
 
 if __name__ == "__main__":
     # example_gaussian()
-    test_main()
-
+    # test_main()
+    sky_radiance()
