@@ -6,26 +6,6 @@ from Residuum import Residuum
 from FitModel import FitWrapper, FitModelFactory, FitMethodFactory
 
 
-def get_spectral_irradiance_reflectance(E_d, E_up):
-    return E_up / E_d
-
-
-def get_error_of_spectral_reflectance(E_d, E_up, E_d_std, E_up_std):
-    """
-    Reflectance std is calculated via gaussian propagation of uncertainty.
-    Specific error is calculated
-    """
-    reflect_std = np.sqrt((1 / E_d) ** 2 * E_up_std ** 2 + (E_up / E_d ** 2) ** 2 * E_d_std ** 2)
-    return reflect_std
-
-def get_reflectance(E_d, E_up):
-    reflectance = get_spectral_irradiance_reflectance(E_d['mean'], E_up['mean'])
-    reflectance_std = get_error_of_spectral_reflectance(E_d['mean'], E_up['mean'], E_d['data_sample_std'], E_up['data_sample_std'])
-
-    reflectance_dict = {'wave_nm': E_d['wave'], 'spectra': reflectance, 'std': reflectance_std, 'var': reflectance_std ** 2}
-    return reflectance_dict
-
-
 class Aerosol_Retrievel(object):
 
     def __init__(self, WeatherParams, config, spectra, logger):
