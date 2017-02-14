@@ -48,6 +48,18 @@ def get_wasi_parameters():
     return wasi_dict
 
 
+def get_wasi(wave):
+    w_oz, oz = wasi_ozone()
+    ozone = np.interp(wave, w_oz, oz)
+    w_o2, o2 = wasi_oxygen()
+    oxygen = np.interp(wave, w_o2, o2)
+    w_wv, wv = wasi_wv()
+    water = np.interp(wave, w_wv, wv)
+    w_eo, eo = wasi_e0()
+    solar = np.interp(wave, w_eo, eo)
+    return ozone, oxygen, water, solar
+
+
 def plot():
     import matplotlib.pyplot as plt
     wv_o2, o2 = wasi_oxygen()

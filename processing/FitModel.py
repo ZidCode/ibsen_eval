@@ -1,6 +1,7 @@
 from lmfit import Model
 from scipy.optimize import minimize, least_squares
-from Model import IrradianceModel_python, IrradianceModel_sym
+from BaseModels import BaseModelPython, BaseModelSym
+from Model import IrradianceRatio, LSkyRatio, SkyRadiance, IrradianceRatioSym, SkyRadianceSym
 from Residuum import Residuum
 
 
@@ -17,11 +18,15 @@ class FitWrapper:
 class FitModelFactory:
 
     def __init__(self, wp, config, wavelengths, logger):
+        #'ratio', 'l_sky_ratio', 'l_sky_nadir'
+        python_map = {'ratio': IrradianceRatio, 'l_sky_ratio': LSkyRatio, 'l_sky_nadir': SkyRadiance}
+        sym_map = {'ratio': IrradianceRatioSym, 'l_sky_nadir': SkyRadianceSym}
 
         if config['package'] == 'lmfit':
-            self.model = IrradianceModel_python(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa)
+            bm = BaseModelPython(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa)
+            self.model = python_map[config['model']](bm)
         else:
-            self.model = IrradianceModel_sym(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa, wavelengths, config['params'])
+            self.model = sym_map[config['model']](wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa, wavelengths, config['params'])
 
     def get_fitmodel(self):
         return self.model
@@ -51,7 +56,7 @@ class LMFit:
         self.config = config
         self.param_dict = param_dict
         self.logger = logger
-        self.callable = model.getModel(config['model'])
+        self.callable = model.func
 
     def fit(self):
         self.logger.info('Method %s' % self.config['method'])
@@ -75,7 +80,7 @@ class Minimize:
 
     def __init__(self, model, config, param_dict, logger):
         self.model = model
-        self.res = Residuum(model, config['model'])
+        self.res = Residuum(model)
         self.callable = FitWrapper(self.res.getResiduum())
         self.symbols = model.get_Symbols()
         self.param_dict = param_dict
@@ -89,6 +94,7 @@ class Minimize:
             self.jacobian = False
 
     def fit(self):
+        self.logger.info("Symbols: %s" % self.symbols)
         self.logger.info('Method %s' % self.config['method'])
         self.result = minimize(self.callable, self.config['initial_values'], args=(self.param_dict['spectra_range']), jac=self.jacobian,
                                method=self.config['method'], bounds=self.config['limits'])
@@ -101,7 +107,7 @@ class Minimize:
         return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
 
     def _calc_fitted_spectra(self):
-        f = self.model.getcompiledModel('ratio')
+        f = self.model.get_compiled()
         self.fitted_spectra = f(*self.result.x)
 
     def _calc_residuals(self):
@@ -114,13 +120,14 @@ class LeastSquaresFit:
     def __init__(self, model, config, param_dict, logger):
         self.config = config
         self.model = model
-        self.res = Residuum(model, config['model'])
+        self.res = Residuum(model)
         self.callable = FitWrapper(self.res.getResiduals())
-        self.symbols = self.model.get_Symbols()
+        self.symbols = model.get_Symbols()
         self.param_dict = param_dict
         self.logger = logger
 
     def fit(self):
+        self.logger.info("Symbols: %s" % self.symbols)
         self.logger.info('Method %s' % self.config['method'])
         bounds = tuple(map(list, zip(*self.config['limits'])))  # [(min,max),(min1,max1)..] -> ([min,min1,..], [max,max1..])
         self.result = least_squares(self.callable, self.config['initial_values'], args=(self.param_dict['spectra_range'],), bounds=bounds)
@@ -133,7 +140,7 @@ class LeastSquaresFit:
         return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
 
     def _calc_fitted_spectra(self):
-        f = self.model.getcompiledModel('ratio')
+        f = self.model.get_compiled()
         self.fitted_spectra = f(*self.result.x)
 
     def _calc_residuals(self):

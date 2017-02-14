@@ -9,15 +9,12 @@ to_list = lambda x : [x]
 
 class Residuum:
 
-    def __init__(self, model, name):
-        self.original_model = model
-        self.model = model.getModel(name)
+    def __init__(self, model):
+        self.model = model.func()
         self.symbols = model.get_Symbols()
+        print(self.model)
         self.reference = T.vector('reference')
         self.args = to_list(self.reference) + self.symbols
-
-    def get_original_model(self):
-        return self.original_model
 
     def getsymResiduum(self):
         R = 0.5 * T.sum((self.model - self.reference) ** 2)

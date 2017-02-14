@@ -45,7 +45,6 @@ def create_logger(log_config):
     return logger
 
 
-# Decorators
 def evaluate_spectra(config, logger=logging):
     ref = parse_ibsen_file(config['Data']['reference'])
     tar = parse_ibsen_file(config['Data']['target'])

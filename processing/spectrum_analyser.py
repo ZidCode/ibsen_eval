@@ -1,9 +1,6 @@
 import numpy as np
-from lmfit import Model
 import matplotlib.pyplot as plt
-from Model import IrradianceModel_python, IrradianceModel_sym
-from Residuum import Residuum
-from FitModel import FitWrapper, FitModelFactory, FitMethodFactory
+from FitModel import FitModelFactory, FitMethodFactory
 
 
 class Aerosol_Retrievel(object):
