@@ -3,11 +3,11 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from Model import IrradianceModel, TmpModel
-from FitModel import FitWrapper, FitModel
-from irradiance_models import irradiance_models
+from Model import IrradianceModel_sym
+from FitModel import FitWrapper
 from Residuum import Residuum
 from get_ssa import get_ssa
+from scipy.optimize import minimize, least_squares
 
 """ Spaghetti time"""
 
@@ -28,8 +28,8 @@ def set_up():
     setup = dict()
     variables = ['alpha', 'beta', 'g_dsa', 'g_dsr']
     setup['variables'] = variables
-    setup['expected']= [1.8, 0.06, 0.32, 0.32]
-    setup['guess'] = [1.0, 0.01, 0.2, 0.2]  # config
+    setup['expected']= [1.8, 0.06, 0.5, 0.8]
+    setup['guess'] = [1.5, 0.04, 0.6, 0.7]  # config
     setup['bounds'] = [(-0.2, 4), (0., 3), (0., 1.), (0., 1.)]  # config
     return setup
 
@@ -38,8 +38,8 @@ def start(logger):
     setup = set_up()
     model_param = get_model_param()
     parameters = {'alpha': 0, 'beta': 1, 'g_dsa': 2, 'g_dsr': 3}
-    input_parameters = {'alpha': np.linspace(1.0, 2.5, 101), 'beta': np.linspace(0.02, 0.1, 101),
-                        'g_dsa': np.linspace(.1, .5, 101), 'g_dsr': np.linspace(0.1, .5, 101)}
+    input_parameters = {'alpha': np.linspace(1.0, 2.5, 101), 'beta': np.linspace(0.02, 0.13, 101),
+                        'g_dsa': np.linspace(.3, .8, 101), 'g_dsr': np.linspace(0.5, 1.0, 101)}
 
     for rand in range(30):
         for biased_parameter, biased_idx in parameters.items():
@@ -48,7 +48,7 @@ def start(logger):
             mu = setup['expected'][biased_idx]
             input_ = input_parameters[biased_parameter]
 
-            irr_symbol = IrradianceModel(model_param['x'], model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'])
+            irr_symbol = IrradianceModel_sym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
             getIrrRatio = irr_symbol.getcompiledModel('ratio')
             simulation = getIrrRatio(*setup['expected'])  + np.random.normal(0, 0.001, len(model_param['x']))
             expected = copy.copy(setup['expected'])
@@ -68,21 +68,22 @@ def start(logger):
             frame = pd.DataFrame(result['output'], columns=variables)
             frame.insert(0, '%s' % biased_parameter, result['input'])
             frame.insert(0, 'expected', result['expected'])
-            frame.to_csv('results/single_analyse_kak2D/biased_%s_%s.txt' % (rand, biased_parameter), index=False)
+            frame.to_csv('results/biased_%s_%s.txt' % (rand, biased_parameter), index=False)
 
 
 def start2D(logger):
     model_param = get_model_param()
     setup = set_up()
     r_setup = copy.copy(set_up())
-    noise_count = 30
-    global_var = {'param': 'g_dsr', 'input': np.linspace(.16,.5,41), 'idx':3}
-    local_var = {'param': 'g_dsa', 'input': np.linspace(.1,.5,41) ,'idx':2}
+    noise_count = 20
+    global_var = {'param': 'g_dsr', 'input': np.linspace(.752,.9, 51), 'idx':3}
+    local_var = {'param': 'g_dsa', 'input': np.linspace(.4,.7, 51) ,'idx':2}
     for key in setup.keys():
         del r_setup[key][global_var['idx']]
         del r_setup[key][local_var['idx']]
+    logger.info("here")
 
-    irr_symbol = IrradianceModel(model_param['x'], model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'])
+    irr_symbol = IrradianceModel_sym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
     getIrrRatio = irr_symbol.getcompiledModel('ratio')
     simulation = getIrrRatio(*setup['expected'])
 
@@ -90,7 +91,6 @@ def start2D(logger):
     map_parameters = {'alpha': 0, 'beta': 1}
     for key, value in fit_parameters.items():
         fit_parameters[key] = ['%s_%s' %(key, i) for i in range(noise_count)]
-
     for i, input_value in enumerate(global_var['input']):
         irr_symbol.setVariable(global_var['param'], input_value)
         logger.info(">>>> Global Input for %s: %s" %(global_var['param'], input_value))
@@ -100,6 +100,7 @@ def start2D(logger):
 
             noised_simulation = simulation + np.random.normal(0, 0.001, len(model_param['x']))
             logger.debug("Symbols %s" % irr_symbol.get_Symbols())
+            logger.debug("Setup bounds:%s " % r_setup['bounds'])
             result['output'] = _iterate(noised_simulation, [], r_setup['expected'], r_setup['guess'], r_setup['bounds'], local_var['param'], irr_symbol, local_var['input'], logger,  2)
             for key, value in fit_parameters.items():
                 logger.debug("Inlude for parameter %s the column %s at index %s" % (key, value[count], map_parameters[key]))
@@ -117,22 +118,24 @@ def start2D(logger):
         frame.insert(0, global_var['param'], buf)
         buf[0:len(setup['expected'])] = setup['expected']
         frame.insert(0, 'expected', buf)
-        frame.to_csv('results/two_variation_Deltaoutput_%s.txt' % i, index=False)
+        frame.to_csv('new_results/two_variation_Deltaoutput_%s.txt' % i, index=False)
         logger.info(frame)
         logger.debug(r_setup)
 
 
 def _iterate(simulation, variables, expected, guess, bounds, biased_parameter, model, input_values, logger, len_parameter=3):
     biased_parameters = np.zeros((len(input_values), len_parameter))
+    bounds = tuple(map(list, zip(*bounds)))
     for i, input_ in enumerate(input_values):
         model.setVariable(biased_parameter, input_)
         logger.debug(">>>> Input for %s: %s" % (biased_parameter, input_))
         logger.debug("Fit variables %s: " % model.get_Symbols())
         res = Residuum(model, 'ratio')
         residuals = FitWrapper(res.getResiduals())
-        Fit = FitModel()
-        resultls = Fit._least_squares(residuals, guess, simulation, bounds)
+        resultls = least_squares(residuals, guess, args=(simulation,), bounds=bounds)
         biased_parameters[i] = np.array(resultls.x) - np.array(expected)
+        logger.info("Fit : %s" % resultls.x)
+        logger.info("Success: %s" %resultls.success)
     return biased_parameters
 
 
@@ -140,7 +143,7 @@ if __name__ == "__main__":
     import argparse
     import logging
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--level', default='INFO')
+    parser.add_argument('-l', '--level', default='DEBUG')
     args = parser.parse_args()
     logger = logging.getLogger('sensivity_analysis')
     ch = logging.StreamHandler()
@@ -148,5 +151,5 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.setLevel(args.level)
-    #start(logger)
+    logger.info("Start") 
     start2D(logger)
