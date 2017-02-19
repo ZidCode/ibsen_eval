@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from Model import IrradianceModel_sym
+from Model import IrradianceRatioSym
 from FitModel import FitWrapper
 from Residuum import Residuum
 from get_ssa import get_ssa
@@ -48,8 +48,8 @@ def start(logger):
             mu = setup['expected'][biased_idx]
             input_ = input_parameters[biased_parameter]
 
-            irr_symbol = IrradianceModel_sym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
-            getIrrRatio = irr_symbol.getcompiledModel('ratio')
+            irr_symbol = IrradianceRatioSym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
+            getIrrRatio = irr_symbol.get_compiled()
             simulation = getIrrRatio(*setup['expected'])  + np.random.normal(0, 0.001, len(model_param['x']))
             expected = copy.copy(setup['expected'])
             variables = copy.copy(setup['variables'])
@@ -83,8 +83,8 @@ def start2D(logger):
         del r_setup[key][local_var['idx']]
     logger.info("here")
 
-    irr_symbol = IrradianceModel_sym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
-    getIrrRatio = irr_symbol.getcompiledModel('ratio')
+    irr_symbol = IrradianceRatioSym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
+    getIrrRatio = irr_symbol.get_compiled()
     simulation = getIrrRatio(*setup['expected'])
 
     fit_parameters = dict((key,0) for key in r_setup['variables'])
@@ -130,7 +130,7 @@ def _iterate(simulation, variables, expected, guess, bounds, biased_parameter, m
         model.setVariable(biased_parameter, input_)
         logger.debug(">>>> Input for %s: %s" % (biased_parameter, input_))
         logger.debug("Fit variables %s: " % model.get_Symbols())
-        res = Residuum(model, 'ratio')
+        res = Residuum(model)
         residuals = FitWrapper(res.getResiduals())
         resultls = least_squares(residuals, guess, args=(simulation,), bounds=bounds)
         biased_parameters[i] = np.array(resultls.x) - np.array(expected)
