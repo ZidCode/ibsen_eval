@@ -4,8 +4,10 @@ from math import exp, log
 from theano import tensor as T
 from BaseModels import BaseModelSym
 
+
 # Python: Composition, Sym: Inheritance
 exp_v = np.vectorize(exp)
+
 
 class WaterVapourTransmittance:
     def __init__(self, base_model):
@@ -14,13 +16,13 @@ class WaterVapourTransmittance:
     def func(self, WV, x):
         return exp_v(self.bm.tau_wv(WV, x))
 
+
 class OzoneTransmittance:
     def __init__(self, base_model):
         self.bm = base_model
 
     def func(self, x, H_oz):
         return exp_v(self.bm.tau_oz(x, H_oz))
-
 
 
 class IrradianceRatio:
@@ -86,7 +88,7 @@ class IrradianceRatioSym(BaseModelSym):
 
 class SkyRadianceSym(BaseModelSym):
 
-    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
+    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']):
         BaseModelSym.__init__(self, zenith, AM, pressure, ssa, wave, variables)
 
 
@@ -101,24 +103,3 @@ class SkyRadianceSym(BaseModelSym):
         call_model = theano.function(symbols, self.func())
         return call_model
 
-
-class GaussModel:
-    def __init__(self, wave, variables):
-        self.x = theano.shared(wave, borrow=True)
-        self.variables = variables
-
-        self.a = T.scalar('a')
-        self.b = T.scalar('b')
-        self.c = T.scalar('c')
-        self.symbols = {'a': self.a, 'b': self.b, 'c': self.c}
-        self.model_dict = {'gauss': self._symbolic_gaussian}
-
-    def get_Symbols(self):
-        return [self.symbols[name] for name in self.variables]
-
-    def _symbolic_gaussian(self):
-        y = self.a * T.exp(-0.5*(self.x-self.b) ** 2 / self.c**2)
-        return y
-
-    def getModel(self, name):
-        return self.model_dict[name]
