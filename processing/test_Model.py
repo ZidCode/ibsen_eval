@@ -116,10 +116,10 @@ def compare_sym_python():
     x = np.linspace(350, 800, 1000)  # config
     H_oz = 0.3
     wv = 0.25
-    alpha = 1.6
+    alpha = 1.8
     beta = 0.06
-    l_dsr = 0.02
-    l_dsa = 0.02
+    l_dsr = 0.1
+    l_dsa = 0.05
     model = BaseModelPython(zenith, AM, pressure, ssa)
     skyModel = SkyRadiance(model)
     y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
@@ -134,8 +134,36 @@ def compare_sym_python():
     plt.show()
 
 
+def coverty_variability():
+    from get_ssa import get_ssa
+    zenith = 53.1836240528
+    AMass = 1.66450160404
+    rel_h = 0.665
+    pressure = 950
+    AM = 5
+    ssa = get_ssa(rel_h, AM)
+    x = np.linspace(350, 800, 1000)  # config
+    H_oz = 0.3
+    wv = 0.25
+    alpha = 1.8
+    beta = 0.06
+    l_dsr = 0.1
+    l_dsa = 0.05
+    l_dsa = np.linspace(0.01, 0.1, 10)
+    for l in l_dsa:
+
+        symmodel = SkyRadianceSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+        func = symmodel.get_compiled()
+        ysym = func(alpha, beta, l_dsr, l, H_oz, wv)
+        plt.plot(x, ysym, label='sym')
+
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     # example_gaussian()
     # test_main()
     #sky_radiance()
-    compare_sym_python()
+    #compare_sym_python()
+    coverty_variability()
