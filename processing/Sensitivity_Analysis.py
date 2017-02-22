@@ -10,7 +10,7 @@ from get_ssa import get_ssa
 from scipy.optimize import minimize, least_squares
 
 """ Spaghetti time"""
-
+TODO='TODO'
 
 def get_model_param():
     setup = dict()
@@ -31,17 +31,33 @@ def set_up():
     setup['expected']= [1.8, 0.06, 0.5, 0.8]
     setup['guess'] = [1.5, 0.04, 0.6, 0.7]  # config
     setup['bounds'] = [(-0.2, 4), (0., 3), (0., 1.), (0., 1.)]  # config
+    setup['Model'] = IrradianceRatioSym
     return setup
+
+
+def sensi_setup():
+    sensi = dict()
+    sensi['statistics'] = 30
+    sensi['alpha'] = np.linspace(1.0, 2.5, 101)
+    sensi['beta'] = np.linspace(0.02, 0.13, 101)
+    sensi['l_dsr'] = np.linspace(0.01, 0.03, 51)
+    sensi['l_dsa'] = np.linspace(0.01, 0.03, 51)
+    sensi['g_dsa' ] = np.linspace(.3, .8, 101)
+    sensi['g_dsr'] = np.linspace(0.5, 1.0, 101)
+    sensi['H_oz'] = np.linspace(0.3, 0.4, 11)
+    sensi['wv'] = np.linspace(0.1, 0.4, 51)
+    return sensi
 
 
 def start(logger):
     setup = set_up()
     model_param = get_model_param()
-    parameters = {'alpha': 0, 'beta': 1, 'g_dsa': 2, 'g_dsr': 3}
-    input_parameters = {'alpha': np.linspace(1.0, 2.5, 101), 'beta': np.linspace(0.02, 0.13, 101),
-                        'g_dsa': np.linspace(.3, .8, 101), 'g_dsr': np.linspace(0.5, 1.0, 101)}
+    sensi = sensi_setup()
+    parameters = {value: idx for idx, value in enumerate(setup['variables'])}
+    input_parameters = {'alpha': sensi['alpha'], 'beta': sensi['beta'],
+                        'g_dsa': sensi['g_dsa'], 'g_dsr': sensi['g_dsr']}
 
-    for rand in range(30):
+    for rand in range(sensi['statistics']):
         for biased_parameter, biased_idx in parameters.items():
             result = dict()
             logger.debug("Simulation: %s" % setup['expected'])
@@ -74,6 +90,7 @@ def start(logger):
 def start2D(logger):
     model_param = get_model_param()
     setup = set_up()
+    sensi = sensi_setup()
     r_setup = copy.copy(set_up())
     noise_count = 20
     global_var = {'param': 'g_dsr', 'input': np.linspace(.752,.9, 51), 'idx':3}
@@ -151,5 +168,5 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.setLevel(args.level)
-    logger.info("Start") 
-    start2D(logger)
+    logger.info("Start")
+    start(logger)
