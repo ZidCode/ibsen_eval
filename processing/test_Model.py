@@ -6,6 +6,15 @@ from BaseModels import BaseModelPython
 from Model import SkyRadiance, WaterVapourTransmittance, OzoneTransmittance, SkyRadianceSym
 from FitModel import FitWrapper
 from Residuum import Residuum
+from matplotlib.font_manager import FontProperties
+
+
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
 
 
 def gaussian(x, a):
@@ -69,7 +78,7 @@ def sky_radiance():
     pressure = 950
     AM = 5
     ssa = get_ssa(rel_h, AM)
-    x = np.linspace(350, 800, 1000)  # config
+    x = np.linspace(350, 850, 1000)  # config
     H_oz = 0.3
     wv = 0.25
     alpha = 1.6
@@ -79,31 +88,43 @@ def sky_radiance():
 
     model = BaseModelPython(zenith, AM, pressure, ssa)
     skyModel = SkyRadiance(model)
-    waterv = OzoneTransmittance(model)
 
-    y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
-    y2 = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr,wv=0.0, H_oz=H_oz)
-    y3 = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=0.5, H_oz=H_oz)
-
-    wv = waterv.func(x, H_oz)
-    wv2 = waterv.func(x, 0.33)
-    wv3 = waterv.func(x, 0.34)
-    plt.plot(x, y)
-    plt.plot(x, y2)
-    plt.plot(x, y3)
-    plt.ylabel('sky radiance')
-    plt.show()
-    plt.plot(x,wv)
-    plt.plot(x,wv2)
-    plt.plot(x,wv3)
-    plt.show()
+    ozone = OzoneTransmittance(model)
+    oz = ozone.func(x, H_oz)
+    oz2 = ozone.func(x, 0.33)
+    oz3 = ozone.func(x, 0.34)
 
     ww = WaterVapourTransmittance(model)
     water = ww.func(0.25, x)
-    water2 = ww.func(0.3, x)
-    plt.plot(x, water)
-    plt.plot(x, water2)
+    water2 = ww.func(1.5, x)
+
+    for wv in np.arange(0.2, 2.5, 0.1):
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("Water Vapour 0.2-2.5 cm", **hfont)
     plt.show()
+
+    for hoz in np.arange(0.3, 0.7, 0.1):
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=hoz)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("Ozone 0.3-0.7 cm", **hfont)
+    plt.show()
+
+
+    plt.plot(x, water, label="WV 0.25cm")
+    plt.plot(x, water2, label="WV 1.5cm")
+    plt.plot(x,oz, label="Hoz 0.3cm")
+    plt.plot(x,oz2, label="Hoz 0.33cm")
+    plt.plot(x,oz3, label="Hoz 0.34cm")
+    plt.legend(loc='best', prop=fontP)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel('Transmittance', **hfont)
+    plt.show()
+
 
 def compare_sym_python():
     from get_ssa import get_ssa
@@ -147,15 +168,15 @@ def coverty_variability():
     wv = 0.25
     alpha = 1.8
     beta = 0.06
-    l_dsr = 0.1
-    l_dsa = 0.05
-    l_dsa = np.linspace(0.01, 0.1, 10)
-    for l in l_dsa:
+    l_dsr = 0.02
+    l_dsa = 0.02
+    #l_dsa = np.linspace(0.01, 0.1, 10)
+    #for l in l_dsa:
 
-        symmodel = SkyRadianceSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
-        func = symmodel.get_compiled()
-        ysym = func(alpha, beta, l_dsr, l, H_oz, wv)
-        plt.plot(x, ysym, label='sym')
+    symmodel = SkyRadianceSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+    func = symmodel.get_compiled()
+    ysym = func(alpha, beta, l_dsr, l_dsa, H_oz, wv)
+    plt.plot(x, ysym, label='sym')
 
     plt.legend()
     plt.show()
@@ -164,6 +185,6 @@ def coverty_variability():
 if __name__ == "__main__":
     # example_gaussian()
     # test_main()
-    #sky_radiance()
+    sky_radiance()
     #compare_sym_python()
-    coverty_variability()
+    #coverty_variability()
