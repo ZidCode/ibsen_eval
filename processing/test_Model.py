@@ -34,7 +34,7 @@ def test_main():
     bounds = [(-0.2, 4), (0., 3), (0., 2.), (0., 2.)]  # config
 
     # Theano
-    irr_symbol = IrradianceRatioSym(zenith, AM, pressure, ssa, x, variables)
+    irr_symbol = IrradianceRatioSym(zenith, AMass, pressure, ssa, x, variables)
     getIrrRatio = irr_symbol.get_compiled()
     y_theano = getIrrRatio(*expected_values)
     res = Residuum(irr_symbol)
@@ -44,7 +44,7 @@ def test_main():
     # Python
     kwargs = {key:value for key,value in zip(variables, expected_values)}
     print("parameters :  %s" % kwargs)
-    bm = BaseModelPython(zenith, AM, pressure, ssa)
+    bm = BaseModelPython(zenith, AMass, pressure, ssa)
     irr_python = IrradianceRatio(bm)
     y_python = irr_python.func(x, **kwargs)
 
@@ -75,15 +75,15 @@ def sky_radiance():
     pressure = 950
     AM = 5
     ssa = get_ssa(rel_h, AM)
-    x = np.linspace(780, 850, 1000)  # config
+    x = np.linspace(350, 750, 1000)  # config
     H_oz = 0.3
-    wv = 0.25
-    alpha = 1.6
+    wv = 1.2
+    alpha = 1.8
     beta = 0.06
-    l_dsr = 0.02
-    l_dsa = 0.02
+    l_dsr = 0.07
+    l_dsa = 0.05
 
-    model = BaseModelPython(zenith, AM, pressure, ssa)
+    model = BaseModelPython(zenith, AMass, pressure, ssa)
     skyModel = SkyRadiance(model)
 
     ozone = OzoneTransmittance(model)
@@ -103,7 +103,7 @@ def sky_radiance():
     plt.title("Water Vapour 0.2-2.5 cm", **hfont)
     plt.show()
 
-    for hoz in np.arange(0.3, 0.7, 0.1):
+    for hoz in np.arange(0.3, 0.5, 0.01):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=hoz)
         plt.plot(x, y)
     plt.xlabel('Wavelength [nm]', **hfont)
@@ -111,23 +111,29 @@ def sky_radiance():
     plt.title("Ozone 0.3-0.7 cm", **hfont)
     plt.show()
 
-    for l in np.arange(0.005, 0.1, 0.01):
+    for l in np.arange(0.05, 0.1, 0.01):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l, wv=wv, H_oz=hoz)
-        plt.plot(x, y)
+        plt.plot(x, y, label='%s' % l)
     plt.xlabel('Wavelength [nm]', **hfont)
     plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
-    plt.title("l_dsr 0.005-0.1", **hfont)
+    #plt.title("l_dsr 0.005-0.1", **hfont)
+    legend = plt.legend(loc=0, ncol=1, prop = fontP,fancybox=True,
+                    shadow=False,title=r'$l_{dsr}$',bbox_to_anchor=(1.0, 1.0))
+    plt.setp(legend.get_title(),fontsize='medium', family=FONTSTYLE)
     plt.show()
 
-    for l in np.arange(0.005, 0.1, 0.01):
+    for l in np.arange(0.03, 0.1, 0.01):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
-        plt.plot(x, y)
+        plt.plot(x, y, label='%s' % l)
     plt.xlabel('Wavelength [nm]', **hfont)
     plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
-    plt.title("l_dsa 0.005-0.1", **hfont)
+    #plt.title("l_dsa 0.005-0.1", **hfont)
+    legend = plt.legend(loc=0, ncol=1, prop = fontP,fancybox=True,
+                    shadow=False,title=r'$l_{dsa}$', bbox_to_anchor=(1.0, 1.0))
+    plt.setp(legend.get_title(),fontsize='medium', family=FONTSTYLE)
     plt.show()
 
-    for a in np.arange(1.4, 1.8, 0.01):
+    for a in np.arange(1.4, 2.5, 0.01):
         y = skyModel.func(x=x, alpha=a, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
         plt.plot(x, y)
     plt.xlabel('Wavelength [nm]', **hfont)
@@ -135,7 +141,7 @@ def sky_radiance():
     plt.title("alpha 1.4-1.8", **hfont)
     plt.show()
 
-    for b in np.arange(0.02, 0.1, 0.01):
+    for b in np.arange(0.02, 0.3, 0.01):
         y = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
         plt.plot(x, y)
     plt.xlabel('Wavelength [nm]', **hfont)
@@ -252,7 +258,7 @@ def compare_sym_python():
 
 
 def fit_skyRadiance():
-    from scipy.optimize import minimize
+    from scipy.optimize import minimize, least_squares
     from get_ssa import get_ssa
     zenith = 53.1836240528
     AMass = 1.66450160404
@@ -260,32 +266,37 @@ def fit_skyRadiance():
     pressure = 950
     AM = 5
     ssa = get_ssa(rel_h, AM)
-    x = np.linspace(780, 840, 1000)  # config
+    x = np.linspace(350, 400, 1000)  # config
     H_oz = 0.34
     wv = 1.2
     alpha = 1.8
     beta = 0.06
-    l_dsr = 0.02
-    l_dsa = 0.02
-    guess = [alpha-0.2, beta+0.02, l_dsr-0.1, l_dsa+0.1]  # config
-    bounds = [(-0.2, 3), (0.01, 0.3), (-0.5, 0.5), (-0.5, 0.5)]  # config
+    l_dsr = 0.05
+    l_dsa = 0.05
+    guess = [alpha+0.2, beta+0.02, l_dsr+0.01,  l_dsa+0.01]  # config
+    bounds = [(-0.25, 4.0), (0.01, 0.3), (-0.05, 0.1), (-0.05, 0.3)]  # config
 
-    symmodel = SkyRadianceSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+    symmodel = SkyRadianceSym(zenith, AMass, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
     func = symmodel.get_compiled()
-    simulation = func(alpha, beta, l_dsr, l_dsa, H_oz, wv)
-    symmodel.setVariable('H_oz', H_oz+0.4)
-    symmodel.setVariable('wv', wv)
+    simulation = func(alpha, beta, l_dsr, l_dsa, H_oz, wv) #+ np.random.normal(0, 0.1, len(x))
+    plt.plot(x, simulation)
+    plt.show()
+    symmodel.setVariable('H_oz', 0.3)
+    symmodel.setVariable('wv', 0.1)
     print(symmodel.get_Symbols())
     res = Residuum(symmodel)
-    callable = FitWrapper(res.getResiduum())
-    derivative = FitWrapper(res.getDerivative())
-    print(symmodel.getVariable('H_oz'))
-    result = minimize(callable, guess, args=(simulation), jac=derivative, method='TNC', bounds=bounds)
+    residuals = FitWrapper(res.getResiduum())
+    result = minimize(residuals, guess, args=(simulation), jac=False, method='L-BFGS-B', bounds=bounds)
     print(result.x)
+    print(result.success)
     plt.plot(x, simulation, label='sym')
     func = symmodel.get_compiled()
     fitted = func(*result.x)
     plt.plot(x, fitted)
+    plt.show()
+    for noise in np.arange(20):
+        simulation = func(alpha, beta, l_dsr, l_dsa) + np.random.normal(0, 0.1, len(x))
+        plt.plot(x, simulation)
     plt.show()
 
 
@@ -307,7 +318,7 @@ def coverty_variability():
     #l_dsa = np.linspace(0.01, 0.1, 10)
     #for l in l_dsa:
 
-    symmodel = SkyRadianceSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+    symmodel = SkyRadianceSym(zenith, AMass, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
     func = symmodel.get_compiled()
     ysym = func(alpha, beta, l_dsr, l_dsa, H_oz, wv)
     plt.plot(x, ysym, label='sym')
@@ -318,7 +329,8 @@ def coverty_variability():
 
 if __name__ == "__main__":
     #test_main()
-    #sky_radiance()
+    sky_radiance()
+    #l_sky_ratio()
     #compare_sym_python()
     #coverty_variability()
-    fit_skyRadiance()
+    #fit_skyRadiance()
