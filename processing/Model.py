@@ -86,6 +86,31 @@ class IrradianceRatioSym(BaseModelSym):
         return call_model
 
 
+class LSkyRatioSym(BaseModelSym):
+
+    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr', 'l_dsr', 'l_dsa']):
+        BaseModelSym.__init__(self, zenith, AM, pressure, ssa, wave, variables)
+
+    def _ratio_E_ds(self):
+        _E_ds_ratio = self.symbols['l_dsr'] * (1 - T.exp(0.95 * self._tau_r())) * 0.5 + \
+                      self.symbols['l_dsa'] * T.exp(1.5 * self._tau_r()) * (1 - T.exp(self._tau_as())) * self._forward_scat()
+        return _E_ds_ratio
+
+    def _ratio_E_d(self):
+        _E_d_ratio = self.symbols['g_dsr'] * (1 - T.exp(0.95 * self._tau_r())) * 0.5 + \
+                     self.symbols['g_dsa'] * T.exp(1.5 * self._tau_r()) * (1 - T.exp(self._tau_as())) * self._forward_scat() +  \
+                     T.exp(self._tau_as() + self._tau_r())
+        return _E_d_ratio
+
+    def func(self):
+        return self._ratio_E_ds() / self._ratio_E_d()
+
+    def get_compiled(self):
+        symbols = self.get_Symbols()
+        call_model = theano.function(symbols, self.func())
+        return call_model
+
+
 class SkyRadianceSym(BaseModelSym):
 
     def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']):

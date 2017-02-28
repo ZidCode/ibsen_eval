@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import Model
 from BaseModels import BaseModelPython, BaseModelSym
-from Model import SkyRadiance, WaterVapourTransmittance, OzoneTransmittance, SkyRadianceSym, IrradianceRatio, IrradianceRatioSym
+from Model import SkyRadiance, WaterVapourTransmittance, OzoneTransmittance, SkyRadianceSym, IrradianceRatio, IrradianceRatioSym, LSkyRatioSym, LSkyRatio
 from FitModel import FitWrapper, Minimize
 from Residuum import Residuum
 from matplotlib.font_manager import FontProperties
@@ -154,6 +154,74 @@ def sky_radiance():
     plt.show()
 
 
+def l_sky_ratio():
+    from get_ssa import get_ssa
+    zenith = 53.1836240528
+    AMass = 1.66450160404
+    rel_h = 0.665
+    pressure = 950
+    AM = 5
+    ssa = get_ssa(rel_h, AM)
+    x = np.linspace(350, 700, 1000)  # config
+    alpha = 1.6
+    beta = 0.06
+    l_dsr = 0.02
+    l_dsa = 0.02
+    g_dsr = 0.9
+    g_dsa = 0.9
+
+    model = BaseModelPython(zenith, AMass, pressure, ssa)
+    skyModel = LSkyRatio(model)
+
+    for l_dsr in np.arange(0.01, 0.1, 0.001):
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("l_dsr 0.01-0.1", **hfont)
+    plt.show()
+
+    for l_dsa in np.arange(0.01, 0.1, 0.001) :
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("l_dsa 0.01-0.1", **hfont)
+    plt.show()
+
+    for g_dsr in np.arange(0.7, 0.99, 0.01):
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("g_dsr 0.7-0.99", **hfont)
+    plt.show()
+
+    for g_dsa in np.arange(0.7, 0.99, 0.01):
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr,g_dsr=g_dsr, g_dsa=g_dsa)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("g_dsa 0.7-0.99", **hfont)
+    plt.show()
+
+    for a in np.arange(1.4, 1.8, 0.01):
+        y = skyModel.func(x=x, alpha=a, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr,g_dsr=g_dsr, g_dsa=g_dsa)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("alpha 1.4-1.8", **hfont)
+    plt.show()
+
+    for b in np.arange(0.02, 0.1, 0.001):
+        y = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l_dsa, l_dsr=l_dsr,g_dsr=g_dsr, g_dsa=g_dsa)
+        plt.plot(x, y)
+    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.title("beta 0.02-0.1", **hfont)
+    plt.show()
+
+
 def compare_sym_python():
     from get_ssa import get_ssa
     zenith = 53.1836240528
@@ -163,19 +231,19 @@ def compare_sym_python():
     AM = 5
     ssa = get_ssa(rel_h, AM)
     x = np.linspace(350, 800, 1000)  # config
-    H_oz = 0.3
-    wv = 0.25
     alpha = 1.8
     beta = 0.06
     l_dsr = 0.1
     l_dsa = 0.05
+    g_dsr = 0.8
+    g_dsa = 0.5
     model = BaseModelPython(zenith, AM, pressure, ssa)
-    skyModel = SkyRadiance(model)
-    y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+    skyModel = LSkyRatio(model)
+    y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa,)
 
-    symmodel = SkyRadianceSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+    symmodel = LSkyRatioSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta','g_dsr', 'g_dsa', 'l_dsr', 'l_dsa'])
     func = symmodel.get_compiled()
-    ysym = func(alpha, beta, l_dsr, l_dsa, H_oz, wv)
+    ysym = func(alpha, beta, g_dsr, g_dsa, l_dsr, l_dsa)
 
     plt.plot(x, ysym, label='sym')
     plt.plot(x, y, label='python')
