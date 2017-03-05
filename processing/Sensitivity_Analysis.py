@@ -32,6 +32,7 @@ def fit_setup():
     setup['model'] = SkyRadianceSym
     setup['global'] = 'H_oz'
     setup['local'] = 'wv'
+    setup['fix'] = {'l_dsr': 0.07}
     return setup
 
 
@@ -160,6 +161,10 @@ def startsky2D(logger):
     r_setup['variables'].remove(r_setup['global'])
     r_setup['variables'].remove(r_setup['local'])
     fit_parameters = dict()
+    for key, value in setup['fix'].items():
+        model.setVariable(key, value)
+        r_setup['variables'].remove(key)
+
     for idx, key in enumerate(r_setup['variables']):
         fit_parameters[key] = dict()
         fit_parameters[key]['idx'] = idx
