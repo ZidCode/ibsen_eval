@@ -8,43 +8,45 @@ from FitModel import FitWrapper
 from Residuum import Residuum
 from get_ssa import get_ssa
 from scipy.optimize import minimize, least_squares
+from atmospheric_mass import get_atmospheric_path_length
 
 
 def get_model_param():
     setup = dict()
-    setup['zenith'] = 53.1836240528
-    setup['AMass'] = 1.66450160404
-    setup['rel_h'] = 0.665
+    setup['zenith'] = 76.3313400556
+    setup['AMass'] = get_atmospheric_path_length(setup['zenith'])
+    setup['rel_h'] = 0.9
     setup['pressure'] = 950
     setup['AM'] = 5
     setup['ssa'] = get_ssa(setup['rel_h'], setup['AM'])
-    setup['x'] = np.linspace(350, 400, 1000)
+    setup['x'] = np.linspace(350, 750, 1000)
     return setup
 
 
 def fit_setup():
     setup = dict()
-    setup['variables'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
-    setup['simulate']= [1.8, 0.06, 0.07, 0.05, 0.34, 1.2]
-    setup['expected']= [1.8, 0.06, 0.07, 0.05]
-    setup['guess'] = [1.5, 0.04, 0.05, 0.02]  # config
-    setup['bounds'] = [(-0.2, 4), (0., 3),(-0.05, 0.2), (-0.05, 0.1)]  # config
-    setup['model'] = SkyRadianceSym
-    setup['global'] = 'H_oz'
-    setup['local'] = 'wv'
-    setup['fix'] = {'l_dsr': 0.07}
+    setup['variables'] = ['alpha', 'beta', 'g_dsa', 'g_dsr', 'l_dsr', 'l_dsa']
+    # setup['variables'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
+    setup['simulate']= [1.8, 0.06, 0.9, 0.8, 0.17, 0.1]
+    setup['expected']= [1.8, 0.06, 0.8, 0.1]
+    setup['guess']= [1.5, 0.04, 0.6, 0.09]
+    setup['bounds'] = [(-0.25, 4),(0.0, 3), (0.0, 1.3), (0.0, 0.5)]  # config
+    setup['model'] = LSkyRatioSym
+    setup['global'] = 'g_dsa'
+    setup['local'] = 'l_dsr'
+    setup['fix'] = {}
     return setup
 
 
 def sensi_setup():
     sensi = dict()
     sensi['statistics'] = 20
-    sensi['alpha'] = np.linspace(1.0, 2.5, 51)
-    sensi['beta'] = np.linspace(0.02, 0.13, 51)
-    sensi['l_dsr'] = np.linspace(0.01, 0.1, 51)
-    sensi['l_dsa'] = np.linspace(0.01, 0.1, 51)
-    sensi['g_dsa' ] = np.linspace(.3, .8, 51)
-    sensi['g_dsr'] = np.linspace(0.5, 1.0, 51)
+    sensi['alpha'] = np.linspace(1.4, 2.3, 31)
+    sensi['beta'] = np.linspace(0.02, 0.13, 31)
+    sensi['l_dsr'] = np.linspace(0.12, 0.2, 31)
+    sensi['l_dsa'] = np.linspace(0.07, 0.13, 31)
+    sensi['g_dsa' ] = np.linspace(.5, 1., 31)
+    sensi['g_dsr'] = np.linspace(.5, 1., 31)
     sensi['H_oz'] = np.linspace(0.3, 0.5, 31)
     sensi['wv'] = np.linspace(0.1, 2.4, 31)
     return sensi
