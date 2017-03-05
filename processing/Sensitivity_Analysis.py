@@ -1,146 +1,52 @@
-import theano
 import copy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from Model import IrradianceRatioSym, LSkyRatioSym, SkyRadianceSym
-from FitModel import FitWrapper
-from Residuum import Residuum
+from BaseModels import BaseModelPython
+from Model import SkyRadianceSym, SkyRadiance
 from get_ssa import get_ssa
-from scipy.optimize import minimize, least_squares
+from multiprocessing import Process, JoinableQueue
+from multiprocessing import current_process
 from atmospheric_mass import get_atmospheric_path_length
+from lmfit import Model
 
 
 def get_model_param():
     setup = dict()
-    setup['zenith'] = 76.3313400556
+    setup['zenith'] = 76.33134
     setup['AMass'] = get_atmospheric_path_length(setup['zenith'])
     setup['rel_h'] = 0.9
     setup['pressure'] = 950
     setup['AM'] = 5
     setup['ssa'] = get_ssa(setup['rel_h'], setup['AM'])
-    setup['x'] = np.linspace(350, 750, 1000)
     return setup
 
 
 def fit_setup():
     setup = dict()
-    setup['variables'] = ['alpha', 'beta', 'g_dsa', 'g_dsr', 'l_dsr', 'l_dsa']
-    # setup['variables'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
-    setup['simulate']= [1.8, 0.06, 0.9, 0.8, 0.17, 0.1]
-    setup['expected']= [1.8, 0.06, 0.8, 0.1]
-    setup['guess']= [1.5, 0.04, 0.6, 0.09]
-    setup['bounds'] = [(-0.25, 4),(0.0, 3), (0.0, 1.3), (0.0, 0.5)]  # config
-    setup['model'] = LSkyRatioSym
-    setup['global'] = 'g_dsa'
+    setup['variables'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
+    setup['simulate']= [1.8, 0.06, 0.17, 0.1, 0.34, 1.2]
+    setup['expected']= [1.8, 0.06, 0.1, 1.2]
+    setup['guess'] = [1.5, 0.04, 0.09, 1.0]  # config
+    setup['bounds'] = [(-0.2, 4), (0., 3),(-0.05, 0.3), (-0.05, 3.3)]  # config
+    setup['model'] = SkyRadianceSym
+    setup['global'] = 'H_oz'
     setup['local'] = 'l_dsr'
-    setup['fix'] = {}
+    setup['independent'] = {'x':np.linspace(650, 750, 1000), setup['global']:0, setup['local']:0}
     return setup
 
 
 def sensi_setup():
     sensi = dict()
     sensi['statistics'] = 20
-    sensi['alpha'] = np.linspace(1.4, 2.3, 31)
-    sensi['beta'] = np.linspace(0.02, 0.13, 31)
+    sensi['alpha'] = np.linspace(1.0, 2.5, 51)
+    sensi['beta'] = np.linspace(0.02, 0.13, 51)
     sensi['l_dsr'] = np.linspace(0.12, 0.2, 31)
-    sensi['l_dsa'] = np.linspace(0.07, 0.13, 31)
-    sensi['g_dsa' ] = np.linspace(.5, 1., 31)
-    sensi['g_dsr'] = np.linspace(.5, 1., 31)
+    sensi['l_dsa'] = np.linspace(0.01, 0.1, 51)
+    sensi['g_dsa' ] = np.linspace(.3, .8, 51)
+    sensi['g_dsr'] = np.linspace(0.5, 1.0, 51)
     sensi['H_oz'] = np.linspace(0.3, 0.5, 31)
     sensi['wv'] = np.linspace(0.1, 2.4, 31)
     return sensi
-
-
-def start(logger):
-    setup = fit_setup()
-    model_param = get_model_param()
-    sensi = sensi_setup()
-    parameters = {value: idx for idx, value in enumerate(setup['variables'])}
-    input_parameters = {'alpha': sensi['alpha'], 'beta': sensi['beta'],
-                        'g_dsa': sensi['g_dsa'], 'g_dsr': sensi['g_dsr']}
-
-    for rand in range(sensi['statistics']):
-        for biased_parameter, biased_idx in parameters.items():
-            result = dict()
-            logger.debug("Simulation: %s" % setup['expected'])
-            mu = setup['expected'][biased_idx]
-            input_ = input_parameters[biased_parameter]
-
-            irr_symbol = IrradianceRatioSym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
-            getIrrRatio = irr_symbol.get_compiled()
-            simulation = getIrrRatio(*setup['expected'])  + np.random.normal(0, 0.001, len(model_param['x']))
-            expected = copy.copy(setup['expected'])
-            variables = copy.copy(setup['variables'])
-            guess = copy.copy(setup['guess'])
-            bounds = copy.copy(setup['bounds'])
-            del variables[biased_idx]
-            del expected[biased_idx]
-            del guess[biased_idx]
-            del bounds[biased_idx]
-
-            result['output'] = _iterate(simulation, expected, guess, bounds, biased_parameter, irr_symbol, input_, logger)
-            result['input'] = input_ - mu
-            logger.info("======= Got %s" % result['output'])
-            result['expected'] = np.zeros(len(input_))
-            result['expected'][0:len(setup['expected'])] = setup['expected']
-            frame = pd.DataFrame(result['output'], columns=variables)
-            frame.insert(0, '%s' % biased_parameter, result['input'])
-            frame.insert(0, 'expected', result['expected'])
-            frame.to_csv('results/biased_%s_%s.txt' % (rand, biased_parameter), index=False)
-
-
-def start2D(logger):
-    model_param = get_model_param()
-    setup = fit_setup()
-    sensi = sensi_setup()
-    r_setup = copy.copy(fit_setup())
-    global_var = {'param': 'g_dsr', 'input': np.linspace(.752,.9, 51), 'idx':3}
-    local_var = {'param': 'g_dsa', 'input': np.linspace(.4,.7, 51) ,'idx':2}
-    for key in setup.keys():
-        del r_setup[key][global_var['idx']]
-        del r_setup[key][local_var['idx']]
-    logger.info("here")
-
-    irr_symbol = IrradianceRatioSym(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
-    getIrrRatio = irr_symbol.get_compiled()
-    simulation = getIrrRatio(*setup['expected'])
-
-    fit_parameters = dict((key,0) for key in r_setup['variables'])
-    map_parameters = {'alpha': 0, 'beta': 1}
-
-    for key, value in fit_parameters.items():
-        fit_parameters[key] = ['%s_%s' %(key, i) for i in range(sensi['statistics'])]
-    for i, input_value in enumerate(global_var['input']):
-        irr_symbol.setVariable(global_var['param'], input_value)
-        logger.info(">>>> Global Input for %s: %s" %(global_var['param'], input_value))
-        result = dict()
-        frame = pd.DataFrame()
-        for count in range(sensi['statistics']):
-
-            noised_simulation = simulation + np.random.normal(0, 0.001, len(model_param['x']))
-            logger.debug("Symbols %s" % irr_symbol.get_Symbols())
-            logger.debug("Setup bounds:%s " % r_setup['bounds'])
-            result['output'] = _iterate(noised_simulation, r_setup['expected'], r_setup['guess'], r_setup['bounds'], local_var['param'], irr_symbol, local_var['input'], logger,  2)
-            for key, value in fit_parameters.items():
-                logger.debug("Inlude for parameter %s the column %s at index %s" % (key, value[count], map_parameters[key]))
-                frame.insert(0, value[count], result['output'][:, map_parameters[key]])
-
-        for key, value in fit_parameters.items():
-            mean = frame[value].iloc[:].mean(axis=1)
-            std = frame[value].iloc[:].std(axis=1)
-            frame.insert(0, '%s_std' % key, std)
-            frame.insert(0, '%s_mean' % key, mean)
-
-        frame.insert(0, local_var['param'], local_var['input'] - setup['expected'][local_var['idx']])
-        buf = np.zeros(len(local_var['input']))
-        buf[0] = input_value - setup['expected'][global_var['idx']]
-        frame.insert(0, global_var['param'], buf)
-        buf[0:len(setup['expected'])] = setup['expected']
-        frame.insert(0, 'expected', buf)
-        frame.to_csv('new_results/two_variation_Deltaoutput_%s.txt' % i, index=False)
-        logger.info(frame)
-        logger.debug(r_setup)
 
 
 get_index = lambda x, l: np.where(x == np.array(l))[0][0]
@@ -150,12 +56,16 @@ def startsky2D(logger):
     setup = fit_setup()
     sensi = sensi_setup()
     r_setup = copy.copy(fit_setup())
-    print(model_param['zenith'])
-    model = setup['model'](model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'], model_param['x'])
-    callme = model.get_compiled()
-    simulation = callme(*setup['simulate'])
-    plt.plot(model_param['x'], simulation)
+
+    model = BaseModelPython(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'])
+    skyModel = SkyRadiance(model)
+    kwargs = {key:value for key, value in zip(setup['variables'], setup['simulate'])}
+    kwargs['x'] = setup['independent']['x']
+    simulation = skyModel.func(**kwargs)
+    import matplotlib.pyplot as plt
+    plt.plot(kwargs['x'], simulation)
     plt.show()
+    del model
 
     global_var = {'param': setup['global'], 'input': sensi[setup['global']], 'idx':get_index(setup['global'], setup['variables'])}
     local_var = {'param': setup['local'], 'input': sensi[setup['local']],'idx':get_index(setup['local'], setup['variables'])}
@@ -163,72 +73,109 @@ def startsky2D(logger):
     r_setup['variables'].remove(r_setup['global'])
     r_setup['variables'].remove(r_setup['local'])
     fit_parameters = dict()
-    for key, value in setup['fix'].items():
-        model.setVariable(key, value)
-        r_setup['variables'].remove(key)
-
     for idx, key in enumerate(r_setup['variables']):
         fit_parameters[key] = dict()
         fit_parameters[key]['idx'] = idx
         fit_parameters[key]['columns'] = ['%s_%s' %(key, i) for i in range(sensi['statistics'])]
 
+    number_of_procs = 12
+    work_q = JoinableQueue()
+    process_list = [Process(target=parallel_sensi, args=(work_q,), name='sensi_proc_[%d]' % i) for i in range(number_of_procs)]
+    for proc in process_list:
+        proc.start()
+
+    jobParam = dict()
+    jobParam['cmd_type'] = 'EVAL'
+    jobParam['model_param'] = model_param
+    jobParam['fit_params'] = fit_parameters
+    jobParam['local_var'] = local_var
+    jobParam['setup'] = setup
+    jobParam['global_var'] = global_var
+    jobParam['r_setup'] = r_setup
+    jobParam['simulation'] = simulation
+    jobParam['statistics'] = sensi['statistics']
+
     for i, input_value in enumerate(global_var['input']):
-        model.setVariable(global_var['param'], input_value)
-        logger.info(">>>> Global Input for %s: %s" %(global_var['param'], input_value))
+        curJob = copy.deepcopy(jobParam)
+        curJob['global_var']['input'] = input_value
+        curJob['global_var']['file_index'] = i
+        work_q.put(curJob)
+
+    work_q.join()
+
+    shutdownJob = dict()
+    for i in range(number_of_procs):
+        shutdownJob['cmd_type'] = 'SHUTDOWN'
+        work_q.put(shutdownJob)
+
+    work_q.join()
+
+    print("Joining processes")
+    for proc in process_list:
+        proc.join()
+    print("All done.")
+
+
+def parallel_sensi(wq):
+    while True:
+        job_params = wq.get()
+        if job_params['cmd_type'] == 'SHUTDOWN':
+            print("%s is shutting down\n" % current_process().name)
+            wq.task_done()
+            break
+
+        model = BaseModelPython(job_params['model_param']['zenith'], job_params['model_param']['AMass'], job_params['model_param']['pressure'], job_params['model_param']['ssa'])
+        skyModel = SkyRadiance(model)
+        callable = skyModel.func
+
+        r_setup = job_params['r_setup']
+        local_var = job_params['local_var']
+        fit_parameters = job_params['fit_params']
+        global_var = job_params['global_var']
+        setup = job_params['setup']
+        input_value = job_params['global_var']['input']
+
         result = dict()
         frame = pd.DataFrame()
-        for count in range(sensi['statistics']):
 
-            noised_simulation = simulation + np.random.normal(0, 0.001, len(model_param['x']))
-            logger.debug("Setup bounds:%s " % r_setup['bounds'])
-            result['output'] = _iterate(noised_simulation, r_setup['expected'], r_setup['guess'], r_setup['bounds'], local_var['param'], model, local_var['input'], logger)
+        for count in range(job_params['statistics']):
+            noised_simulation = job_params['simulation'] + np.random.normal(0, 0.04, len(setup['independent']['x']))
+            result['output'] = _iterate(noised_simulation, r_setup['expected'], r_setup['guess'], r_setup['bounds'],
+                                        r_setup['variables'], r_setup['independent'], callable, job_params['global_var'], job_params['local_var'])
 
             for key, value in fit_parameters.items():
-                logger.debug("Inlude for parameter %s the column %s at index %s" % (key, value['columns'][count],  fit_parameters[key]['idx']))
 
-                print(value['columns'][count])
-                print(result['output'][:, fit_parameters[key]['idx']])
                 frame.insert(0, value['columns'][count], result['output'][:, fit_parameters[key]['idx']])
-
         for key, value in fit_parameters.items():
             mean = frame[value['columns']].iloc[:].mean(axis=1)
-            std = frame[value['columns']].iloc[:].std(axis=1)
-            frame.insert(0, '%s_std' % key, std)
+            stddev = frame[value['columns']].iloc[:].std(axis=1)
+            frame.insert(0, '%s_std' % key, stddev)
             frame.insert(0, '%s_mean' % key, mean)
 
-        logger.debug("Local variable at place: %s" % local_var['idx'])
-        logger.debug("Global variable at place: %s" % global_var['idx'])
-
         frame.insert(0, local_var['param'], local_var['input'] - setup['simulate'][local_var['idx']])
-
         buf = np.zeros(len(local_var['input']))
         buf[0] = input_value - setup['simulate'][global_var['idx']]
         frame.insert(0, global_var['param'], buf)
-        print(len(local_var['input']))
-        print(setup['expected'])
         buf[0:len(setup['simulate'])] = setup['simulate']
         frame.insert(0, 'expected', buf)
-        frame.to_csv('results/two_variation_Deltaoutput_%s.txt' % i, index=False)
-        logger.info(frame)
-        logger.debug(r_setup)
+        frame.to_csv('results/two_variation_Deltaoutput_%s.txt' % job_params['global_var']['file_index'], index=False)
+        del model
+        wq.task_done()
 
 
+def _iterate(simulation, expected, guess, bounds, variables, independent, callable_, global_, local_):
+    biased_parameters = np.zeros((len(local_['input']), len(expected)))
+    expected_dict = {key: value for key, value in zip(variables, expected)}
 
+    gmod = Model(callable_, independent_vars=independent.keys(), param_names=variables, method='lbfgsb')
+    for param, ini, limits in zip(variables, guess, bounds):
+        gmod.set_param_hint(param, value=ini, min=limits[0], max=limits[1])
 
-def _iterate(simulation, expected, guess, bounds, biased_parameter, model, input_values, logger):
-    biased_parameters = np.zeros((len(input_values), len(expected)))
-
-    for i, input_ in enumerate(input_values):
-        model.setVariable(biased_parameter, input_)
-        logger.debug(">>>> Input for %s: %s" % (biased_parameter, input_))
-        logger.debug("Fit variables %s: " % model.get_Symbols())
-        res = Residuum(model)
-        residuals = FitWrapper(res.getResiduum())
-        resultls = minimize(residuals, guess, args=(simulation), jac=False, method='L-BFGS-B', bounds=bounds)
-        logger.info("Fit : %s" % np.array(resultls.x))
-        logger.info("Expected: %s" % expected)
-        biased_parameters[i] = np.array(resultls.x) - np.array(expected)
-        logger.info("Success: %s" %resultls.success)
+    independent[global_['param']] = global_['input']
+    for i, input_ in enumerate(local_['input']):
+        independent[local_['param']] = input_
+        result = gmod.fit(simulation, verbose=False, **independent)
+        biased_parameters[i] = np.array([result.params[key].value - expected_dict[key] for key in variables])
     return biased_parameters
 
 
@@ -246,3 +193,4 @@ if __name__ == "__main__":
     logger.setLevel(args.level)
     logger.info("Start")
     startsky2D(logger)
+
