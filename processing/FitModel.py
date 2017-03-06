@@ -61,9 +61,12 @@ class LMFit:
     def fit(self):
         self.logger.info('Method %s' % self.config['method'])
         self.logger.info('Parameter  names %s' % self.config['params'])
-        gmod = Model(self.callable, independent_vars=['x'], param_names=self.config['params'], method=self.config['method'])
+
+        gmod = Model(self.callable, independent_vars=self.config['independent'].keys(), param_names=self.config['params'], method=self.config['method'])
         self._set_params(self.config['params'], self.config['initial_values'], self.config['limits'], gmod)
-        self.result = gmod.fit(self.param_dict['spectra_range'], x=self.param_dict['wave_range'])
+        self.config['independent']['x'] = self.param_dict['wave_range']
+        self.logger.debug("Setting %s parameters fix" % self.config['independent'].keys())
+        self.result = gmod.fit(self.param_dict['spectra_range'], **self.config['independent'])
         for key in self.result.params.keys():
             self.param_dict[key] = dict()
             self.param_dict[key]['stderr'] = self.result.params[key].stderr
@@ -80,11 +83,15 @@ class Minimize:
 
     def __init__(self, model, config, param_dict, logger):
         self.model = model
+        self.param_dict = param_dict
+        self.config = config
+        del self.config['independent']['x']
+        for key, value in self.config['independent'].items():
+            logger.debug("Set %s for %s " % (value, key))
+            self.model.setVariable(key, value)
         self.res = Residuum(model)
         self.callable = FitWrapper(self.res.getResiduum())
         self.symbols = model.get_Symbols()
-        self.param_dict = param_dict
-        self.config = config
         self.logger = logger
         if config['jac_flag']:
             logger.info("Using jacobian")
@@ -152,6 +159,7 @@ class Result:
     def __init__(self, result, fitted_spectra, residuals, wavelength):
         #public
         self.result = result
+        self.success = result.success
         self.best_fit = fitted_spectra
         self.residuals = residuals
         self.wavelength = wavelength

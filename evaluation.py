@@ -15,7 +15,10 @@ from processing.ProcessFactory import DataProcess
     Fit class necessary
 """
 
+
 convert_to_array = lambda x, m : np.array([m(s) for s in x.split(',')])
+convert_to_dict = lambda independent: {m.split(':')[0]:float(m.split(':')[1]) for m in independent.split(',')}
+
 
 def parse_ini_config(ini_file):
     config = ConfigParser.ConfigParser()
@@ -29,6 +32,7 @@ def parse_ini_config(ini_file):
     config_dict['Fitting']['range_'] = convert_to_array(config_dict['Fitting']['range_'], float)
     config_dict['Fitting']['params']  = convert_to_array(config_dict['Fitting']['params'], str)
     config_dict['Fitting']['initial_values'] = convert_to_array(config_dict['Fitting']['initial_values'], float)
+    config_dict['Fitting']['independent'] = convert_to_dict(config_dict['Fitting']['independent'])
     config_dict['Fitting']['jac_flag'] = literal_eval(config_dict['Fitting']['jac_flag'])
     config_dict['Validation']['validate'] = convert_to_array(config_dict['Validation']['validate'], str)
     config_dict['Validation']['aod_range'] = convert_to_array(config_dict['Validation']['aod_range'], int)
@@ -67,6 +71,7 @@ def evaluate_spectra(config, logger=logging):
     aero = Aerosol_Retrievel(WeatherParams, config['Fitting'], data_dict, logger)
     result, param_dict = aero.getParams()
     logger.info("%s \n" % result.fit_report())
+    logger.info("%s \n" % result.success)
 
     if config['Processing']['logging_level'] == 'DEBUG':
         plot_fitted_reflectance(result, param_dict, data_dict)
@@ -121,6 +126,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = parse_ini_config(args.config)
     logger = create_logger(config['Processing'])
+
     if args.measurement_directory:
         evaluate_measurements(args.measurement_directory, config, logger, args.output_file)
     else:
