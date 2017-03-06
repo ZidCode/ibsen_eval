@@ -1,6 +1,7 @@
 import numpy as np
 import os
 from matplotlib.font_manager import FontProperties
+from scipy.ndimage.filters import gaussian_filter
 
 
 FONTSTYLE = 'serif'
@@ -22,6 +23,7 @@ def wasi_e0(filename=os.path.dirname(os.path.realpath(__file__)) + '/WASI_databa
     data = np.genfromtxt(filename, skip_header=11)
     wave_nm = data[:,0]
     e0 = data[:,1]
+    e0 = gaussian_filter(e0, 2)
     return wave_nm, e0
 
 
