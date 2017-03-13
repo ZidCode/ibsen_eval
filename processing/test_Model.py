@@ -159,6 +159,11 @@ def sky_radiance():
     plt.ylabel('Transmittance', **hfont)
     plt.show()
 
+    for noise in np.arange(20):
+        simulation = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)+ np.random.normal(0, 0.04, len(x))
+        plt.plot(x, simulation)
+    plt.show()
+
 
 def l_sky_ratio():
     from get_ssa import get_ssa
@@ -230,6 +235,11 @@ def l_sky_ratio():
     plt.title("beta 0.02-0.13", **hfont)
     plt.show()
 
+    for noise in np.arange(20):
+        simulation = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa) + np.random.normal(0, 0.0005, len(x))
+        plt.plot(x, simulation)
+    plt.show()
+
 
 def compare_sym_python():
     from get_ssa import get_ssa
@@ -248,7 +258,7 @@ def compare_sym_python():
     g_dsa = 0.5
     model = BaseModelPython(zenith, AM, pressure, ssa)
     skyModel = LSkyRatio(model)
-    y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa,)
+    y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa)
 
     symmodel = LSkyRatioSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta','g_dsr', 'g_dsa', 'l_dsr', 'l_dsa'])
     func = symmodel.get_compiled()
@@ -298,7 +308,7 @@ def fit_skyRadiance():
     plt.plot(x, fitted)
     plt.show()
     for noise in np.arange(20):
-        simulation = func(alpha, beta, l_dsr, l_dsa) + np.random.normal(0, 0.1, len(x))
+        simulation = func(alpha, beta, l_dsr, l_dsa) + np.random.normal(0, 0.04, len(x))
         plt.plot(x, simulation)
     plt.show()
 
@@ -332,8 +342,8 @@ def coverty_variability():
 
 if __name__ == "__main__":
     #test_main()
-    #sky_radiance()
-    l_sky_ratio()
+    sky_radiance()
+    #l_sky_ratio()
     #compare_sym_python()
     #coverty_variability()
     #fit_skyRadiance()
