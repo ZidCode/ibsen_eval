@@ -46,14 +46,15 @@ class MidpointNormalize(colors.Normalize):
 
 
 LableTable = {
-    'beta': r'absolute $\Delta \beta \;$',
+    'beta': r'absolute $\Delta \beta$',
+    #'beta': r'$\Delta \beta\; \left[ \%\right]$',
     'alpha': r'$\Delta \alpha \; \left[ \%\right]$',
-    'g_dsa': r'Coverty factor $\Delta$ $g_{dsa} \left[ \%\right]$',
-    'g_dsr': r'Coverty factor $\Delta$ $g_{dsr} \left[ \%\right]$',
-    'l_dsa': r'Intensity factor $\Delta$ $l_{dsa} \left[ \%\right]$',
-    'l_dsr': r'Intensity factor $\Delta$ $l_{dsr} \left[ \%\right]$',
-    'wv': r'$\Delta$ $Water \, Vapour \left[ \%\right]$',
-    'H_oz': r'Ozone scale height $\Delta$ $H_{oz} \left[ \%\right]$'
+    'g_dsa': r'Coverty factor $\Delta g_{dsa} \;  \left[ \%\right]$',
+    'g_dsr': r'Coverty factor $\Delta g_{dsr}  \; \left[ \%\right]$',
+    'l_dsa': r'Intensity factor $\Delta l_{dsa} \;  \left[ \%\right]$',
+    'l_dsr': r'Intensity factor $\Delta l_{dsr} \;  \left[ \%\right]$',
+    'wv': r'$\Delta Water \, Vapour  \; \left[ \%\right]$',
+    'H_oz': r'Ozone scale height $\Delta H_{oz} \; \left[ \%\right]$'
 }
 
 
@@ -114,7 +115,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--directory', default='/home/jana_jo/DLR/Codes/evaluation/processing/results/twoD_1p8_0p06_0p5_0p8/')
-    parser.add_argument('-c', '--counts', default=41, type=int)
+    parser.add_argument('-c', '--counts', default=31, type=int)
     config = dict()
     config['keys'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
     config['local'] = 'wv'
