@@ -2,7 +2,7 @@ import copy
 import numpy as np
 import pandas as pd
 from BaseModels import BaseModelPython
-from Model import SkyRadianceSym, SkyRadiance
+from Model import SkyRadiance, LSkyRatio
 from get_ssa import get_ssa
 from multiprocessing import Process, JoinableQueue
 from multiprocessing import current_process
@@ -56,7 +56,7 @@ def startsky2D(model_param, setup, sensi):
     r_setup = copy.copy(setup)
 
     model = BaseModelPython(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'])
-    skyModel = SkyRadiance(model)
+    skyModel = setup['model'](model)
     kwargs = {key:value for key, value in zip(setup['variables'], setup['simulate'])}
     kwargs['x'] = setup['independent']['x']
     simulation = skyModel.func(**kwargs)
@@ -128,7 +128,7 @@ def parallel_sensi(wq):
             break
 
         model = BaseModelPython(job_params['model_param']['zenith'], job_params['model_param']['AMass'], job_params['model_param']['pressure'], job_params['model_param']['ssa'])
-        skyModel = SkyRadiance(model)
+        skyModel = job_params['setup']['model'](model)
         callable_ = skyModel.func
 
         r_setup = job_params['r_setup']
