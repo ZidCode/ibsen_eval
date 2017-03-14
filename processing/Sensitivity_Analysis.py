@@ -23,17 +23,17 @@ def get_model_param():
 
 def fit_setup():
     setup = dict()
-    setup['variables'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
-    setup['simulate']= [1.8, 0.06, 0.17, 0.1, 0.34, 1.2]
-    setup['expected']= [0.06, 0.1, 0.34]
-    setup['guess'] = [0.05,0.09, 0.3]  # config
-    setup['bounds'] = [(0., 3),(0.01, 0.7), (0.25, 0.7)]  # config
-    setup['model'] = SkyRadiance
-    setup['global'] = 'alpha'
-    setup['local'] = 'wv'
-    setup['independent'] = {'x':np.linspace(520, 650, 1000), setup['global']:0, setup['local']:0, 'l_dsr':0.17}
-    setup['dir'] = 'Lsky3/'
+    setup['variables'] = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'g_dsr', 'g_dsa']
+    setup['simulate']= [1.8, 0.06, 0.1, 0.17, 0.9, 0.8]
+    setup['expected']= [1.8, 0.06, 0.1, 0.9]
+    setup['guess'] = [1.6, 0.05, 0.09, 0.7]
+    setup['bounds'] = [(-0.2, 5),(0.0, 3), (0.01, 0.7), (0.0, 5)]  # config
+    setup['model'] = LSkyRatio
     setup['noise'] = 0.0005  # 0.0005 for ratio 0.02 for L_sky
+    setup['global'] = 'g_dsa'
+    setup['local'] = 'l_dsr'
+    setup['independent'] = {'x':np.linspace(350, 750, 1000), setup['global']:0, setup['local']:0}
+    setup['dir'] = 'results/'
     return setup
 
 
@@ -41,10 +41,10 @@ def sensi_setup():
     sensi = dict()
     sensi['statistics'] = 20
     sensi['alpha'] = np.linspace(1.0, 2.5, 31)
-    sensi['beta'] = np.linspace(0.02, 0.14, 31)
-    sensi['l_dsr'] = np.linspace(0.15, 0.21, 31)
+    sensi['beta'] = np.linspace(0.04, 0.088, 31)
+    sensi['l_dsr'] = np.linspace(0.15, 0.21, 51)
     sensi['l_dsa'] = np.linspace(0.01, 0.13, 31)
-    sensi['g_dsa' ] = np.linspace(.3, .8, 31)
+    sensi['g_dsa' ] = np.linspace(.5, 1., 51)
     sensi['g_dsr'] = np.linspace(0.5, 1.0, 31)
     sensi['H_oz'] = np.linspace(0.3, 0.51, 31)
     sensi['wv'] = np.linspace(0.1, 2.5, 31)
@@ -61,9 +61,9 @@ def startsky2D(model_param, setup, sensi):
     kwargs = {key:value for key, value in zip(setup['variables'], setup['simulate'])}
     kwargs['x'] = setup['independent']['x']
     simulation = skyModel.func(**kwargs)
-    # import matplotlib.pyplot as plt
-    # plt.plot(kwargs['x'], simulation)
-    # plt.show()
+    import matplotlib.pyplot as plt
+    plt.plot(kwargs['x'], simulation)
+    plt.show()
     del model
 
     global_var = {'param': setup['global'], 'input': sensi[setup['global']], 'idx':get_index(setup['global'], setup['variables'])}

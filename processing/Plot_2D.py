@@ -117,10 +117,11 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--directory', default='/home/jana_jo/DLR/Codes/evaluation/processing/results/twoD_1p8_0p06_0p5_0p8/')
     parser.add_argument('-c', '--counts', default=31, type=int)
     config = dict()
-    config['keys'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
-    config['local'] = 'wv'
-    config['global'] = 'H_oz'
-    config['show'] =  ['l_dsr', 'beta']
-    config['present'] = {'l_dsr': Relative, 'beta': Absolute}
+    config['keys']  = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'g_dsr', 'g_dsa']  # Lsky_Ratio
+    #config['keys'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
+    config['local'] = 'l_dsr'
+    config['global'] = 'g_dsa'
+    config['show'] =  ['alpha','l_dsa', 'beta']
+    config['present'] = {'alpha':Relative, 'l_dsa': Relative, 'beta': Absolute}
     args = parser.parse_args()
     main(args.directory, args.counts, config)
