@@ -33,6 +33,7 @@ def fit_setup():
     setup['local'] = 'wv'
     setup['independent'] = {'x':np.linspace(520, 650, 1000), setup['global']:0, setup['local']:0, 'l_dsr':0.17}
     setup['dir'] = 'Lsky3/'
+    setup['noise'] = 0.0005  # 0.0005 for ratio 0.02 for L_sky
     return setup
 
 
@@ -142,7 +143,7 @@ def parallel_sensi(wq):
         frame = pd.DataFrame()
 
         for count in range(job_params['statistics']):
-            noised_simulation = job_params['simulation'] + np.random.normal(0, 0.04, len(setup['independent']['x']))
+            noised_simulation = job_params['simulation'] + np.random.normal(0, setup['noise'], len(setup['independent']['x']))
             result['output'], result['success'] = _iterate(noised_simulation, r_setup['expected'], r_setup['guess'], r_setup['bounds'],
                                         r_setup['variables'], r_setup['independent'], callable_, job_params['global_var'], job_params['local_var'])
             for key, value in fit_parameters.items():
