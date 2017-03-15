@@ -28,10 +28,11 @@ class Aerosol_Retrievel(object):
         self.param_dict['std'] = self.spectra['std'][start:end]
 
     def _construct_weights(self):
-        self.weights = 1 / self.param_dict['std']
+        self.param_dict['weights'] = 1 #/ (self.param_dict['std'])
 
     def getParams(self):
         self._cut_range()
+        self._construct_weights()
         #  self._construct_weights()
         modelfactory = FitModelFactory(self.weatherparams, self.config, self.param_dict['wave_range'], self.logger)
         model = modelfactory.get_fitmodel()

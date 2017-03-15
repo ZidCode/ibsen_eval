@@ -66,7 +66,7 @@ class LMFit:
         self._set_params(self.config['params'], self.config['initial_values'], self.config['limits'], gmod)
         self.config['independent']['x'] = self.param_dict['wave_range']
         self.logger.debug("Setting %s parameters fix" % self.config['independent'].keys())
-        self.result = gmod.fit(self.param_dict['spectra_range'], **self.config['independent'])
+        self.result = gmod.fit(self.param_dict['spectra_range'], weights=self.param_dict['weights'],  **self.config['independent'])
         for key in self.result.params.keys():
             self.param_dict[key] = dict()
             self.param_dict[key]['stderr'] = self.result.params[key].stderr

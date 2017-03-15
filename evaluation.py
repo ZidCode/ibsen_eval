@@ -10,6 +10,7 @@ from processing.spectrum_analyser import Aerosol_Retrievel
 from parser.ibsen_parser import parse_ibsen_file
 from utils.plotting import plot_meas, plot_used_irradiance_and_reflectance, plot_fitted_reflectance
 from processing.ProcessFactory import DataProcess
+import lmfit
 """
     Irradiance measurements does not show calibrated spectra
     Fit class necessary

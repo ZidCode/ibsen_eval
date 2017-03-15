@@ -23,16 +23,16 @@ def get_model_param():
 
 def fit_setup():
     setup = dict()
-    setup['variables'] = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'g_dsr', 'g_dsa']
-    setup['simulate']= [1.8, 0.06, 0.1, 0.17, 0.9, 0.8]
-    setup['expected']= [1.8, 0.06, 0.1, 0.9]
-    setup['guess'] = [1.6, 0.05, 0.09, 0.7]
-    setup['bounds'] = [(-0.2, 5),(0.0, 3), (0.01, 0.7), (0.0, 5)]  # config
-    setup['model'] = LSkyRatio
-    setup['noise'] = 0.0005  # 0.0005 for ratio 0.02 for L_sky
-    setup['global'] = 'g_dsa'
-    setup['local'] = 'l_dsr'
-    setup['independent'] = {'x':np.linspace(350, 750, 1000), setup['global']:0, setup['local']:0}
+    setup['variables'] = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'wv', 'H_oz']
+    setup['simulate']= [1.8, 0.06, 0.1, 0.17, 1.2, 0.34]
+    setup['expected']= [0.1, 0.17]
+    setup['guess'] = [0.05, 0.09]
+    setup['bounds'] = [(0.01, 0.7), (0.01, 0.7)]  # config
+    setup['model'] = SkyRadiance
+    setup['noise'] = 0.02  # 0.0005 for ratio 0.02 for L_sky
+    setup['global'] = 'alpha'
+    setup['local'] = 'beta'
+    setup['independent'] = {'x':np.linspace(350, 500, 1000), setup['global']:0, setup['local']:0, 'wv':1.3, 'H_oz':0.34}
     setup['dir'] = 'results/'
     return setup
 
