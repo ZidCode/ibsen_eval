@@ -56,8 +56,11 @@ def evaluate_spectra(config, logger=logging):
 
     if tar['UTCTime']:
         logger.warning("Config UTCTime: %s. New UTCTime %s from IbsenFile." % (config['Processing']['utc_time'], tar['UTCTime']))
-        config['Processing']['utc_time'] = tar['UTCTime']
-    logger.info("Date: %s " % config['Processing']['utc_time'])
+        config['Processing']['utc_time'] = dict()
+        config['Processing']['utc_time']['tar'] = tar['UTCTime']
+        config['Processing']['utc_time']['ref'] = ref['UTCTime']
+    logger.info("Tar Date: %s " % config['Processing']['utc_time']['tar'])
+    logger.info("Ref Date: %s " % config['Processing']['utc_time']['ref'])
     logger.info("GPS coords (lat, lon) %s %s" % (config['Processing']['gps_coords'][0], config['Processing']['gps_coords'][1]))
     logger.info("Files\n \t ref: %s  \n \t tar: %s \n" %(config['Data']['reference'], config['Data']['target']))
 
@@ -100,7 +103,7 @@ def evaluate_measurements(directory, config, logger=logging, output_file='RENAME
                     config['Fitting']['initial_values'][idx] = float(raw_input('Old: %s in %s' % (value,idx)))
                 params, result = evaluate_spectra(config, logger)
 
-            result_timeline['utc_times'] = np.append(result_timeline['utc_times'], config['Processing']['utc_time'])
+            result_timeline['utc_times'] = np.append(result_timeline['utc_times'], config['Processing']['utc_time']['tar'])
             result_timeline['sun_zenith'] = np.append(result_timeline['sun_zenith'], params['sun_zenith'])
             result_timeline['alpha'] = np.append(result_timeline['alpha'], params['alpha']['value'])
             result_timeline['alpha_stderr'] = np.append(result_timeline['alpha_stderr'], params['alpha']['stderr'])

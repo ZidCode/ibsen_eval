@@ -4,7 +4,7 @@ from math import exp, log
 from theano import tensor as T
 from scipy.constants import atmosphere
 from wasi_reader import get_wasi_parameters, get_wasi
-from atmospheric_mass import get_ozone_path_length
+from atmospheric_mass import get_ozone_path_length, get_atmospheric_path_length
 
 
 exp_v = np.vectorize(exp)
@@ -12,8 +12,8 @@ exp_v = np.vectorize(exp)
 
 class BaseModelPython:
 
-    def __init__(self, zenith, AM, pressure, ssa):
-        self.AM = AM
+    def __init__(self, zenith, pressure, ssa):
+        self.AM = get_atmospheric_path_length(zenith)
         self.ssa = ssa
         self.pressure = pressure
         self.p_0 = atmosphere / 100.0
@@ -75,12 +75,12 @@ class BaseModelPython:
 
 class BaseModelSym:
     """ Only symbolic representation"""
-    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
+    def __init__(self, zenith, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
         #private
         self.variables = variables
         self.wavelength = theano.shared(wave, 'wavelength')
         self.zenith_rad = theano.shared(np.radians(zenith), 'zenith_rad')
-        self.AM = theano.shared(AM, 'AM')
+        self.AM = theano.shared(get_atmospheric_path_length(zenith), 'AM')
         self.pressure = theano.shared(pressure, 'pressure')
         self.ssa = theano.shared(ssa, 'ssa')
         ozone, oxygen, water, solar = get_wasi(wave)

@@ -27,29 +27,31 @@ class OzoneTransmittance:
 
 class IrradianceRatio:
 
-    def __init__(self, base_model):
+    def __init__(self, base_model, base_model_ref):
         self.bm = base_model
+        self.rf = base_model_ref
 
     def func(self, x, alpha, beta, g_dsr=1, g_dsa=1, g_dd=0):
         term = self.bm.ratio_sky_radiance(x, alpha, beta, g_dsa=g_dsa, g_dsr=g_dsr, g_dd=g_dd)
-        nom = self.bm.ratio_sky_radiance(x, alpha, beta)
+        nom = self.rf.ratio_sky_radiance(x, alpha, beta)
         return term / nom
 
 
 class LSkyRatio:
 
-    def __init__(self, base_model):
+    def __init__(self, base_model, base_model_ref):
         self.bm = base_model
+        self.rf = base_model_ref
 
     def func(self, x, alpha, beta, l_dsa, l_dsr, g_dsr=0.4, g_dsa=0.4, l_dd=0, g_dd=1):
         term = self.bm.ratio_sky_radiance(x, alpha, beta, g_dsr=l_dsr, g_dsa=l_dsa, g_dd=l_dd)
-        norm = self.bm.ratio_sky_radiance(x, alpha, beta, g_dsr=g_dsr, g_dsa=g_dsa, g_dd=g_dd)
+        norm = self.rf.ratio_sky_radiance(x, alpha, beta, g_dsr=g_dsr, g_dsa=g_dsa, g_dd=g_dd)
         return term / norm
 
 
 class SkyRadiance:
 
-    def __init__(self, base_model):
+    def __init__(self, base_model, _useles_):
         self.bm = base_model
 
 

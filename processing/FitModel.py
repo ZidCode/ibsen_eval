@@ -23,10 +23,11 @@ class FitModelFactory:
         sym_map = {'ratio': IrradianceRatioSym, 'l_sky_nadir': SkyRadianceSym}
 
         if config['package'] == 'lmfit':
-            bm = BaseModelPython(wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa)
-            self.model = python_map[config['model']](bm)
+            bm = BaseModelPython(wp.sun_zenith_tar, wp.pressure, wp.ssa)
+            bmref = BaseModelPython(wp.sun_zenith_ref, wp.pressure, wp.ssa)
+            self.model = python_map[config['model']](bm, bmref)
         else:
-            self.model = sym_map[config['model']](wp.sun_zenith, wp.atmos_path, wp.pressure, wp.ssa, wavelengths, config['params'])
+            self.model = sym_map[config['model']](wp.sun_zenith_tar, wp.pressure, wp.ssa, wavelengths, config['params'])
 
     def get_fitmodel(self):
         return self.model

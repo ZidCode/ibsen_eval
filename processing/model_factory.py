@@ -19,14 +19,17 @@ Irradiance model due to Greg and Carder
 class WeatherAtmosphereParameter:
 
     def __init__(self, logger, config, wavelength):
-        self.sun_zenith = get_sun_zenith(config['Processing']['utc_time'], *config['Processing']['gps_coords'])
-        self.atmos_path = get_atmospheric_path_length(self.sun_zenith)
-        weather_dict = retrieve_weather_parameters(config['Processing']['params'], config['Processing']['gps_coords'], config['Processing']['utc_time'])
+        self.sun_zenith_tar = get_sun_zenith(config['Processing']['utc_time']['tar'], *config['Processing']['gps_coords'])
+        self.sun_zenith_ref = get_sun_zenith(config['Processing']['utc_time']['ref'], *config['Processing']['gps_coords'])
+        self.atmos_path = get_atmospheric_path_length(self.sun_zenith_tar)
+        weather_dict = retrieve_weather_parameters(config['Processing']['params'], config['Processing']['gps_coords'], config['Processing']['utc_time']['tar'])
         humidity = weather_dict['hum']
         self.pressure = international_barometric_formula(config['Processing']['gps_coords'][-1])  # height (magic number)
         self.ssa = get_ssa(humidity)
-        logger.info(" \n \t Zenith angle %s" %  self.sun_zenith)
-        logger.info(" \n \t  Atmospheric path length %s" % self.atmos_path)
+        logger.info(" \n \t Zenith angle tar %s" %  self.sun_zenith_tar)
+        logger.info(" \n \t Zenith angle ref %s" %  self.sun_zenith_ref)
+        logger.info(" \n \t  Atmospheric path length tar %s" % self.atmos_path)
+        logger.info(" \n \t  Atmospheric path length ref %s" % get_atmospheric_path_length(self.sun_zenith_ref))
         logger.info(" \n \t  Relative humidity %s" % humidity)
         logger.info(" \n \t  Pressure %s" % self.pressure)
         logger.info(" \n \t  Single scattering albedo %s" % self.ssa)
