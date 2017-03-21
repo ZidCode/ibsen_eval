@@ -28,7 +28,7 @@ class Aerosol_Retrievel(object):
         self.param_dict['std'] = self.spectra['std'][start:end]
 
     def _construct_weights(self):
-        self.param_dict['weights'] = 1 #/ (self.param_dict['std'])
+        self.param_dict['weights'] = 1 / (self.param_dict['std'])
 
     def getParams(self):
         self._cut_range()
