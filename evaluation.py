@@ -87,14 +87,18 @@ def evaluate_measurements(directory, config, logger=logging, output_file='RENAME
     import pandas as pd
     file_prefixes = ['target', 'reference']
     files = [file_ for file_ in glob.iglob(directory + '%s*' % file_prefixes[0])]
-    keys_for_param_dict = ['sun_zenith','utc_times', 'alpha', 'alpha_stderr', 'beta', 'beta_stderr', 'g_dsa', 'g_dsa_stderr', 'g_dsr', 'g_dsr_stderr']
-    result_timeline = {key:np.array([]) for key in keys_for_param_dict}
+
+    result_timeline = dict()
+    for param in config['Fitting']['params']:
+        result_timeline[param] = np.array([])
+        result_timeline['%s_stderr' % param] = np.array([])
+    result_timeline['sun_zenith'] = np.array([])
+    result_timeline['utc_times'] = np.array([])
 
     for file_ in sorted(files):
         for key in file_prefixes:
             config['Data'][key] = file_.replace(file_prefixes[0], key)
         try:
-            print(config)
             pass
             logger.info("Evaluating file: %s \n" % file_)
             params, result = evaluate_spectra(config, logger)
@@ -105,14 +109,14 @@ def evaluate_measurements(directory, config, logger=logging, output_file='RENAME
 
             result_timeline['utc_times'] = np.append(result_timeline['utc_times'], config['Processing']['utc_time']['tar'])
             result_timeline['sun_zenith'] = np.append(result_timeline['sun_zenith'], params['sun_zenith'])
-            result_timeline['alpha'] = np.append(result_timeline['alpha'], params['alpha']['value'])
-            result_timeline['alpha_stderr'] = np.append(result_timeline['alpha_stderr'], params['alpha']['stderr'])
-            result_timeline['beta'] = np.append(result_timeline['beta'], params['beta']['value'])
-            result_timeline['beta_stderr'] = np.append(result_timeline['beta_stderr'], params['beta']['stderr'])
-            result_timeline['g_dsa'] = np.append(result_timeline['g_dsa'], params['g_dsa']['value'])
-            result_timeline['g_dsa_stderr'] = np.append(result_timeline['g_dsa_stderr'], params['g_dsa']['stderr'])
-            result_timeline['g_dsr'] = np.append(result_timeline['g_dsr'], params['g_dsr']['value'])
-            result_timeline['g_dsr_stderr'] = np.append(result_timeline['g_dsr_stderr'], params['g_dsr']['stderr'])
+
+            del params['sun_zenith']
+
+            for key,item in params['variables'].items():
+                result_timeline[key] = np.append(result_timeline[key], item['value'])
+                stderr = '%s_stderr' % key
+                result_timeline[stderr] = np.append(result_timeline[stderr], item['stderr'])
+
         except IOError:
             logger.error("%s have no corresponding reference" % file_)
 

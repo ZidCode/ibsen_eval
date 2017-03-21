@@ -68,10 +68,11 @@ class LMFit:
         self.config['independent']['x'] = self.param_dict['wave_range']
         self.logger.debug("Setting %s parameters fix" % self.config['independent'].keys())
         self.result = gmod.fit(self.param_dict['spectra_range'], weights=self.param_dict['weights'],  **self.config['independent'])
+        self.param_dict['variables'] = dict()
         for key in self.result.params.keys():
-            self.param_dict[key] = dict()
-            self.param_dict[key]['stderr'] = self.result.params[key].stderr
-            self.param_dict[key]['value'] = self.result.params[key].value
+            self.param_dict['variables'][key] = dict()
+            self.param_dict['variables'][key]['stderr'] = self.result.params[key].stderr
+            self.param_dict['variables'][key]['value'] = self.result.params[key].value
         return self.result, self.param_dict
 
     def _set_params(self, params, initial_values, limits, fit_model):
@@ -106,10 +107,11 @@ class Minimize:
         self.logger.info('Method %s' % self.config['method'])
         self.result = minimize(self.callable, self.config['initial_values'], args=(self.param_dict['spectra_range']), jac=self.jacobian,
                                method=self.config['method'], bounds=self.config['limits'])
+        self.param_dict['variables'] = dict()
         for idx, symbol in enumerate(self.symbols):
-            self.param_dict[symbol] = dict()
-            self.param_dict[symbol]['stderr'] = None
-            self.param_dict[symbol]['value'] = self.result.x[idx]
+            self.param_dict['variables'][symbol] = dict()
+            self.param_dict['variables'][symbol]['stderr'] = None
+            self.param_dict['variables'][symbol]['value'] = self.result.x[idx]
         self._calc_fitted_spectra()
         self._calc_residuals()
         return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
@@ -139,10 +141,11 @@ class LeastSquaresFit:
         self.logger.info('Method %s' % self.config['method'])
         bounds = tuple(map(list, zip(*self.config['limits'])))  # [(min,max),(min1,max1)..] -> ([min,min1,..], [max,max1..])
         self.result = least_squares(self.callable, self.config['initial_values'], args=(self.param_dict['spectra_range'],), bounds=bounds)
+        self.param_dict['variables'] = dict()
         for idx, symbol in enumerate(self.symbols):
-            self.param_dict[symbol] = dict()
-            self.param_dict[symbol]['stderr'] = None
-            self.param_dict[symbol]['value'] = self.result.x[idx]
+            self.param_dict['variables'][symbol] = dict()
+            self.param_dict['variables'][symbol]['stderr'] = None
+            self.param_dict['variables'][symbol]['value'] = self.result.x[idx]
         self._calc_fitted_spectra()
         self._calc_residuals()
         return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
