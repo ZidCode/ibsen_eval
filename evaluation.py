@@ -35,6 +35,7 @@ def parse_ini_config(ini_file):
     config_dict['Fitting']['initial_values'] = convert_to_array(config_dict['Fitting']['initial_values'], float)
     config_dict['Fitting']['independent'] = convert_to_dict(config_dict['Fitting']['independent'], float)
     config_dict['Fitting']['jac_flag'] = literal_eval(config_dict['Fitting']['jac_flag'])
+    config_dict['Aided']['params'] = convert_to_dict(config_dict['Aided']['params'], str)
     config_dict['Validation']['results'] = convert_to_dict(config_dict['Validation']['results'], str)
     config_dict['Validation']['validate'] = convert_to_array(config_dict['Validation']['validate'], str)
     config_dict['Validation']['aod_range'] = convert_to_array(config_dict['Validation']['aod_range'], int)
