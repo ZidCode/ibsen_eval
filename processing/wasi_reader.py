@@ -23,7 +23,7 @@ def wasi_e0(filename=os.path.dirname(os.path.realpath(__file__)) + '/WASI_databa
     data = np.genfromtxt(filename, skip_header=11)
     wave_nm = data[:,0]
     e0 = data[:,1]
-    e0 = gaussian_filter(e0, 0.67)
+    e0 = gaussian_filter(e0, 1.0)
     return wave_nm, e0
 
 
