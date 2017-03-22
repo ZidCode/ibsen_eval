@@ -34,7 +34,7 @@ def test_main():
     bounds = [(-0.2, 4), (0., 3), (0., 2.), (0., 2.)]  # config
 
     # Theano
-    irr_symbol = IrradianceRatioSym(zenith, AMass, pressure, ssa, x, variables)
+    irr_symbol = IrradianceRatioSym(zenith, pressure, ssa, x, variables)
     getIrrRatio = irr_symbol.get_compiled()
     y_theano = getIrrRatio(*expected_values)
     res = Residuum(irr_symbol)
@@ -75,7 +75,7 @@ def sky_radiance():
     rel_h = 0.9
     pressure = 950
     ssa = get_ssa(rel_h, 5)
-    x = np.linspace(350, 750, 1000)  # config
+    x = np.linspace(500, 700, 1000)  # config
     H_oz = 0.3
     wv = 1.2
     alpha = 1.8
@@ -83,8 +83,8 @@ def sky_radiance():
     l_dsr = 0.17
     l_dsa = 0.1
 
-    model = BaseModelPython(zenith, AMass, pressure, ssa)
-    skyModel = SkyRadiance(model)
+    model = BaseModelPython(zenith, pressure, ssa)
+    skyModel = SkyRadiance(model, model)
 
     ozone = OzoneTransmittance(model)
     oz = ozone.func(x, H_oz)
@@ -122,7 +122,7 @@ def sky_radiance():
     plt.setp(legend.get_title(),fontsize='medium', family=FONTSTYLE)
     plt.show()
 
-    for l in np.arange(0.07, 0.13, 0.01):
+    for l in np.arange(0.07, 0.5, 0.01):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
         plt.plot(x, y, label='%s' % l)
     plt.xlabel('Wavelength [nm]', **hfont)
@@ -133,7 +133,7 @@ def sky_radiance():
     plt.setp(legend.get_title(),fontsize='medium', family=FONTSTYLE)
     plt.show()
 
-    for a in np.arange(1.4, 2.5, 0.01):
+    for a in np.arange(1.4, 18, 0.01):
         y = skyModel.func(x=x, alpha=a, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
         plt.plot(x, y)
     plt.xlabel('Wavelength [nm]', **hfont)
@@ -184,8 +184,8 @@ def l_sky_ratio():
     g_dsa = 0.9
 
 
-    model = BaseModelPython(zenith, AMass, pressure, ssa)
-    skyModel = LSkyRatio(model)
+    model = BaseModelPython(zenith, pressure, ssa)
+    skyModel = LSkyRatio(model, model)
 
     for l in np.arange(0.14, 0.22, 0.001):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l, g_dsr=g_dsr, g_dsa=g_dsa)
@@ -229,9 +229,10 @@ def l_sky_ratio():
 
     for b in np.arange(0.02, 0.13, 0.001):
         y = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l_dsa, l_dsr=l_dsr,g_dsr=g_dsr, g_dsa=g_dsa)
-        plt.plot(x, y)
+        plt.plot(x, y, label="%s" % b)
     plt.xlabel('Wavelength [nm]', **hfont)
     plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    plt.legend()
     plt.title("beta 0.02-0.13", **hfont)
     plt.show()
 
@@ -256,11 +257,11 @@ def compare_sym_python():
     l_dsa = 0.05
     g_dsr = 0.8
     g_dsa = 0.5
-    model = BaseModelPython(zenith, AM, pressure, ssa)
-    skyModel = LSkyRatio(model)
+    model = BaseModelPython(zenith, pressure, ssa)
+    skyModel = LSkyRatio(model, model)
     y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa)
 
-    symmodel = LSkyRatioSym(zenith, AM, pressure, ssa, x, ['alpha', 'beta','g_dsr', 'g_dsa', 'l_dsr', 'l_dsa'])
+    symmodel = LSkyRatioSym(zenith, pressure, ssa, x, ['alpha', 'beta','g_dsr', 'g_dsa', 'l_dsr', 'l_dsa'])
     func = symmodel.get_compiled()
     ysym = func(alpha, beta, g_dsr, g_dsa, l_dsr, l_dsa)
 
@@ -289,7 +290,7 @@ def fit_skyRadiance():
     guess = [alpha+0.2, beta+0.02, l_dsr+0.01,  l_dsa+0.01]  # config
     bounds = [(-0.25, 4.0), (0.01, 0.3), (-0.05, 0.1), (-0.05, 0.3)]  # config
 
-    symmodel = SkyRadianceSym(zenith, AMass, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+    symmodel = SkyRadianceSym(zenith, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
     func = symmodel.get_compiled()
     simulation = func(alpha, beta, l_dsr, l_dsa, H_oz, wv) #+ np.random.normal(0, 0.1, len(x))
     plt.plot(x, simulation)
@@ -331,7 +332,7 @@ def coverty_variability():
     #l_dsa = np.linspace(0.01, 0.1, 10)
     #for l in l_dsa:
 
-    symmodel = SkyRadianceSym(zenith, AMass, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
+    symmodel = SkyRadianceSym(zenith, pressure, ssa, x, ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv'])
     func = symmodel.get_compiled()
     ysym = func(alpha, beta, l_dsr, l_dsa, H_oz, wv)
     plt.plot(x, ysym, label='sym')
