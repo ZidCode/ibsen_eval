@@ -18,7 +18,7 @@ import lmfit
 
 
 convert_to_array = lambda x, m : np.array([m(s) for s in x.split(',')])
-convert_to_dict = lambda independent: {m.split(':')[0]:float(m.split(':')[1]) for m in independent.split(',')}
+convert_to_dict = lambda independent, type_: {m.split(':')[0]:type_(m.split(':')[1]) for m in independent.split(',')}
 
 
 def parse_ini_config(ini_file):
@@ -33,8 +33,9 @@ def parse_ini_config(ini_file):
     config_dict['Fitting']['range_'] = convert_to_array(config_dict['Fitting']['range_'], float)
     config_dict['Fitting']['params']  = convert_to_array(config_dict['Fitting']['params'], str)
     config_dict['Fitting']['initial_values'] = convert_to_array(config_dict['Fitting']['initial_values'], float)
-    config_dict['Fitting']['independent'] = convert_to_dict(config_dict['Fitting']['independent'])
+    config_dict['Fitting']['independent'] = convert_to_dict(config_dict['Fitting']['independent'], float)
     config_dict['Fitting']['jac_flag'] = literal_eval(config_dict['Fitting']['jac_flag'])
+    config_dict['Validation']['results'] = convert_to_dict(config_dict['Validation']['results'], str)
     config_dict['Validation']['validate'] = convert_to_array(config_dict['Validation']['validate'], str)
     config_dict['Validation']['aod_range'] = convert_to_array(config_dict['Validation']['aod_range'], int)
     return config_dict
@@ -122,7 +123,6 @@ def evaluate_measurements(directory, config, logger=logging, output_file='RENAME
 
     frame = pd.DataFrame(result_timeline)
     frame.to_csv(output_file, index=False)
-
 
 
 if __name__ == "__main__":

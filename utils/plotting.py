@@ -102,41 +102,31 @@ def plot_turbidity(wave, aods, wave_new, fitted):
 def plot_aengstrom_parameters_aeronet(object_list, title):
 
     fig = plt.figure()
-    gs = gridspec.GridSpec(4, 4)
+    gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    ax3 = plt.subplot(gs[2, :])
-    ax4 = plt.subplot(gs[3, :])
     for obj in object_list:
-        obj.get_plot([ax1, ax2, ax3, ax4])
+        obj.get_plot([ax1, ax2])
 
     ax1.legend(loc='best', prop=fontP)
     ax2.legend(loc='best', prop=fontP)
-    ax3.legend(loc='best', prop=fontP)
-    ax4.legend(loc='best', prop=fontP)
 
     ax1.set_ylabel(r'Aengstrom exponent $\alpha$', **hfont)
     ax2.set_ylabel(r'Turbidity $\beta$', **hfont)
-    ax3.set_ylabel(r'$g_{dsr}$', **hfont)
-    ax4.set_ylabel(r'$g_{dsa}$', **hfont)
-    ax4.set_xlabel('UTC Times', **hfont)
+    ax2.set_xlabel('UTC Times', **hfont)
     ax1.set_title('%s' % title, **hfont)
     plt.tight_layout()
     plt.show()
 
 
-def ibsen_plot(frame, ax1, ax2, ax3, ax4):
+def ibsen_plot(frame, ax1, ax2):
     ax1.errorbar(frame['utc_times'], frame['alpha'], yerr=frame['alpha_stderr'],fmt='o',
                  label='Ibsen', markersize='2', color='b', ecolor='b')
     ax2.errorbar(frame['utc_times'], frame['beta'], yerr=frame['beta_stderr'], label='Ibsen', fmt='o', markersize='2', color='b', ecolor='b')
-    ax3.errorbar(frame['utc_times'], frame['g_dsr'], yerr=frame['g_dsr_stderr'],
-                 label='Ibsen')
-    ax4.errorbar(frame['utc_times'], frame['g_dsa'], yerr=frame['g_dsa_stderr'],
-                 label='Ibsen')
-    return ax1, ax2, ax3, ax4
+    return ax1, ax2
 
 
-def aeronet_plot(aeronet, ax1, ax2, _, __):
+def aeronet_plot(aeronet, ax1, ax2):
     ax1.plot(aeronet['utc_times'], aeronet['440-870_Angstrom_Exponent'], '+', label='440-870')
     ax1.plot(aeronet['utc_times'], aeronet['380-500_Angstrom_Exponent'], '+', label='380-500')
     ax1.plot(aeronet['utc_times'], aeronet['440-675_Angstrom_Exponent'], '+', label='440-675')
@@ -147,7 +137,7 @@ def aeronet_plot(aeronet, ax1, ax2, _, __):
     return ax1, ax2
 
 
-def micro_plot(micro_dict, ax1, ax2, _, __):
+def micro_plot(micro_dict, ax1, ax2):
     ax1.errorbar(micro_dict['utc_times'], micro_dict['alpha'], yerr=micro_dict['alpha_stderr'],
                  label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
     ax2.errorbar(micro_dict['utc_times'], micro_dict['beta'], yerr=micro_dict['beta_stderr'],

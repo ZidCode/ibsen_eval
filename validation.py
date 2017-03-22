@@ -28,11 +28,16 @@ class IbsenPlot:
 
     def __init__(self, source, _):
         print("IbsenPlot Constructor")
-        self.frame = pd.read_csv(source)
-        self.frame['utc_times'] = [convert2datetime(utc) for utc in self.frame['utc_times']]
+        self.misc_frame = pd.DataFrame()
+
+        for key, source_file in source.items():
+            frame =  pd.read_csv(source_file)
+            self.misc_frame[key] = frame[key]
+            self.misc_frame['%s_stderr' % key] = frame['%s_stderr' % key]
+            self.misc_frame['utc_times'] = [convert2datetime(utc) for utc in frame['utc_times']]
 
     def get_plot(self, ax):
-        return ibsen_plot(self.frame, *ax)
+        return ibsen_plot(self.misc_frame, *ax)
 
 
 class AeronetPlot:
@@ -48,7 +53,7 @@ class AeronetPlot:
         return aeronet_plot(self.aeronet, *ax)
 
 
-class MicroPlot():
+class MicroPlot:
 
     def __init__(self, source, _):
         print("MicroPlot Constructor")
