@@ -19,14 +19,14 @@ def darkcurrent_channel_analyse(directory):
     for key, val in sorted(cal_dict.items()):
         plt.plot(val['darkcurrent']['wave'], val['darkcurrent']['mean'], label='%1.f' % key)
     plt.xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
-    plt.ylabel(r'DN [a.u.]', **hfont)
+    plt.ylabel(r'Signal [DN]', **hfont)
 
     fontP = FontProperties()
     fontP.set_family('serif')
     fontP.set_size('small')
     legend = plt.legend(loc=0, ncol=1, prop = fontP,fancybox=True,
                         shadow=False,title='Integration Times [ms]',bbox_to_anchor=(1.0, 1.0))
-    plt.setp(legend.get_title(),fontsize='small')
+    #plt.setp(legend.get_title(),fontsize='small')
     plt.tight_layout()
     plt.show()
 
@@ -35,7 +35,7 @@ def darkcurrent_channel_analyse(directory):
     plt.plot(cal_dict[5]['darkcurrent']['wave'], cal_dict[5]['darkcurrent']['data'], alpha=0.05)
     plt.plot(cal_dict[5]['darkcurrent']['wave'], cal_dict[5]['reference']['data'], alpha=0.05)
     plt.xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
-    plt.ylabel(r'DN [a.u.]', **hfont)
+    plt.ylabel(r'Signal [DN]', **hfont)
     plt.show()
 
     sorted_keys = sorted(cal_dict.keys()) #[4:-4]
@@ -64,9 +64,9 @@ def darkcurrent_channel_analyse(directory):
     #ax1.plot(IntTimes, noise_dict[258]['dark'])
     ax2.plot(tmp_channels, noise)
     ax1.set_xlabel('Integration Time [ms]', **hfont)
-    ax2.set_xlabel('Wavelength [nm]', **hfont)
-    ax1.set_ylabel('DN [a.u.]', **hfont)
-    ax2.set_ylabel('DN [a.u.]', **hfont)
+    ax2.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+    ax1.set_ylabel('Signal [DN]', **hfont)
+    ax2.set_ylabel('Signal [DN]', **hfont)
     plt.tight_layout()
     plt.show()
 
@@ -81,8 +81,8 @@ def temperature():
     gs = gridspec.GridSpec(1, 1)
     ax1 = plt.subplot(gs[0, :])
 
-    winter = '/home/jana_jo/DLR/Codes/measurements/LMU/291116_LMU/'
-    summer = '/home/jana_jo/DLR/Codes/measurements/Roof_DLR/2016_09_14RoofDLR/'
+    winter = '/home/joanna/DLR/Codes/measurements/measurements/LMU/291116_LMU/'
+    summer = '/home/joanna/DLR/Codes/measurements/measurements/Roof_DLR/2016_09_14RoofDLR/'
     import glob
     file_prefixes = ['darkcurrent']
     files_winter = sorted([file_ for file_ in glob.iglob(winter + '%s*' % file_prefixes[0])])[5:7]
@@ -99,9 +99,9 @@ def temperature():
         sum_dict = ip.parse_ibsen_file(sum)
         ax1.plot(sum_dict['wave'][50:], sum_dict['mean'][50:],color='sandybrown', label='30 $^{\circ}$C' % sum_dict['IntTime'])
     assert win_dict['IntTime'] == sum_dict['IntTime']
-    ax1.set_ylabel('DN [a.u.]', **hfont)
-    ax1.set_ylabel('DN [a.u.]', **hfont)
-    ax1.set_xlabel('Wavelength [nm]', **hfont)
+    ax1.set_ylabel('Signal [DN]', **hfont)
+    ax1.set_ylabel('Signal [DN]', **hfont)
+    ax1.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
     ax1.legend(loc='best', prop=fontP, title=r' %s ms Integrationtime at temperature:' % win_dict['IntTime'])
     plt.setp(ax1.get_legend().get_title(), fontsize='small', family=FONTSTYLE)
     plt.tight_layout()
@@ -110,7 +110,7 @@ def temperature():
 
 def test_offset_subtraction():
     """ testing of offset subtraction or darkcurrent subtraction is better"""
-    test_directory = '/home/jana_jo/DLR/Codes/calibration/test_nonlinearity/labor/ibsen_nonlinearity_verschoeben2/'
+    test_directory = '/home/joanna/DLR/Codes/calibration/test_nonlinearity/labor/ibsen_nonlinearity_verschoeben2/'
     offset = 'offset_corrected_calibration/'
     dark_ = 'darkcurrent_corrected_calibration/'
     _file = 'nonlinearity_correction.txt'
@@ -128,7 +128,7 @@ if __name__  == "__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--directory', default='/home/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
+    parser.add_argument('-d', '--directory', default='/home/joanna/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
     args = parser.parse_args()
     test_offset_subtraction()
     darkcurrent_channel_analyse(args.directory)

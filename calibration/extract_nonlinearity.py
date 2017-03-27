@@ -6,6 +6,13 @@ import matplotlib.pyplot as plt
 from numpy.testing import assert_array_equal
 from matplotlib.font_manager import FontProperties
 
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
+
 
 def generate_nonlinear_correction(cal_dict, nonlinear_config, noise_dict):
     nonlinear_correction_dict = dict()
@@ -58,38 +65,42 @@ def calculate_nonlinearity_factors(cal_dict, nonlinear_config, noise_dict):
 
     plt.plot(DN, DN_non, '+')
     plt.plot(averaging_DN, nonlinear_factors, 'y')
-    plt.title('Nonlinear Correction')
-    plt.xlabel('DN')
-    plt.ylabel('rel. error DN')
+    plt.xlabel('Signal [DN]', **hfont)
+    plt.ylabel('Deviation from linearity', **hfont)
     plt.show()
     return averaging_DN, nonlinear_factors
 
 
-def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
-    sorted_keys = sorted(cal_dict.keys())
-    chosen_keys = [key for key in sorted_keys[min:max:step]]
-
-    std_old = np.array([])
-
+def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=0, step=1):
     import matplotlib.pyplot as plt
-    for key in chosen_keys:
-        plt.plot(cal_dict[key]['reference']['wave'], cal_dict[key]['reference']['mean'], label='%s' % key)
-    plt.xlabel('Wavelength [nm]')
-    plt.ylabel('DN')
-    plt.legend()
-    plt.show()
-
-    gs = gridspec.GridSpec(3, 3)
-    ax1 = plt.subplot(gs[0, :])
-    ax2 = plt.subplot(gs[1, :])
-    ax3 = plt.subplot(gs[2, :])
+    sorted_keys = sorted(cal_dict.keys())
+    chosen_keys = [key for key in sorted_keys[min::step]]
     FONTSTYLE = 'serif'
     FONTSIZE = 12
     hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
     fontP = FontProperties()
     fontP.set_family(FONTSTYLE)
     fontP.set_size('small')
+    std_old = np.array([])
 
+    GS = gridspec.GridSpec(2, 2)
+    ax1 = plt.subplot(GS[0, :])
+    ax2 = plt.subplot(GS[1, :])
+
+
+    for key in chosen_keys:
+        ax1.plot(cal_dict[key]['reference']['wave'], cal_dict[key]['reference']['mean'], label='%s' % key)
+        ax2.plot(cal_dict[key]['darkcurrent']['wave'], cal_dict[key]['darkcurrent']['mean'], label='%s' % key)
+    ax2.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+    ax1.set_ylabel('Signal [DN]', **hfont)
+    ax2.set_ylabel('Signal [DN]', **hfont)
+    ax1.legend(loc=0, ncol=1, prop = fontP,fancybox=True, shadow=False,title='Integration Times [ms]',bbox_to_anchor=(1.02, 1.0))
+    plt.show()
+
+    gs = gridspec.GridSpec(3, 3)
+    ax1 = plt.subplot(gs[0, :])
+    ax2 = plt.subplot(gs[1, :])
+    ax3 = plt.subplot(gs[2, :])
 
     for key in chosen_keys:
         # Darkcurrent subtraction
@@ -125,9 +136,9 @@ def check_nonlinearity(cal_dict, correction_dict=None, min=0, max=-1, step=1):
 
     ax1.set_title('Uncorrected spectra', **hfont)
     ax2.set_title('Nonlinear corrected spectra', **hfont)
-    ax1.set_ylabel('DN [a.u.]', **hfont)
-    ax2.set_ylabel('DN [a.u.]', **hfont)
-    ax3.set_xlabel('Wavelength [nm]', **hfont)
+    ax1.set_ylabel('Signal [DN]', **hfont)
+    ax2.set_ylabel('Signal [DN]', **hfont)
+    ax3.set_xlabel('Wavelength $\lambda$ [nm]', **hfont)
     ax3.set_ylabel(r'$\Delta$ $\%$', **hfont)
     ax3.legend(loc='best', prop=fontP)
     leg = plt.gca().get_legend()

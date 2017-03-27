@@ -1,5 +1,14 @@
 import numpy as np
 import pandas as pd
+from matplotlib.font_manager import FontProperties
+
+
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
 
 
 def get_halogen_spectra(reference_file):
@@ -46,8 +55,8 @@ def generate_response_factors(cal_dict, halogen_file):
     frame.to_csv(store_to_file, index=False)
     import matplotlib.pyplot as plt
     plt.plot(mod_waves, scale_factor)
-    plt.ylabel(r'$\frac{DN}{\frac{mW}{nm m^2 sr}}$')
-    plt.xlabel('Wavelength [nm]')
+    plt.ylabel(r'Radiance $DN / \frac{mW}{nm m^2 sr}$', **hfont)
+    plt.xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
     plt.show()
 
     return cal_dict, response_dict

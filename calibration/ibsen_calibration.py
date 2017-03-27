@@ -7,6 +7,16 @@ import pandas as pd
 import parser.ibsen_parser as ip
 from extract_nonlinearity import generate_nonlinear_correction, check_nonlinearity
 from extract_response import generate_response_factors
+from matplotlib.font_manager import FontProperties
+
+
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
+
 
 def sort_ibsen_by_int(dirname):
     """ marshal, xml, or json pickel packages - todo"""
@@ -20,6 +30,7 @@ def sort_ibsen_by_int(dirname):
     """
     cal_dict = {}
     for file_ in glob.iglob('%s*.asc' % dirname):
+        print(file_)
         ibsen_dict = ip.parse_ibsen_file(file_)
         # Skip saturated pixel
         ibsen_dict['wave'] = ibsen_dict['wave'][50:]
@@ -122,15 +133,29 @@ def generate_ibsen_calibration_files(directory, reference):
     for integration, spectra in cal_dict.items():
         spectra['reference']['mean'] = spectra['reference']['mean'] / np.interp(spectra['reference']['wave'], response_dict['wave'], response_dict['scale_factors'])
         plt.plot(spectra['reference']['wave'], spectra['reference']['mean'])
-    plt.xlabel('Wavelength [nm]')
-    plt.ylabel(r'$\frac{mW}{nm m^2 sr}$')
+    plt.xlabel('Wavelength $\lambda$ [nm]', **hfont)
+    plt.ylabel(r'$\frac{mW}{nm m^2 sr}$', **hfont)
     plt.show()
 
+    fix, ax1 = plt.subplots()
+    ax1.plot(response_dict['wave'], response_dict['intensity'], 'r+', label='Ibsen response')
+    ax1.set_xlabel('Wavelength $\lambda$ [nm]', **hfont)
+    ax1.set_ylabel('Signal [DN]')
+    ax1.legend(loc=2, ncol=1, prop = fontP,fancybox=True, shadow=False)
+    ax2 = ax1.twinx()
+    ax2.plot(response_dict['wave'], response_dict['halogen'], 'y+', label='Halogen lamp')
+    ax2.plot(response_dict['wave'], response_dict['intensity'] / response_dict['scale_factors'], 'b', label='Calibrated ibsen response')
+    ax2.set_ylabel(r'$\frac{mW}{nm m^2 sr}$', **hfont)
+    ax2.legend(loc=1, ncol=1, prop = fontP,fancybox=True, shadow=False)
+    plt.show()
+
+
     plt.plot(response_dict['wave'], response_dict['intensity'], 'r+', label='Ibsen response')
-    plt.plot(response_dict['wave'], response_dict['halogen'], 'b+', label='Halogen lamp')
-    plt.plot(response_dict['wave'], response_dict['intensity'] / response_dict['scale_factors'], 'y', label='Calibrated ibsen response')
-    plt.xlabel('Wavelength [nm]')
-    plt.legend()
+    plt.plot(response_dict['wave'], response_dict['halogen'], 'y+', label='Halogen lamp')
+    plt.plot(response_dict['wave'], response_dict['intensity'] / response_dict['scale_factors'], 'b', label='Calibrated ibsen response')
+    plt.xlabel('Wavelength $\lambda$ [nm]', **hfont)
+    plt.ylabel(r'$\frac{mW}{nm m^2 sr}$', **hfont)
+    plt.legend(loc=2, ncol=1, prop = fontP,fancybox=True, shadow=False,bbox_to_anchor=(1.0, 1.0))
     plt.show()
 
 
@@ -141,8 +166,8 @@ if __name__ == "__main__":
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--directory', default='/home/jana_jo/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
-    parser.add_argument('-r', '--reference_file', default='/home/jana_jo/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
+    parser.add_argument('-d', '--directory', default='/home/joanna/DLR/Codes/calibration/Ibsen_0109_5313264/EOC/Optiklabor/', help="Add directory with raw data measured by Rasta")
+    parser.add_argument('-r', '--reference_file', default='/home/joanna/DLR/Codes/calibration/GS1032_1m.txt',help="Reference file for halogen lamp")
     args = parser.parse_args()
     print(args.reference_file)
     generate_ibsen_calibration_files(args.directory, args.reference_file)
