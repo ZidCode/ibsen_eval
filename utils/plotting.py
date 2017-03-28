@@ -114,6 +114,7 @@ def plot_aengstrom_parameters_aeronet(object_list, title):
     ax1.set_ylabel(r'Aengstrom exponent $\alpha$', **hfont)
     ax2.set_ylabel(r'Turbidity $\beta$', **hfont)
     ax2.set_xlabel('UTC Times', **hfont)
+    ax1.set_xlabel('UTC Times', **hfont)
     ax1.set_title('%s' % title, **hfont)
     plt.tight_layout()
     plt.show()
@@ -127,10 +128,10 @@ def ibsen_plot(frame, ax1, ax2):
 
 
 def aeronet_plot(aeronet, ax1, ax2):
-    ax1.plot(aeronet['utc_times'], aeronet['440-870_Angstrom_Exponent'], '+', label='440-870')
-    ax1.plot(aeronet['utc_times'], aeronet['380-500_Angstrom_Exponent'], '+', label='380-500')
-    ax1.plot(aeronet['utc_times'], aeronet['440-675_Angstrom_Exponent'], '+', label='440-675')
-    ax1.plot(aeronet['utc_times'], aeronet['500-870_Angstrom_Exponent'], '+', label='500-870')
+    ax1.plot(aeronet['utc_times'], aeronet['440-870_Angstrom_Exponent'], '+', label='440-870 [nm]')
+    ax1.plot(aeronet['utc_times'], aeronet['380-500_Angstrom_Exponent'], '+', label='380-500 [nm]')
+    ax1.plot(aeronet['utc_times'], aeronet['440-675_Angstrom_Exponent'], '+', label='440-675 [nm]')
+    ax1.plot(aeronet['utc_times'], aeronet['500-870_Angstrom_Exponent'], '+', label='500-870 [nm]')
     ax2.errorbar(aeronet['utc_times'], aeronet['Turbidity'], yerr=aeronet['Turbidity_stderror'],fmt='o',
                  label='Aeronet', color='r', ecolor='r', markersize='2')
 
