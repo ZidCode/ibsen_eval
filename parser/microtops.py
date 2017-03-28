@@ -17,19 +17,16 @@ utc_calc = np.vectorize(med_time)
 
 
 def parse_microtops_inifile(file_):
-
+    micro_dict = dict()
     with codecs.open(file_, "r", encoding="utf-8-sig") as fp:
         UTC = fp.readline()
         UTCTime = datetime.strptime('%s 00:00:00' % UTC, '%d.%m.%Y %H:%M:%S')
 
-    data = np.genfromtxt(file_, skip_header=2, delimiter=',', dtype=str)
-    micro_keys = ['utc_times', 'alpha', 'beta']
-    micro_dict = {key: np.array([]) for key in micro_keys}
-    micro_dict['alpha'] = float_v(data[:,2])
-    micro_dict['alpha_stderr'] = float_v(data[:, 3])
-    micro_dict['beta'] = float_v(data[:, 4])
-    micro_dict['beta_stderr'] = float_v(data[:, 5])
-    micro_dict['utc_times'] = utc_calc(UTCTime, data[:,0], data[:,1])
+    data = np.genfromtxt(file_, skip_header=1, delimiter=',', dtype=str)
+    micro_dict['utc_times'] = utc_calc(UTCTime, data[1:,0], data[1:,1])
+
+    for idx, key in enumerate(data[0, 2:]):
+        micro_dict[key] = float_v(data[1:, idx + 2])
     micro_dict['label'] = 'microtops'
     return micro_dict
 
@@ -37,3 +34,10 @@ def parse_microtops_inifile(file_):
 if __name__ == "__main__":
     filename =  '/home/jana_jo/DLR/Codes/MicrotopsData/20160913_DLRRoof/aengstroem_results.txt'
     UTCTime = datetime.strptime('2016-08-25 00:00:00', '%Y-%m-%d %H:%M:%S')
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', default='DEBUG')
+    args = parser.parse_args()
+    m = parse_microtops_inifile(args.file)
+    print(m['beta'])
+# /home/jana_jo/DLR/Codes/measurements/MicrotopsData/29_11_2016/380_870nm/aengstrom_wv_ozone_results_380_870.txt
