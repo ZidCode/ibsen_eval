@@ -36,18 +36,18 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    map_dict = {'E_ds_mean': tarmd, 'E_d_mean': refmd}
+    map_dict = {r'$E_{ds}$': tarmd, r'$E_{d}$': refmd}
 
     for key, meas in map_dict.items():
         ax1.plot(meas['wave'], meas['data'], alpha=0.1)
+    for key, meas in map_dict.items():
         ax1.plot(meas['wave'], meas['mean'], label='%s' %key)
 
-    ax1.set_title(r'$E_{ds}$ and $E_{d}$', **hfont)
-    ax2.plot(reflectance['wave_nm'], reflectance['spectra'], '+')
-    ax1.set_ylabel(r'$\frac{mW}{m^2 \cdot nm}$', **hfont)
-    ax2.set_ylabel(r'Ratio [$\%$]', **hfont)
+    ax2.plot(reflectance['wave_nm'], reflectance['spectra'])
+    ax1.set_ylabel(r'Irradiance $\left[\frac{mW}{m^2 \cdot nm \cdot \pi}\right]$', **hfont)
+    ax2.set_ylabel(r'$E_{ds}$/$E_{d}$', **hfont)
     ax1.legend(loc='best', prop=fontP)
-    plt.xlabel('Wavelength [nm]', **hfont)
+    plt.xlabel('Wavelength $\lambda$ [nm]', **hfont)
     plt.show()
 
 
@@ -64,11 +64,13 @@ def plot_fitted_reflectance(result, param_dict, measurement):
 
     ax1 = result.plot_residuals(ax=ax1)
     ax2.plot(measurement['wave_nm'], measurement['spectra'])
-    ax2.plot(param_dict['wave_range'], result.best_fit, 'r-')
     ax2.errorbar(param_dict['wave_range'], param_dict['spectra_range'], yerr=param_dict['std'], ecolor='g')
-    ax2.set_title('Fitted ratio', **hfont)
-    ax2.set_ylabel('Ratio', **hfont)
-    ax2.set_xlabel(r'Wavelength [nm]', **hfont)
+    ax2.plot(param_dict['wave_range'], result.best_fit, 'r-', label='Fit')
+
+    ax2.set_ylabel(r'$E_{ds}$/$E_{d}$', **hfont)
+    #ax2.set_ylabel(r'$L_{sky}$ $\left[\frac{mW}{m^2 \cdot nm \cdot sr}\right]$', **hfont)
+    ax2.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+    ax2.legend(loc='best', prop=fontP)
     plt.show()
 
 
@@ -144,6 +146,7 @@ def micro_plot(micro_dict, ax1, ax2):
     ax2.errorbar(micro_dict['utc_times'], micro_dict['beta'], yerr=micro_dict['beta_stderr'],
                  label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
     return ax1, ax2
+
 
 def plot_wv_ozone(object_list, title):
     fig = plt.figure()
