@@ -4,7 +4,7 @@ import pandas as pd
 from evaluation import parse_ini_config, create_logger, evaluate_spectra
 
 
-def retrieveLsky1(config, directory, output_file, logger):
+def retrieve(config, directory, output_file, logger):
     aided_params = dict()
     for key, aided_file in config['Aided']['params'].items():
         aided_params[key] = pd.read_csv(aided_file)
@@ -63,4 +63,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = parse_ini_config(args.config)
     logger = create_logger(config['Processing'])
-    retrieveLsky1(config, args.measurement_directory, args.output_file, logger)
+    retrieve(config, args.measurement_directory, args.output_file, logger)
