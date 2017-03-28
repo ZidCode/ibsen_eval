@@ -1,8 +1,18 @@
 from lmfit import Model
+import numpy as np
 from scipy.optimize import minimize, least_squares
 from BaseModels import BaseModelPython, BaseModelSym
 from Model import IrradianceRatio, LSkyRatio, SkyRadiance, IrradianceRatioSym, SkyRadianceSym
 from Residuum import Residuum
+from matplotlib.font_manager import FontProperties
+
+
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
 
 
 class FitWrapper:
@@ -173,7 +183,10 @@ class Result:
         print(self.result)
 
     def plot_residuals(self, ax):
-        ax1 = ax.plot(self.wavelength, self.residuals)
+        ax1 = ax.plot(self.wavelength, np.zeros(len(self.wavelength)), 'b')
+        ax1 = ax.plot(self.wavelength, self.residuals, 'bo')
+        ax.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+        ax.set_ylabel(r'residuals', **hfont)
         return ax1
 
 
