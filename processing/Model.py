@@ -65,8 +65,8 @@ class SkyRadiance:
 
 class IrradianceRatioSym(BaseModelSym):
 
-    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
-        BaseModelSym.__init__(self, zenith, AM, pressure, ssa, wave, variables)
+    def __init__(self, zenith, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr']):
+        BaseModelSym.__init__(self, zenith, pressure, ssa, wave, variables)
 
     def _ratio_E_ds(self):
         _E_ds_ratio = self.symbols['g_dsr'] * (1 - T.exp(0.95 * self._tau_r())) * 0.5 + \
@@ -90,8 +90,8 @@ class IrradianceRatioSym(BaseModelSym):
 
 class LSkyRatioSym(BaseModelSym):
 
-    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr', 'l_dsr', 'l_dsa']):
-        BaseModelSym.__init__(self, zenith, AM, pressure, ssa, wave, variables)
+    def __init__(self, zenith, pressure, ssa, wave, variables=['alpha', 'beta', 'g_dsa', 'g_dsr', 'l_dsr', 'l_dsa']):
+        BaseModelSym.__init__(self, zenith, pressure, ssa, wave, variables)
 
     def _ratio_E_ds(self):
         _E_ds_ratio = self.symbols['l_dsr'] * (1 - T.exp(0.95 * self._tau_r())) * 0.5 + \
@@ -115,8 +115,8 @@ class LSkyRatioSym(BaseModelSym):
 
 class SkyRadianceSym(BaseModelSym):
 
-    def __init__(self, zenith, AM, pressure, ssa, wave, variables=['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']):
-        BaseModelSym.__init__(self, zenith, AM, pressure, ssa, wave, variables)
+    def __init__(self, zenith, pressure, ssa, wave, variables=['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']):
+        BaseModelSym.__init__(self, zenith, pressure, ssa, wave, variables)
 
 
     def func(self):
