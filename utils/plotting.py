@@ -144,3 +144,45 @@ def micro_plot(micro_dict, ax1, ax2):
     ax2.errorbar(micro_dict['utc_times'], micro_dict['beta'], yerr=micro_dict['beta_stderr'],
                  label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
     return ax1, ax2
+
+def plot_wv_ozone(object_list, title):
+    fig = plt.figure()
+
+    gs = gridspec.GridSpec(2, 2)
+    ax1 = plt.subplot(gs[0, :])
+    ax2 = plt.subplot(gs[1, :])
+    for obj in object_list:
+        obj.get_wv_plot([ax1, ax2])
+
+    ax1.legend(loc='best', prop=fontP)
+    ax2.legend(loc='best', prop=fontP)
+
+    ax1.set_ylabel(r'Water Vapour [cm]', **hfont)
+    ax2.set_ylabel(r'Ozone scale height [cm]', **hfont)
+    ax2.set_xlabel('UTC Times', **hfont)
+    ax1.set_xlabel('UTC Times', **hfont)
+    ax1.set_title('%s' % title, **hfont)
+    plt.tight_layout()
+    plt.show()
+
+
+def ibsen_wv_plot(frame, ax1, ax2):
+    ax1.errorbar(frame['utc_times'], frame['wv'], yerr=frame['H_oz_stderr'],fmt='o',
+                 label='Ibsen', markersize='2', color='b', ecolor='b')
+    ax2.errorbar(frame['utc_times'], frame['H_oz'], yerr=frame['H_oz_stderr'], label='Ibsen', fmt='o', markersize='2', color='b', ecolor='b')
+    return ax1, ax2
+
+
+def aeronet_wv_plot(aeronet, ax1, ax2):
+    ax1.plot(aeronet['utc_times'], aeronet['Precipitable_Water(cm)'], '+', label='Aeronet')
+    ax2.plot(aeronet['utc_times'], aeronet['Ozone(Dobson)'], '+', label='Aeronet', color='r')
+
+    return ax1, ax2
+
+
+def micro_wv_plot(micro_dict, ax1, ax2):
+    ax1.errorbar(micro_dict['utc_times'], micro_dict['wv'], yerr=micro_dict['wv_stderr'],
+                 label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
+    ax2.errorbar(micro_dict['utc_times'], micro_dict['H_oz'], yerr=micro_dict['H_oz_stderr'],
+             label='Microtops', fmt='o', markersize='2', color='g', ecolor='g')
+    return ax1, ax2
