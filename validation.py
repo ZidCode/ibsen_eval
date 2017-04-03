@@ -38,7 +38,7 @@ class IbsenPlot:
 
         for key, source_file in source.items():
             frame =  pd.read_csv(source_file)
-            print("%s key % source" %(key, source_file))
+            print("%s key %s source" %(key, source_file))
             self.misc_frame[key] = frame[key]
             self.misc_frame['%s_stderr' % key] = frame['%s_stderr' % key]
             self.misc_frame['utc_times'] = [convert2datetime(utc) for utc in frame['utc_times']]
