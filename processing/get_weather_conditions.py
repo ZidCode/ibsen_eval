@@ -9,6 +9,15 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from scipy import interpolate
 from api_key import api_key
+from matplotlib.font_manager import FontProperties
+
+
+FONTSTYLE = 'serif'
+FONTSIZE = 12
+hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
+fontP = FontProperties()
+fontP.set_family(FONTSTYLE)
+fontP.set_size('small')
 
 
 def download_weather_data(destiny):
@@ -119,9 +128,38 @@ def retrieve_weather_parameters(params, gps, utc_time, debug=False):
     return utc_param_values
 
 
-if __name__ == '__main__':
-    GPS_Munich = [48.08617, 11.27970]
-    utc_time = datetime.strptime('2016-09-12 10:43:20', '%Y-%m-%d %H:%M:%S')
+def show_more_days():
     params = ['hum', 'pressurem']
-    vals = retrieve_weather_parameters(params, GPS_Munich, utc_time, True)
-    print("Rel. Hum: %s and Pressure %s" % (vals['hum'], vals['pressurem']))
+    gps = [48.14800, 11.57300]
+    utc_time1 = datetime.strptime('2017-02-16 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time2 = datetime.strptime('2016-11-29 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time3 = datetime.strptime('2016-12-06 10:43:20', '%Y-%m-%d %H:%M:%S')
+    scaling_properties = {'hum': lambda x: x / 100, 'pressurem': lambda x: x}
+
+    t_new = []
+    fix, ax1 = plt.subplots()
+    utc_times = [utc_time1, utc_time2, utc_time3]
+    markers = ['v', 'o', 'p']
+    for mark, utc_time in zip(markers, utc_times):
+        utc_param_values = dict()
+        inter = dict()
+        data = get_parameters(gps, utc_time)
+        param_ts = extract_ts(params, data, utc_time)
+        lable = '%s.%s.%s' % ('{:02d}'.format(param_ts['time'][0].day), '{:02d}'.format(param_ts['time'][0].month), param_ts['time'][0].year)
+        for idx, time in enumerate(param_ts['time']):
+            param_ts['time'][idx] = time.replace(year=2016, month=11, day=29)
+        ax1.plot(param_ts['time'], param_ts['hum'], label=lable, marker=mark,  linestyle = 'None')
+
+    ax1.set_xlabel('UTC Timestamp', **hfont)
+    ax1.set_ylabel(r'rel. humidity $\left[ \% \right]$', **hfont)
+    plt.legend(loc='best', prop=fontP, title='Date')
+    plt.show()
+
+
+if __name__ == '__main__':
+    show_more_days()
+    #GPS_Munich = [48.14800, 11.57300]
+    #utc_time = datetime.strptime('2017-02-16 10:43:20', '%Y-%m-%d %H:%M:%S')
+    #params = ['hum', 'pressurem']
+    #vals = retrieve_weather_parameters(params, GPS_Munich, utc_time, True)
+    #print("Rel. Hum: %s and Pressure %s" % (vals['hum'], vals['pressurem']))
