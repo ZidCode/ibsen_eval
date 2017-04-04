@@ -120,9 +120,9 @@ class Minimize:
                                method=self.config['method'], bounds=self.config['limits'])
         self.param_dict['variables'] = dict()
         for idx, symbol in enumerate(self.symbols):
-            self.param_dict['variables'][symbol] = dict()
-            self.param_dict['variables'][symbol]['stderr'] = None
-            self.param_dict['variables'][symbol]['value'] = self.result.x[idx]
+            self.param_dict['variables'][symbol.name] = dict()
+            self.param_dict['variables'][symbol.name]['stderr'] = None
+            self.param_dict['variables'][symbol.name]['value'] = self.result.x[idx]
         self._calc_fitted_spectra()
         self._calc_residuals()
         return Result(self.result, self.fitted_spectra, self.residuals, self.param_dict['wave_range']), self.param_dict
