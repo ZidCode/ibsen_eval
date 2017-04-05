@@ -32,9 +32,9 @@ def plot_histogram():
     plt.errorbar(frame['alpha'], np.mean(g_dsr_matrix,axis=0),yerr=np.std(g_dsr_matrix,axis=0), ecolor= 'g', label=r"$\Delta g_r$", fmt='none')
     plt.errorbar(frame['alpha'], np.mean(g_dsa_matrix, axis=0),yerr=np.std(g_dsa_matrix, axis=0), ecolor= 'r', label=r"$\Delta g_a$", fmt='none')
     plt.legend()
-    plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
+    #plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
     plt.xlabel(r'Angstrom exponent $\Delta \alpha$')
-    plt.ylabel(r'$\Delta$')
+    plt.ylabel(r'$\Delta [\%]$')
     plt.show()
 
     filenames = ["results/biased_%s_beta.txt" % i for i in range(30)]
@@ -63,9 +63,9 @@ def plot_histogram():
     plt.errorbar(frame['beta'], np.mean(g_dsr_matrix, axis=0),yerr=np.std(g_dsr_matrix, axis=0), ecolor= 'g', label=r"$\Delta g_r$", fmt='none')
     plt.errorbar(frame['beta'], np.mean(g_dsa_matrix, axis=0),yerr=np.std(g_dsa_matrix, axis=0), ecolor= 'r', label=r"$\Delta g_a$", fmt='none')
     plt.legend()
-    plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
+    #plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
     plt.xlabel(r'Turbidity $\Delta \beta$')
-    plt.ylabel(r'$\Delta$')
+    plt.ylabel(r'$\Delta [\%]$')
     plt.show()
 
 
@@ -95,9 +95,9 @@ def plot_histogram():
     plt.errorbar(frame['g_dsr'], np.mean(beta_matrix, axis=0),yerr=np.std(beta_matrix, axis=0), ecolor= 'g', label=r"$\Delta \beta$", fmt='none')
     plt.errorbar(frame['g_dsr'], np.mean(g_dsa_matrix, axis=0),yerr=np.std(g_dsa_matrix, axis=0), ecolor= 'r', label=r"$\Delta g_a$", fmt='none')
     plt.legend()
-    plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
-    plt.xlabel(r'Bedeckungsfaktor $\Delta g_{dsr}$')
-    plt.ylabel(r'$\Delta$')
+    #plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
+    plt.xlabel(r'Coverty factor $\Delta g_{dsr}$')
+    plt.ylabel(r'$\Delta [\%]$')
     plt.show()
 
     filenames = ["results/biased_%s_g_dsa.txt" % i for i in range(30)]
@@ -126,9 +126,9 @@ def plot_histogram():
     plt.errorbar(frame['g_dsa'], np.mean(beta_matrix, axis=0),yerr=np.std(beta_matrix,axis=0), ecolor= 'g', label=r"$\Delta \beta$", fmt='none')
     plt.errorbar(frame['g_dsa'], np.mean(g_dsr_matrix, axis=0),yerr=np.std(g_dsr_matrix, axis=0), ecolor= 'r', label=r"$\Delta g_r$", fmt='none')
     plt.legend()
-    plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
-    plt.xlabel(r'Bedeckungsfaktor $\Delta g_{dsa}$')
-    plt.ylabel(r'$\Delta$')
+    #plt.title(r"$alpha$:%s,$beta$:%s,$g_{dsa}$:%s,$g_{dsr}$:%s" % (frame['expected'][0], frame['expected'][1], frame['expected'][2], frame['expected'][3]))
+    plt.xlabel(r'Coverty factor $\Delta g_{dsa}$')
+    plt.ylabel(r'$\Delta [\%]$')
     plt.show()
 
 

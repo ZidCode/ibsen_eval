@@ -75,9 +75,9 @@ def sky_radiance():
     rel_h = 0.9
     pressure = 950
     ssa = get_ssa(rel_h, 5)
-    x = np.linspace(500, 700, 1000)  # config
+    x = np.linspace(650, 750, 1000)  # config
     H_oz = 0.3
-    wv = 1.2
+    wv = 0.9
     alpha = 1.8
     beta = 0.06
     l_dsr = 0.17
@@ -97,10 +97,11 @@ def sky_radiance():
 
     for wv in np.arange(0.2, 2.5, 0.1):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
-        plt.plot(x, y)
+        plt.plot(x, y, label=wv)
     plt.xlabel('Wavelength [nm]', **hfont)
     plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
     plt.title("Water Vapour 0.2-2.5 cm", **hfont)
+    plt.legend(prop=fontP)
     plt.show()
 
     for hoz in np.arange(0.3, 0.5, 0.01):

@@ -39,7 +39,6 @@ def retrieve(config, directory, output_file, logger):
                 params, result = evaluate_spectra(config, logger)
 
             result_timeline['sun_zenith'] = np.append(result_timeline['sun_zenith'], params['sun_zenith'])
-
             del params['sun_zenith']
 
             for key,item in params['variables'].items():

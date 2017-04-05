@@ -67,8 +67,8 @@ def plot_fitted_reflectance(result, param_dict, measurement):
     ax2.errorbar(param_dict['wave_range'], param_dict['spectra_range'], yerr=param_dict['std'], ecolor='g')
     ax2.plot(param_dict['wave_range'], result.best_fit, 'r-', label='Fit')
 
-    ax2.set_ylabel(r'$E_{ds}$/$E_{d}$', **hfont)
-    #ax2.set_ylabel(r'$L_{sky}$ $\left[\frac{mW}{m^2 \cdot nm \cdot sr}\right]$', **hfont)
+    #ax2.set_ylabel(r'$E_{ds}$/$E_{d}$', **hfont)
+    ax2.set_ylabel(r'$L_{sky}$ $\left[\frac{mW}{m^2 \cdot nm \cdot sr}\right]$', **hfont)
     ax2.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
     ax2.legend(loc='best', prop=fontP)
     plt.show()
