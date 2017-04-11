@@ -23,16 +23,17 @@ def get_model_param():
 
 def fit_setup():
     setup = dict()
-    setup['variables'] = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'wv', 'H_oz']
-    setup['simulate']= [1.8, 0.06, 0.1, 0.17, 1.2, 0.34]
-    setup['expected']= [0.1, 0.17]
-    setup['guess'] = [0.05, 0.09]
-    setup['bounds'] = [(0.01, 0.7), (0.01, 0.7)]  # config
-    setup['model'] = SkyRadiance
-    setup['noise'] = 0.02  # 0.0005 for ratio 0.02 for L_sky
-    setup['global'] = 'alpha'
-    setup['local'] = 'beta'
-    setup['independent'] = {'x':np.linspace(350, 500, 1000), setup['global']:0, setup['local']:0, 'wv':1.3, 'H_oz':0.34}
+    #setup['variables'] = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'wv', 'H_oz']
+    setup['variables'] = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'g_dsr', 'g_dsa']
+    setup['simulate']= [1.8, 0.06, 0.1, 0.17, 0.9,  0.8]
+    setup['expected']= [1.8, 0.06, 0.1, 0.17]
+    setup['guess'] = [1.5, 0.05, 0.1, 0.16]
+    setup['bounds'] = [(-0.2, 5.), (0.0, 5), (0.01, 0.7), (0.01, 0.7)]  # config
+    setup['model'] = LSkyRatio
+    setup['noise'] = 0.0005  # 0.0005 for ratio 0.02 for L_sky
+    setup['global'] = 'g_dsr'
+    setup['local'] = 'g_dsa'
+    setup['independent'] = {'x':np.linspace(350, 700, 1000), setup['global']:0, setup['local']:0}
     setup['dir'] = 'results/'
     return setup
 
@@ -44,7 +45,7 @@ def sensi_setup():
     sensi['beta'] = np.linspace(0.04, 0.088, 31)
     sensi['l_dsr'] = np.linspace(0.15, 0.21, 51)
     sensi['l_dsa'] = np.linspace(0.01, 0.13, 31)
-    sensi['g_dsa' ] = np.linspace(.5, 1., 51)
+    sensi['g_dsa' ] = np.linspace(.5, 1., 31)
     sensi['g_dsr'] = np.linspace(0.5, 1.0, 31)
     sensi['H_oz'] = np.linspace(0.3, 0.51, 31)
     sensi['wv'] = np.linspace(0.1, 2.5, 31)
@@ -56,8 +57,8 @@ get_index = lambda x, l: np.where(x == np.array(l))[0][0]
 def startsky2D(model_param, setup, sensi):
     r_setup = copy.copy(setup)
 
-    model = BaseModelPython(model_param['zenith'], model_param['AMass'], model_param['pressure'], model_param['ssa'])
-    skyModel = setup['model'](model)
+    model = BaseModelPython(model_param['zenith'], model_param['pressure'], model_param['ssa'])
+    skyModel = setup['model'](model, model)
     kwargs = {key:value for key, value in zip(setup['variables'], setup['simulate'])}
     kwargs['x'] = setup['independent']['x']
     simulation = skyModel.func(**kwargs)
@@ -128,8 +129,8 @@ def parallel_sensi(wq):
             wq.task_done()
             break
 
-        model = BaseModelPython(job_params['model_param']['zenith'], job_params['model_param']['AMass'], job_params['model_param']['pressure'], job_params['model_param']['ssa'])
-        skyModel = job_params['setup']['model'](model)
+        model = BaseModelPython(job_params['model_param']['zenith'], job_params['model_param']['pressure'], job_params['model_param']['ssa'])
+        skyModel = job_params['setup']['model'](model, model)
         callable_ = skyModel.func
 
         r_setup = job_params['r_setup']
@@ -179,6 +180,7 @@ def _iterate(simulation, expected, guess, bounds, variables, independent, callab
     for i, input_ in enumerate(local_['input']):
         independent[local_['param']] = input_
         result = gmod.fit(simulation, verbose=False, **independent)
+        print(result.fit_report())
         success_ar[i] = result.success
         biased_parameters[i] = np.array([result.params[key].value - expected_dict[key] for key in variables])
     return biased_parameters, success_ar
