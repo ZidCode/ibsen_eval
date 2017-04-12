@@ -31,15 +31,17 @@ def parse_spectralon(file_ = os.path.dirname(os.path.realpath(__file__))+'/S1005
 
 
 def plot(wave, specs):
-    plt.plot(wave, specs * 100, '+')
+    plt.plot(wave, specs * 100)
     plt.xlabel('Wavelength [nm]', **hfont)
-    plt.ylabel(r'Reflectance [$\%$]', **hfont)
+    plt.ylabel(r'Spectralon reflectance [$\%$]', **hfont)
     plt.show()
 
 
 if __name__ == "__main__":
-    ref = {'wave': np.linspace(350, 750, 1000), 'mean': np.linspace(0.01, 0.01, 1000)}
-    plt.plot(ref['wave'], ref['mean'])
-    ref = scale_to_irradiance(ref)
-    plt.plot(ref['wave'], ref['mean'])
-    plt.show()
+    wave, specs = parse_spectralon()
+    plot(wave, specs)
+    #ref = {'wave': np.linspace(350, 750, 1000), 'mean': np.linspace(0.01, 0.01, 1000)}
+    #plt.plot(ref['wave'], ref['mean'])
+    #ref = scale_to_irradiance(ref)
+    #plt.plot(ref['wave'], ref['mean'])
+    #plt.show()

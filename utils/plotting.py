@@ -17,7 +17,7 @@ def plot_meas(tar, ref):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    map_dicts = {r'Radiance $E_{ds}$': {'plt': ax1, 'meas': tar},
+    map_dicts = {r'Radiance $L_{sky}$': {'plt': ax1, 'meas': tar},
                  r'Irradiance $E_d$': {'plt': ax2, 'meas': ref}}
 
     for k, v in map_dicts.items():
@@ -26,8 +26,8 @@ def plot_meas(tar, ref):
 
 
     plt.xlabel('Wavelength [nm]', **hfont)
-    ax1.set_ylabel(r'$\frac{mW}{m^2 \cdot nm\cdot sr}$', **hfont)
-    ax2.set_ylabel(r'$\frac{mW}{m^2 \cdot nm}$', **hfont)
+    ax1.set_ylabel(r'Radiance L $\frac{mW}{m^2 \cdot nm\cdot sr}$', **hfont)
+    ax2.set_ylabel(r'Irradiance E $\frac{mW}{m^2 \cdot nm}$', **hfont)
     plt.tight_layout()
     plt.show()
 
@@ -36,7 +36,7 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
     gs = gridspec.GridSpec(2, 2)
     ax1 = plt.subplot(gs[0, :])
     ax2 = plt.subplot(gs[1, :])
-    map_dict = {r'$E_{ds}$': tarmd, r'$E_{d}$': refmd}
+    map_dict = {r'$L_{sky}$': tarmd, r'$E_{d}$': refmd}
 
     for key, meas in map_dict.items():
         ax1.plot(meas['wave'], meas['data'], alpha=0.1)
@@ -44,8 +44,8 @@ def plot_used_irradiance_and_reflectance(tarmd, refmd, reflectance):
         ax1.plot(meas['wave'], meas['mean'], label='%s' %key)
 
     ax2.plot(reflectance['wave_nm'], reflectance['spectra'])
-    ax1.set_ylabel(r'Irradiance $\left[\frac{mW}{m^2 \cdot nm \cdot \pi}\right]$', **hfont)
-    ax2.set_ylabel(r'$E_{ds}$/$E_{d}$', **hfont)
+    ax1.set_ylabel(r'Irradiance  E $\left[\frac{mW}{m^2 \cdot nm}\right]$', **hfont)
+    ax2.set_ylabel(r'$L_{sky}$/$E_{d}$', **hfont)
     ax1.legend(loc='best', prop=fontP)
     plt.xlabel('Wavelength $\lambda$ [nm]', **hfont)
     plt.show()
@@ -110,15 +110,15 @@ def plot_aengstrom_parameters_aeronet(object_list, title):
     for obj in object_list:
         obj.get_plot([ax1, ax2])
 
-    ax1.legend(loc='best', prop=fontP)
-    ax2.legend(loc='best', prop=fontP)
-
+    #ax1.legend(loc='best', prop=fontP)
+    #ax2.legend(loc='best', prop=fontP)
+    #
     ax1.set_ylabel(r'Aengstrom exponent $\alpha$', **hfont)
     ax2.set_ylabel(r'Turbidity $\beta$', **hfont)
     ax2.set_xlabel('UTC Times', **hfont)
     ax1.set_xlabel('UTC Times', **hfont)
-    ax1.set_title('%s' % title, **hfont)
-    plt.tight_layout()
+    #ax1.set_title('%s' % title, **hfont)
+    #plt.tight_layout()
     plt.show()
 
 

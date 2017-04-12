@@ -25,28 +25,33 @@ def test_main():
     pressure = 950
     AM = 5
     ssa = get_ssa(rel_h, AM)
+    print(ssa)
+    rel_h = 0.8
+    ssa = get_ssa(rel_h, AM)
+    print(ssa)
     x = np.linspace(350, 800, 100)  # config
     variables = ['alpha', 'beta', 'g_dsa', 'g_dsr']  # config
     expected_values = [2.5, 0.06, 0.6, 0.8]
 
     print('Expected: %s' % expected_values)
-    guess = [1.0, 0.01, 0.5, 0.7]  # config
+    guess = [2.3, 0.05, 0.5, 0.7]  # config
     bounds = [(-0.2, 4), (0., 3), (0., 2.), (0., 2.)]  # config
 
     # Theano
-    irr_symbol = IrradianceRatioSym(zenith, pressure, ssa, x, variables)
-    getIrrRatio = irr_symbol.get_compiled()
-    y_theano = getIrrRatio(*expected_values)
-    res = Residuum(irr_symbol)
-    residuum = FitWrapper(res.getResiduum())
+    #irr_symbol = IrradianceRatioSym(zenith, pressure, ssa, x, variables)
+    #getIrrRatio = irr_symbol.get_compiled()
+    #y_theano = getIrrRatio(*expected_values) + np.random.normal(0, 0.001, len(x))
+    #res = Residuum(irr_symbol)
+    #residuum = FitWrapper(res.getResiduum())
 
 
     # Python
     kwargs = {key:value for key,value in zip(variables, expected_values)}
     print("parameters :  %s" % kwargs)
-    bm = BaseModelPython(zenith, AMass, pressure, ssa)
-    irr_python = IrradianceRatio(bm)
-    y_python = irr_python.func(x, **kwargs)
+    bm = BaseModelPython(zenith, pressure, ssa)
+    irr_python = IrradianceRatio(bm, bm)
+    y_python = irr_python.func(x, **kwargs) + np.random.normal(0, 0.0005, len(x))
+
 
     gmod = Model(irr_python.func, independent_vars=['x'], param_names=variables)
     gmod.set_param_hint('alpha', value=guess[0], min=bounds[0][0], max=bounds[0][1])
@@ -56,13 +61,14 @@ def test_main():
 
     result_lmfit = gmod.fit(y_python, x=x)
     print(result_lmfit.fit_report())
-
-    plt.plot(x, y_theano)
-    x_new = np.linspace(300, 900,150)
-    irr_symbol.set_wavelengthAOI(x_new)
-    getIrrRatio = irr_symbol.get_compiled()
-    y_new = getIrrRatio(*expected_values)
-    plt.plot(x_new, y_new, '+', label='different wavelengths')
+    #plt.plot(x, y_theano)
+    #x_new = np.linspace(300, 900,150)
+    #irr_symbol.set_wavelengthAOI(x_new)
+    #getIrrRatio = irr_symbol.get_compiled()
+    #y_new = getIrrRatio(*expected_values)
+    plt.plot(x, y_python)
+    plt.xlabel(r"Wavelength $\lambda$", **hfont)
+    plt.ylabel(r"$E_{ds}/E_{d}$", **hfont)
     plt.legend()
     plt.show()
 
@@ -281,7 +287,7 @@ def fit_skyRadiance():
     pressure = 950
     AM = 5
     ssa = get_ssa(rel_h, AM)
-    x = np.linspace(350, 400, 1000)  # config
+    x = np.linspace(350, 700, 1000)  # config
     H_oz = 0.34
     wv = 1.2
     alpha = 1.8
@@ -343,9 +349,9 @@ def coverty_variability():
 
 
 if __name__ == "__main__":
-    #test_main()
-    sky_radiance()
+    test_main()
+    #sky_radiance()
     #l_sky_ratio()
     #compare_sym_python()
     #coverty_variability()
-    #fit_skyRadiance()
+    fit_skyRadiance()
