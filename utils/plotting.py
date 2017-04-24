@@ -161,7 +161,7 @@ def plot_wv_ozone(object_list, title):
     ax1.legend(loc='best', prop=fontP)
     ax2.legend(loc='best', prop=fontP)
 
-    ax1.set_ylabel(r'Water Vapour [cm]', **hfont)
+    ax1.set_ylabel(r'Water Vapor [cm]', **hfont)
     ax2.set_ylabel(r'Ozone scale height [cm]', **hfont)
     ax2.set_xlabel('UTC Times', **hfont)
     ax1.set_xlabel('UTC Times', **hfont)
