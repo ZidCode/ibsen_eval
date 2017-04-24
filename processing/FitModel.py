@@ -2,7 +2,7 @@ from lmfit import Model
 import numpy as np
 from scipy.optimize import minimize, least_squares
 from BaseModels import BaseModelPython, BaseModelSym
-from Model import IrradianceRatio, LSkyRatio, SkyRadiance, IrradianceRatioSym, SkyRadianceSym
+from Model import IrradianceRatio, LSkyRatio, SkyRadiance, IrradianceRatioSym, SkyRadianceSym, LSkyRatioSym
 from Residuum import Residuum
 from matplotlib.font_manager import FontProperties
 
@@ -30,7 +30,7 @@ class FitModelFactory:
     def __init__(self, wp, config, wavelengths, logger):
         #'ratio', 'l_sky_ratio', 'l_sky_nadir'
         python_map = {'ratio': IrradianceRatio, 'l_sky_ratio': LSkyRatio, 'l_sky_nadir': SkyRadiance}
-        sym_map = {'ratio': IrradianceRatioSym, 'l_sky_nadir': SkyRadianceSym}
+        sym_map = {'ratio': IrradianceRatioSym, 'l_sky_nadir': SkyRadianceSym, 'l_sky_ratio': LSkyRatioSym}
 
         if config['package'] == 'lmfit':
             bm = BaseModelPython(wp.sun_zenith_tar, wp.pressure, wp.ssa)
