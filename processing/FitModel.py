@@ -186,7 +186,7 @@ class Result:
         ax1 = ax.plot(self.wavelength, np.zeros(len(self.wavelength)), 'b')
         ax1 = ax.plot(self.wavelength, self.residuals, 'bo')
         ax.set_xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
-        ax.set_ylabel(r'residuals', **hfont)
+        ax.set_ylabel(r'residuals $\left[\frac{mW}{m^2 \cdot nm \cdot sr}\right]$', **hfont)
         return ax1
 
 

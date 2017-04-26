@@ -10,7 +10,7 @@ from matplotlib.font_manager import FontProperties
 from atmospheric_mass import get_atmospheric_path_length
 
 FONTSTYLE = 'serif'
-FONTSIZE = 12
+FONTSIZE = 20
 hfont = {'family':FONTSTYLE, 'fontsize': FONTSIZE}
 fontP = FontProperties()
 fontP.set_family(FONTSTYLE)
@@ -50,7 +50,7 @@ def test_main():
     print("parameters :  %s" % kwargs)
     bm = BaseModelPython(zenith, pressure, ssa)
     irr_python = IrradianceRatio(bm, bm)
-    y_python = irr_python.func(x, **kwargs) + np.random.normal(0, 0.0005, len(x))
+    y_python = irr_python.func(x, **kwargs)# + np.random.normal(0, 0.0005, len(x))
 
 
     gmod = Model(irr_python.func, independent_vars=['x'], param_names=variables)
@@ -67,7 +67,7 @@ def test_main():
     #getIrrRatio = irr_symbol.get_compiled()
     #y_new = getIrrRatio(*expected_values)
     plt.plot(x, y_python)
-    plt.xlabel(r"Wavelength $\lambda$", **hfont)
+    plt.xlabel(r"Wavelength $\lambda$ [nm]", **hfont)
     plt.ylabel(r"$E_{ds}/E_{d}$", **hfont)
     plt.legend()
     plt.show()
@@ -75,19 +75,20 @@ def test_main():
 
 def sky_radiance():
     from get_ssa import get_ssa
-    zenith = 76.3313400556
+    #zenith = 76.3313400556
+    zenith = 60.
     AMass = get_atmospheric_path_length(zenith)
 
     rel_h = 0.9
     pressure = 950
     ssa = get_ssa(rel_h, 5)
-    x = np.linspace(650, 750, 1000)  # config
-    H_oz = 0.3
+    x = np.linspace(350, 750, 1000)  # config
+    H_oz = 0.34
     wv = 0.9
-    alpha = 1.8
-    beta = 0.06
+    alpha = 1.0
+    beta = 0.1
     l_dsr = 0.17
-    l_dsa = 0.1
+    l_dsa = 0.13
 
     model = BaseModelPython(zenith, pressure, ssa)
     skyModel = SkyRadiance(model, model)
@@ -101,25 +102,27 @@ def sky_radiance():
     water = ww.func(0.25, x)
     water2 = ww.func(1.5, x)
 
-    for wv in np.arange(0.2, 2.5, 0.1):
+    y_true = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+    for wv in np.arange(0.2, 1.2, 0.1):
         y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
-        plt.plot(x, y, label=wv)
-    plt.xlabel('Wavelength [nm]', **hfont)
-    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
-    plt.title("Water Vapour 0.2-2.5 cm", **hfont)
-    plt.legend(prop=fontP)
+        plt.plot(x, y-y_true, label=wv)
+    plt.xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+    plt.ylabel(r'Deviation Sky Radiance $\Delta$L $\left[\frac{mW}{m^2 \cdot nm \cdot sr}\right]$', **hfont)
+    legend = plt.legend(prop=fontP, title=r'Water vapor [cm]')
+    legend.get_frame().set_alpha(0.2)
+    plt.setp(legend.get_title(),fontsize='small', family=FONTSTYLE)
     plt.show()
 
-    for hoz in np.arange(0.3, 0.5, 0.01):
-        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=hoz)
-        plt.plot(x, y)
-    plt.xlabel('Wavelength [nm]', **hfont)
-    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
-    plt.title("Ozone 0.3-0.7 cm", **hfont)
+    #for hoz in np.arange(0.34, 0.5, 0.01):
+    y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+    plt.plot(x, y)
+    plt.xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+    plt.ylabel(r'Sky Radiance $\left[\frac{mW}{m^2 \cdot nm \cdot sr}\right]$', **hfont)
+    #plt.title("Ozone 0.3-0.7 cm", **hfont)
     plt.show()
 
     for l in np.arange(0.12, 0.22, 0.01):
-        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l, wv=wv, H_oz=hoz)
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l, wv=wv, H_oz=H_oz)
         plt.plot(x, y, label='%s' % l)
     plt.xlabel('Wavelength [nm]', **hfont)
     plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
@@ -130,7 +133,7 @@ def sky_radiance():
     plt.show()
 
     for l in np.arange(0.07, 0.5, 0.01):
-        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
+        y = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
         plt.plot(x, y, label='%s' % l)
     plt.xlabel('Wavelength [nm]', **hfont)
     plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
@@ -140,21 +143,21 @@ def sky_radiance():
     plt.setp(legend.get_title(),fontsize='medium', family=FONTSTYLE)
     plt.show()
 
-    for a in np.arange(1.4, 18, 0.01):
-        y = skyModel.func(x=x, alpha=a, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
-        plt.plot(x, y)
-    plt.xlabel('Wavelength [nm]', **hfont)
-    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
-    plt.title("alpha 1.4-1.8", **hfont)
-    plt.show()
+    #for a in np.arange(1.4, 18, 0.01):
+    #    y = skyModel.func(x=x, alpha=a, beta=beta, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+    #    plt.plot(x, y)
+    #plt.xlabel('Wavelength [nm]', **hfont)
+    #plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    #plt.title("alpha 1.4-1.8", **hfont)
+    #plt.show()
 
-    for b in np.arange(0.02, 0.3, 0.01):
-        y = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)
-        plt.plot(x, y)
-    plt.xlabel('Wavelength [nm]', **hfont)
-    plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
-    plt.title("beta 0.02-0.1", **hfont)
-    plt.show()
+    #for b in np.arange(0.02, 0.3, 0.01):
+    #    y = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
+    #    plt.plot(x, y)
+    #plt.xlabel('Wavelength [nm]', **hfont)
+    #plt.ylabel(r'Sky Radiance $\frac{mW}{m^2 \cdot nm}$', **hfont)
+    #plt.title("beta 0.02-0.1", **hfont)
+    #plt.show()
 
     plt.plot(x, water, label="WV 0.25cm")
     plt.plot(x, water2, label="WV 1.5cm")
@@ -167,14 +170,15 @@ def sky_radiance():
     plt.show()
 
     for noise in np.arange(20):
-        simulation = skyModel.func(x=x, alpha=alpha, beta=b, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=hoz)+ np.random.normal(0, 0.04, len(x))
+        simulation = skyModel.func(x=x, alpha=alpha, beta=0.06, l_dsa=l, l_dsr=l_dsr, wv=wv, H_oz=H_oz)
         plt.plot(x, simulation)
     plt.show()
 
 
 def l_sky_ratio():
     from get_ssa import get_ssa
-    zenith = 76.3313400556
+    #zenith = 76.3313400556
+    zenith = 60.
     AMass = get_atmospheric_path_length(zenith)
 
     rel_h = 0.9
@@ -184,7 +188,7 @@ def l_sky_ratio():
     H_oz = 0.3
     wv = 1.2
     alpha = 1.8
-    beta = 0.06
+    beta = 0.1
     l_dsr = 0.17
     l_dsa = 0.1
     g_dsr = 0.9
@@ -243,9 +247,10 @@ def l_sky_ratio():
     plt.title("beta 0.02-0.13", **hfont)
     plt.show()
 
-    for noise in np.arange(20):
-        simulation = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa) + np.random.normal(0, 0.0005, len(x))
-        plt.plot(x, simulation)
+    simulation = skyModel.func(x=x, alpha=alpha, beta=beta, l_dsa=l_dsa, l_dsr=l_dsr, g_dsr=g_dsr, g_dsa=g_dsa)# + np.random.normal(0, 0.0005, len(x))
+    plt.plot(x, simulation)
+    plt.xlabel(r'Wavelength $\lambda$ [nm]', **hfont)
+    plt.ylabel(r'$L_{sky}/E_d$ $\left[ sr^{-1} \right]$', **hfont)
     plt.show()
 
 
@@ -350,8 +355,8 @@ def coverty_variability():
 
 if __name__ == "__main__":
     test_main()
-    #sky_radiance()
-    #l_sky_ratio()
+    sky_radiance()
+    l_sky_ratio()
     #compare_sym_python()
     #coverty_variability()
-    fit_skyRadiance()
+    #fit_skyRadiance()

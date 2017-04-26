@@ -131,15 +131,17 @@ def retrieve_weather_parameters(params, gps, utc_time, debug=False):
 def show_more_days():
     params = ['hum', 'pressurem']
     gps = [48.14800, 11.57300]
-    utc_time1 = datetime.strptime('2017-02-16 10:43:20', '%Y-%m-%d %H:%M:%S')
-    utc_time2 = datetime.strptime('2016-11-29 10:43:20', '%Y-%m-%d %H:%M:%S')
-    utc_time3 = datetime.strptime('2016-12-06 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time1a = datetime.strptime('2016-09-13 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time1b = datetime.strptime('2016-09-14 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time1 = datetime.strptime('2016-11-29 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time2 = datetime.strptime('2016-12-06 10:43:20', '%Y-%m-%d %H:%M:%S')
+    utc_time3 = datetime.strptime('2017-02-16 10:43:20', '%Y-%m-%d %H:%M:%S')
     scaling_properties = {'hum': lambda x: x / 100, 'pressurem': lambda x: x}
 
     t_new = []
     fix, ax1 = plt.subplots()
-    utc_times = [utc_time1, utc_time2, utc_time3]
-    markers = ['v', 'o', 'p']
+    utc_times = [utc_time1a, utc_time1b, utc_time1, utc_time2, utc_time3]
+    markers = ['v', 'o', 'p', '*', 's']
     for mark, utc_time in zip(markers, utc_times):
         utc_param_values = dict()
         inter = dict()

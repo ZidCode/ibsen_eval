@@ -43,6 +43,9 @@ class IbsenPlot:
             self.misc_frame['%s_stderr' % key] = frame['%s_stderr' % key]
             self.misc_frame['utc_times'] = [convert2datetime(utc) for utc in frame['utc_times']]
 
+    def get_frame(self):
+        return self.misc_frame
+
     def get_wv_plot(self, ax):
         return ibsen_wv_plot(self.misc_frame, *ax)
 
@@ -59,6 +62,9 @@ class AeronetPlot:
         Parser.get_Timeline()
         Parser.get_turbidity(aod_range)
 
+    def get_frame(self):
+        return self.aeronet
+
     def get_wv_plot(self, ax):
         return aeronet_wv_plot(self.aeronet, *ax)
 
@@ -71,6 +77,9 @@ class MicroPlot:
     def __init__(self, source, _):
         print("MicroPlot Constructor")
         self.micro_dict = parse_microtops_inifile(source)
+
+    def get_frame(self):
+        return self.micro_dict
 
     def get_wv_plot(self, ax):
         return micro_wv_plot(self.micro_dict, *ax)

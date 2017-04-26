@@ -46,15 +46,15 @@ class MidpointNormalize(colors.Normalize):
 
 
 LableTable = {
-    #'beta': r'absolute $\Delta \beta$',
-    'beta': r'$\Delta \beta\; \left[ \%\right]$',
-    'alpha': r'$\Delta \alpha \; \left[ \%\right]$',
-    'g_dsa': r'Coverty factor $\Delta g_{dsa} \;  \left[ \%\right]$',
-    'g_dsr': r'Coverty factor $\Delta g_{dsr}  \; \left[ \%\right]$',
-    'l_dsa': r'Intensity factor $\Delta l_{dsa} \;  \left[ \%\right]$',
-    'l_dsr': r'Intensity factor $\Delta l_{dsr} \;  \left[ \%\right]$',
-    'wv': r'$\Delta Water \, Vapour  \; \left[ \%\right]$',
-    'H_oz': r'Ozone scale height $\Delta H_{oz} \; \left[ \%\right]$'
+#    'beta': r' Error of $\beta$',
+    'beta': r'Error of $ \beta \; \left[ \%\right]$',
+    'alpha': r'Error of $ \alpha \; \left[ \%\right]$',
+    'g_dsa': r'Error of  $ g_{dsa} \; \left[ \%\right]$',
+    'g_dsr': r'Error of $g_{dsr} \;  \left[ \%\right]$',
+    'l_dsa': r'Error of $l_{dsa} \;  \left[ \%\right]$',
+    'l_dsr': r'Error of $l_{dsr} \;  \left[ \%\right]$',
+    'wv': r' Error of $wv$ $ \left[ \%\right]$',
+    'H_oz': r'Error of $H_{oz} \; \left[ \%\right]$'
 }
 
 
@@ -118,10 +118,11 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--counts', default=31, type=int)
     config = dict()
     #config['keys']  = ['alpha', 'beta', 'l_dsa', 'l_dsr', 'g_dsr', 'g_dsa']  # Lsky_Ratio
-    config['keys'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'wv', 'H_oz']
-    config['local'] = 'beta'
-    config['global'] = 'alpha'
-    config['show'] =  ['l_dsr', 'l_dsa']
-    config['present'] = {'l_dsr': Relative, 'l_dsa': Absolute}
+    config['keys']  = ['alpha', 'beta', 'g_dsa', 'g_dsr']
+    #config['keys'] = ['alpha', 'beta', 'l_dsr', 'l_dsa', 'H_oz', 'wv']
+    config['local'] = 'g_dsa'
+    config['global'] = 'g_dsr'
+    config['show'] =  ['beta', 'alpha']
+    config['present'] = {'beta': Relative, 'alpha': Relative}
     args = parser.parse_args()
     main(args.directory, args.counts, config)
