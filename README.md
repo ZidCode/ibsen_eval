@@ -1,18 +1,46 @@
-# ibsen_eval
+# Aerosol parameter retrieval based on Bird and Riordan (1984)
 
-evaluation.py :         evaluates reflectance deduced from target, reference and dark from the ibsen
-TODO:files are still hardcoded. Should be passed by command line or stored in an ini-file for 
- with further configuration
+## Usage
+Usage via config.ini
 
-parser/ibsen_parser.py:  parses ibsen files independent on ref/tar/dark (subtract_dark_from_mean and get mean included)
-TODO: Instead of get_mean something like outlie detection method or sth. else should be implemented
+python evalution.py --help
 
-parser/ibsen_calib....:  Calibrates ibsen data by means of RASTA 
+Aided support ..
+python retrieval.py -m directory
 
-python ibsen_calibration.py --help shows additional parameters
-TODO: check_nonlinearity should be expanded by method correct_nonlinearity
+Validation:
+python validation.py
 
-processing/spectrum_analyser.py: Analyses spectrum (Reflectance)
 
-processing/solar_zenith.py:      Extracts the solar zenith depending on GPS coordinates and utc_time
+## Python Packages
+
+emcee==2.2.1
+lmfit==0.9.5
+matplotlib==1.5.1
+nose==1.3.7
+nose-watch==0.9.1
+nosier==1.1
+numpy==1.12.0
+pandas==0.16.1
+pyephem==3.7.6.0
+pytest==2.9.2
+python-dateutil==2.4.2
+rednose==1.2.2
+rsa==3.2
+scipy==0.19.0
+simpy==3.0.8
+sympy==1.0
+Theano==0.8.2
+watchdog==0.8.3
+
+## Installing
+
+no need: export Pythonpath
+export PYTHONPATH=$PYTHONPATH:/home/yourpath
+
+## Unittests
+
+should be updated
+
+
 
