@@ -29,3 +29,5 @@ def get_ozone_path_length(zenith):
 if __name__ == "__main__":
     zenith = 53.1836240528
     assert_approx_equal( get_atmospheric_path_length(zenith), 1.66450160404, 5)
+
+# comment
