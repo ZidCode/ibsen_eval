@@ -9,7 +9,6 @@ from Residuum import Residuum
 from matplotlib.font_manager import FontProperties
 from atmospheric_mass import get_atmospheric_path_length
 
-# i am pushing in the branch
 
 FONTSTYLE = 'serif'
 FONTSIZE = 20
